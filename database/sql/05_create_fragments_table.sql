@@ -5,4 +5,4 @@ CREATE TABLE fragments (
     person_id INT NOT NULL REFERENCES persons(person_id),
     player_url TEXT NOT NULL,
     thumbnail_url TEXT NOT NULL
-)
+);
