@@ -8,7 +8,7 @@ VALUES ('Jouzas Malickas', 1, 'https://vz-cac74041-8b3.b-cdn.net/23be7b7b-f356-4
 
 -- Insert sample data for bios
 INSERT INTO bios (person_id, language_code, bio)
-VALUES (1, "en","Juozas Malickas (52), is a Lithuanian history teacher. He uses his life story to bridge Lithuania's past & present. Raised across Lithuania, he emigrated to the US for 20 years before returning to Lithuania in 2020. Juozas offers a firsthand perspective on Soviet vs. post-independence Lithuania, also highlighting the shift from a restricted small town to the dynamic Vilnius of today.");
+VALUES (1, 'en','Juozas Malickas (52), is a Lithuanian history teacher. He uses his life story to bridge Lithuania''s past & present. Raised across Lithuania, he emigrated to the US for 20 years before returning to Lithuania in 2020. Juozas offers a firsthand perspective on Soviet vs. post-independence Lithuania, also highlighting the shift from a restricted small town to the dynamic Vilnius of today.');
 
 -- Insert sample data for tags
 INSERT INTO tags (name)

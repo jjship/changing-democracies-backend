@@ -29,7 +29,7 @@ services:
       - database-v:/var/lib/postgresql/data
     command: '-p ${POSTGRES_PORT}'
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d {POSTGRES_DB}']
+      test: ['CMD-SHELL', 'pg_isready -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       start_period: 2s
       interval: 5s
       timeout: 5s

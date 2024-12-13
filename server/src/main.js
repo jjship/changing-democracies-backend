@@ -12,7 +12,7 @@ async function main() {
   const dbClient = await pool.connect();
 
   try {
-    const { rows } = await dbClient.query('SELECT * FROM fragment');
+    const { rows } = await dbClient.query('SELECT * FROM fragments');
     console.log({ rows });
   } catch (err) {
     console.error({ err });
