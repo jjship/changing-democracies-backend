@@ -1,5 +1,10 @@
 FROM node:23-alpine
-WORKDIR /server
-COPY package.json .
+
+WORKDIR /app
+
+COPY package*.json ./
 RUN npm i
-CMD ["npm", "start"]
+
+COPY . .
+
+CMD ["npm", "run", "start:prod"]
