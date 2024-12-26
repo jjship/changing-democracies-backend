@@ -12,7 +12,7 @@ const dataSourceOptions: DataSourceOptions = {
   username: env.DB_USER,
   password: env.DB_PASSWORD,
   synchronize: env.NODE_ENV !== 'production',
-  logging: env.NODE_ENV === 'development',
+  logging: env.NODE_ENV === 'development' ? ['query', 'error', 'schema', 'warn', 'info', 'log'] : ['error'],
   entities: [`${__dirname}/entities/*.{js,ts}`],
   migrations: [`${__dirname}/migrations/*.{js,ts}`],
   migrationsRun: true,

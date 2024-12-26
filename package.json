@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "nodemon .",
-    "test:integration": "mocha --config ./.mocharc.spec.json"
+    "test:integration": "NODE_ENV=test mocha --config ./.mocharc.spec.json"
   },
   "dependencies": {
     "@sinclair/typebox": "^0.34.13",
