@@ -6,33 +6,35 @@ services:
     build: .
     env_file: .env
     ports:
-      - ${SERVER_PORT}:${SERVER_PORT}
-    # volumes:
+      - ${PORT}:${PORT}
+    volumes:
+      - .:/app
     #   - ./server:/server
     #   - server-v-node-modules:/server/node_modules
     depends_on:
-      db:
-        condition: service_healthy
+      - db
+      # db:
+      #   condition: service_healthy
 
   db:
     image: postgres:17-alpine
-    container_name: ${POSTGRES_HOST}
+    container_name: ${DB_HOST}
     restart: always
     # build:
     #   context: ./database
     #   dockerfile: Dockerfile
     env_file: .env
     ports:
-      - ${POSTGRES_PORT}:${POSTGRES_PORT}
+      - ${DB_PORT}:${DB_PORT}
     # volumes:
     #   - database-v:/var/lib/postgresql/data
-    # command: '-p ${POSTGRES_PORT}'
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
-      start_period: 2s
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    # command: '-p ${DB_PORT}'
+    # healthcheck:
+    #   test: ['CMD-SHELL', 'pg_isready -p ${DB_PORT} -U ${DB_USER} -d ${POSTGRES_DB}']
+    #   start_period: 2s
+    #   interval: 5s
+    #   timeout: 5s
+    #   retries: 5
 # volumes:
 #   server-v-node-modules:
 #     name: 'server-v-node-modules'

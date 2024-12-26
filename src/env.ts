@@ -5,7 +5,7 @@ const portSchema = z.string().regex(/^\d+$/).transform(Number);
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
-  SERVER_PORT: portSchema.default('8083'),
+  PORT: portSchema.default('8083'),
 
   DB_HOST: z.string(),
   DB_PORT: portSchema.default('8084'),

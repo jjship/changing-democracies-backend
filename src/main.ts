@@ -24,3 +24,4 @@
 // main()
 //   .then(() => console.log('Connected to db!'))
 //   .catch((err) => console.error('Error connecting to db', { err }));
+console.log('MAIN');
