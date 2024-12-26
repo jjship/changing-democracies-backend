@@ -8,9 +8,9 @@ const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
   host: env.DB_HOST,
   port: env.DB_PORT,
+  database: env.DB_DATABASE,
   username: env.DB_USER,
   password: env.DB_PASSWORD,
-  database: env.DB_DATABASE,
   synchronize: env.NODE_ENV !== 'production',
   logging: env.NODE_ENV === 'development',
   entities: [`${__dirname}/entities/*.{js,ts}`],
@@ -26,7 +26,8 @@ async function createDbConnection(options?: Partial<DataSourceOptions>) {
     ...options,
   } as DataSourceOptions);
 
-  return await dataSource.initialize();
+  const connection = await dataSource.initialize();
+  return connection;
 }
 
 function getDbConnection() {
