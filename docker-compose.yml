@@ -12,9 +12,8 @@ services:
     #   - ./server:/server
     #   - server-v-node-modules:/server/node_modules
     depends_on:
-      - db
-      # db:
-      #   condition: service_healthy
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:17-alpine
@@ -26,17 +25,17 @@ services:
     env_file: .env
     ports:
       - ${DB_PORT}:${DB_PORT}
-    # volumes:
-    #   - database-v:/var/lib/postgresql/data
-    # command: '-p ${DB_PORT}'
-    # healthcheck:
-    #   test: ['CMD-SHELL', 'pg_isready -p ${DB_PORT} -U ${DB_USER} -d ${POSTGRES_DB}']
-    #   start_period: 2s
-    #   interval: 5s
-    #   timeout: 5s
-    #   retries: 5
-# volumes:
-#   server-v-node-modules:
-#     name: 'server-v-node-modules'
-#   database-v:
-#     name: 'database-v'
+    volumes:
+      - database-v:/var/lib/postgresql/data
+    command: '-p ${DB_PORT}'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -p ${DB_PORT} -U ${DB_USER} -d ${DB_DATABASE}']
+      start_period: 2s
+      interval: 5s
+      timeout: 5s
+      retries: 5
+volumes:
+  #   server-v-node-modules:
+  #     name: 'server-v-node-modules'
+  database-v:
+    name: 'database-v'

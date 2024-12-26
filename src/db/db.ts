@@ -11,10 +11,11 @@ const dataSourceOptions: DataSourceOptions = {
   username: env.DB_USER,
   password: env.DB_PASSWORD,
   database: env.DB_DATABASE,
+  synchronize: env.NODE_ENV !== 'production',
+  logging: env.NODE_ENV === 'development',
   entities: [`${__dirname}/entities/*.{js,ts}`],
   migrations: [`${__dirname}/migrations/*.{js,ts}`],
   migrationsRun: true,
-  synchronize: true, // TODO not in production
 };
 
 let dataSource: DataSource | undefined;

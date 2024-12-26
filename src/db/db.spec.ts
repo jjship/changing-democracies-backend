@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import { createDbConnection, getDbConnection } from './db';
 import { Fragment } from './entities/Fragment';
+import { env } from '../env';
 
 describe('Example Test', () => {
   it('should pass', () => {
@@ -10,9 +11,13 @@ describe('Example Test', () => {
 
 describe('Database', () => {
   before(async () => {
+    await createTestDatabase();
+
     await createDbConnection({
-      database: 'test-db',
+      database: env.TEST_DATABASE,
     });
+
+    console.log({ connection: getDbConnection() });
   });
 
   after(async () => {
@@ -41,3 +46,17 @@ describe('Database', () => {
     expect(fragments[0].title).to.equal('Test Fragment');
   });
 });
+
+async function createTestDatabase() {
+  console.log('BEFORE');
+  const localConnection = await createDbConnection({
+    database: env.DB_DATABASE,
+    migrationsRun: false,
+  });
+
+  console.log('AFTER');
+
+  await localConnection.query(`DROP DATABASE IF EXISTS "${env.TEST_DATABASE}"`);
+  await localConnection.query(`CREATE DATABASE "${env.TEST_DATABASE}"`);
+  await localConnection.destroy();
+}

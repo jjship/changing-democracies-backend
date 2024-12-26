@@ -12,6 +12,7 @@ const envSchema = z.object({
   DB_USER: z.string(),
   DB_PASSWORD: z.string(),
   DB_DATABASE: z.string(),
+  TEST_DATABASE: z.string(),
 });
 
 export const env = envSchema.parse(process.env);
