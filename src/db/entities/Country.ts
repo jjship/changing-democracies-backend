@@ -1,14 +1,14 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Person } from './Person';
+import { PersonEntity } from './Person';
 
 @Entity()
-export class Country {
+export class CountryEntity {
   @PrimaryGeneratedColumn('uuid')
-  country_id!: string;
+  id: string;
 
   @Column({ type: 'text' })
-  name!: string;
+  name: string;
 
-  @OneToMany(() => Person, (person) => person.country)
-  persons!: Person[];
+  @OneToMany(() => PersonEntity, (person) => person.country)
+  persons?: PersonEntity[];
 }
