@@ -1,14 +1,14 @@
 version: '3.9'
 services:
-  app:
-    image: app:1.0.0
+  cd_backend:
+    image: cd_backend:1.0.0
     container_name: ${SERVER_HOST}
     build: .
     env_file: .env
     ports:
       - ${PORT}:${PORT}
     volumes:
-      - .:/app
+      - .:/cd_backend
 
     depends_on:
       - db
