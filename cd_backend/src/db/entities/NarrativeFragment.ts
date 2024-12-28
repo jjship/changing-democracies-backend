@@ -23,3 +23,16 @@ export class NarrativeFragmentEntity {
 //   .createQueryBuilder('narrativeFragment')
 //   .where('narrativeFragment.narrativeId = :narrativeId', { narrativeId })
 //   .getCount(); // Automatically assigns the next available sequence
+
+// async function recomputeNarrativeSequence(narrativeId: string) {
+//   const narrativeFragments = await narrativeFragmentRepository.find({
+//     where: { narrative: { id: narrativeId } },
+//     order: { sequence: 'ASC' },
+//   });
+
+//   for (let i = 0; i < narrativeFragments.length; i++) {
+//     narrativeFragments[i].sequence = i; // Recompute sequence
+//   }
+
+//   await narrativeFragmentRepository.save(narrativeFragments);
+// }
