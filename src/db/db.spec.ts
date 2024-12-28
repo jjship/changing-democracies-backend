@@ -1,13 +1,15 @@
 import { expect } from 'chai';
 import { createDbConnection, getDbConnection } from './db';
-import { Fragment } from './entities/Fragment';
+import { FragmentEntity } from './entities/Fragment';
 import { env } from '../env';
 import { DataSource } from 'typeorm';
 import uuid from 'uuid4';
-import { Person } from './entities/Person';
-import { Country } from './entities/Country';
-import { Bio } from './entities/Bio';
-import { Tag } from './entities/Tag';
+import { PersonEntity } from './entities/Person';
+import { CountryEntity } from './entities/Country';
+import { BioEntity } from './entities/Bio';
+import { TagEntity } from './entities/Tag';
+import { NarrativeEntity } from './entities/Narrative';
+import { NarrativeFragmentEntity } from './entities/NarrativeFragment';
 
 describe('Example Test', () => {
   it('should pass', () => {
@@ -36,51 +38,74 @@ describe('Database', () => {
   });
 
   it('should insert and retrieve test data', async () => {
+    const testFragmentId = uuid();
+    let testTag: TagEntity | undefined;
+    let testNarrativeFragment: NarrativeFragmentEntity | undefined;
+
     const connection = getDbConnection();
 
-    const countryRepository = connection.getRepository(Country);
-    const testCountry = new Country();
-    testCountry.name = 'testCountry';
-    await countryRepository.save(testCountry);
+    await connection.transaction(async (entityManager) => {
+      const testCountry = new CountryEntity();
+      testCountry.name = 'testCountry';
+      await entityManager.save(CountryEntity, testCountry);
 
-    const bioRepository = connection.getRepository(Bio);
-    const testBio = new Bio();
-    testBio.bio = 'lorem ipsum i tak dalej';
-    testBio.language_code = 'PL';
-    await bioRepository.save(testBio);
+      const testBio = new BioEntity();
+      testBio.bio = 'lorem ipsum i tak dalej';
+      testBio.language_code = 'PL';
+      await entityManager.save(BioEntity, testBio);
 
-    const tagRepository = connection.getRepository(Tag);
-    const testTag = new Tag();
-    testTag.name = 'test_tag';
-    await tagRepository.save(testTag);
+      testTag = new TagEntity();
+      testTag.name = 'test_tag';
+      await entityManager.save(TagEntity, testTag);
 
-    const personRepository = connection.getRepository(Person);
-    const testPerson = new Person();
-    testPerson.name = 'testName testSurname';
-    testPerson.bios = [testBio];
-    testPerson.country = testCountry;
-    await personRepository.save(testPerson);
+      const testPerson = new PersonEntity();
+      testPerson.name = 'testName testSurname';
+      testPerson.bios = [testBio];
+      testPerson.country = testCountry;
+      await entityManager.save(PersonEntity, testPerson);
 
-    const fragmentRepository = connection.getRepository(Fragment);
-    const testFragment = new Fragment();
-    testFragment.fragment_id = uuid();
-    testFragment.title = 'Test Fragment';
-    testFragment.length = 120;
-    testFragment.player_url = 'http://example.com/player';
-    testFragment.thumbnail_url = 'http://example.com/thumbnail';
-    testFragment.person = testPerson;
-    testFragment.tags = [testTag];
-    await fragmentRepository.save(testFragment);
+      const testFragment = new FragmentEntity();
+      testFragment.id = testFragmentId;
+      testFragment.title = 'Test FragmentEntity';
+      testFragment.duration_sec = 120;
+      testFragment.player_url = 'http://example.com/player';
+      testFragment.thumbnail_url = 'http://example.com/thumbnail';
+      testFragment.person = testPerson;
+      testFragment.tags = [testTag];
+      await entityManager.save(FragmentEntity, testFragment);
 
-    const dbFragment = await fragmentRepository.findOne({
-      where: { fragment_id: testFragment.fragment_id },
-      relations: ['person', 'person.country', 'person.bios', 'tags'],
+      const testNarrative = new NarrativeEntity();
+      testNarrative.title = 'Test Narrative';
+      testNarrative.description = 'description';
+      await entityManager.save(NarrativeEntity, testNarrative);
+
+      testNarrativeFragment = new NarrativeFragmentEntity();
+      testNarrativeFragment.narrative = testNarrative;
+      testNarrativeFragment.fragment = testFragment;
+      testNarrativeFragment.sequence = 0;
+      await entityManager.save(NarrativeFragmentEntity, testNarrativeFragment);
     });
 
-    expect(dbFragment?.title).to.equal('Test Fragment');
-    expect(dbFragment?.person.name).to.equal('testName testSurname');
-    expect(dbFragment?.person.country.name).to.equal('testCountry');
-    expect(dbFragment?.tags[0].name).to.equal('test_tag');
+    const fragmentRepository = connection.getRepository(FragmentEntity);
+
+    const dbFragment = await fragmentRepository.findOne({
+      where: { id: testFragmentId },
+      relations: [
+        'person',
+        'person.country',
+        'person.bios',
+        'tags',
+        'narrativeFragments',
+        'narrativeFragments.fragment',
+        'narrativeFragments.narrative',
+      ],
+    });
+
+    expect(dbFragment!.title).to.equal('Test FragmentEntity');
+    expect(dbFragment!.person!.name).to.equal('testName testSurname');
+    expect(dbFragment!.person!.country!.name).to.equal('testCountry');
+    expect(dbFragment!.tags).to.deep.equal([testTag]);
+    expect(dbFragment?.narrativeFragments![0].id).to.equal(testNarrativeFragment!.id);
   });
 });
 

@@ -1,28 +1,42 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable } from 'typeorm';
-import { Person } from './Person';
-import { Tag } from './Tag';
+import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinTableOptions } from 'typeorm';
+import { PersonEntity } from './Person';
+import { TagEntity } from './Tag';
+import { NarrativeFragmentEntity } from './NarrativeFragment';
 
 @Entity()
-export class Fragment {
+export class FragmentEntity {
   @PrimaryColumn('uuid')
-  fragment_id!: string;
+  id: string;
 
   @Column({ type: 'text' })
-  title!: string;
+  title: string;
 
-  @Column({ type: 'int' })
-  length!: number;
-
-  @Column({ type: 'text' })
-  player_url!: string;
+  @Column({ default: 0 })
+  duration_sec: number = 0;
 
   @Column({ type: 'text' })
-  thumbnail_url!: string;
+  player_url: string;
 
-  @ManyToOne(() => Person, (person) => person.fragments, { onDelete: 'CASCADE' })
-  person!: Person;
+  @Column({ type: 'text' })
+  thumbnail_url: string;
 
-  @ManyToMany(() => Tag, (tag) => tag.fragments)
-  @JoinTable()
-  tags!: Tag[];
+  @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT' })
+  person?: PersonEntity;
+
+  @ManyToMany(() => TagEntity, (tag) => tag.fragments)
+  @JoinTable({
+    name: 'fragment_tags',
+    joinColumn: {
+      name: 'fragment_id',
+      referencedColumnName: 'id',
+    },
+    inverseJoinColumn: {
+      name: 'tag_id',
+      referencedColumnName: 'id',
+    },
+  })
+  tags?: TagEntity[];
+
+  @OneToMany(() => NarrativeFragmentEntity, (narrativeFragment) => narrativeFragment.fragment)
+  narrativeFragments?: NarrativeFragmentEntity[];
 }

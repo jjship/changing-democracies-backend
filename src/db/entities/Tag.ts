@@ -1,14 +1,14 @@
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { Fragment } from './Fragment';
+import { FragmentEntity } from './Fragment';
 
 @Entity()
-export class Tag {
+export class TagEntity {
   @PrimaryGeneratedColumn('uuid')
-  tag_id!: string;
+  id: string;
 
   @Column({ unique: true })
-  name!: string;
+  name: string;
 
-  @ManyToMany(() => Fragment, (fragment) => fragment.tags)
-  fragments!: Fragment[];
+  @ManyToMany(() => FragmentEntity, (fragment) => fragment.tags)
+  fragments?: FragmentEntity[];
 }

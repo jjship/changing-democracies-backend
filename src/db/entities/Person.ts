@@ -1,22 +1,22 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { Country } from './Country';
-import { Bio } from './Bio';
-import { Fragment } from './Fragment';
+import { CountryEntity } from './Country';
+import { BioEntity } from './Bio';
+import { FragmentEntity } from './Fragment';
 
 @Entity()
-export class Person {
+export class PersonEntity {
   @PrimaryGeneratedColumn('uuid')
-  person_id!: string;
+  id: string;
 
   @Column({ unique: true })
-  name!: string;
+  name: string;
 
-  @ManyToOne(() => Country, (country) => country.persons, { onDelete: 'RESTRICT' })
-  country!: Country;
+  @ManyToOne(() => CountryEntity, (country) => country.persons, { onDelete: 'RESTRICT' })
+  country?: CountryEntity;
 
-  @OneToMany(() => Bio, (bio) => bio.person)
-  bios!: Bio[];
+  @OneToMany(() => BioEntity, (bio) => bio.person)
+  bios?: BioEntity[];
 
-  @OneToMany(() => Fragment, (fragment) => fragment.person)
-  fragments!: Fragment[];
+  @OneToMany(() => FragmentEntity, (fragment) => fragment.person)
+  fragments?: FragmentEntity[];
 }

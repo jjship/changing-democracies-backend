@@ -1,17 +1,17 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
-import { Person } from './Person';
+import { PersonEntity } from './Person';
 
 @Entity()
-export class Bio {
+export class BioEntity {
   @PrimaryGeneratedColumn('uuid')
-  bio_id!: string;
+  id: string;
 
   @Column({ length: 2, unique: true })
-  language_code!: string;
+  language_code: string;
 
   @Column({ type: 'text' })
-  bio!: string;
+  bio: string;
 
-  @ManyToOne(() => Person, (person) => person.bios)
-  person!: Person;
+  @ManyToOne(() => PersonEntity, (person) => person.bios)
+  person: PersonEntity;
 }
