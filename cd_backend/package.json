@@ -1,5 +1,5 @@
 {
-  "name": "cd_server",
+  "name": "cd_backend",
   "version": "1.0.0",
   "private": true,
   "author": {
@@ -7,7 +7,7 @@
     "email": "devontheroof@gmail.com"
   },
   "scripts": {
-    "start": "nodemon .",
+    "start": "nodemon main.ts",
     "test:integration": "NODE_ENV=test mocha --config ./.mocharc.spec.json"
   },
   "dependencies": {

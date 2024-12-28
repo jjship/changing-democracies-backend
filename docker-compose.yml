@@ -1,15 +1,25 @@
-version: '3.9'
 services:
-  app:
-    image: app:1.0.0
-    container_name: ${SERVER_HOST}
-    build: .
+  cd_backend:
+    image: cd_backend:1.0.0
+    container_name: ${BACKEND_HOST}
+    build: ./cd_backend
     env_file: .env
     ports:
-      - ${PORT}:${PORT}
+      - ${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
-      - .:/app
+      - ./cd_backend:/cd_backend
+    depends_on:
+      - db
 
+  cd_cms:
+    image: cd_cms:1.0.0
+    container_name: ${CMS_HOST}
+    build: ./cd_cms
+    env_file: .env
+    ports:
+      - ${CMS_PORT}:${CMS_PORT}
+    volumes:
+      - ./cd_cms:/cd_cms
     depends_on:
       - db
 
@@ -20,3 +30,10 @@ services:
       POSTGRES_USER: '${DB_USER}'
       POSTGRES_PASSWORD: '${DB_PASSWORD}'
       POSTGRES_DB: '${DB_DATABASE}'
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
