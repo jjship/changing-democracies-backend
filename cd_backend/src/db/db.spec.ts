@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { createDbConnection, getDbConnection } from './db';
 import { FragmentEntity } from './entities/Fragment';
-import { env } from '../env';
+import { ENV } from '../env';
 import { DataSource } from 'typeorm';
 import uuid from 'uuid4';
 import { PersonEntity } from './entities/Person';
@@ -11,11 +11,7 @@ import { TagEntity } from './entities/Tag';
 import { NarrativeEntity } from './entities/Narrative';
 import { NarrativeFragmentEntity } from './entities/NarrativeFragment';
 
-describe('Example Test', () => {
-  it('should pass', () => {
-    expect(1 + 1).to.equal(2);
-  });
-});
+export { createTestDatabase };
 
 describe('Database', () => {
   before(async function () {
@@ -23,7 +19,7 @@ describe('Database', () => {
     await createTestDatabase();
 
     await createDbConnection({
-      database: env.TEST_DATABASE,
+      database: ENV.TEST_DATABASE,
     });
   });
 
@@ -112,10 +108,10 @@ describe('Database', () => {
 async function createTestDatabase() {
   const adminConnection = new DataSource({
     type: 'postgres',
-    host: env.DB_HOST,
-    port: env.DB_PORT,
-    username: env.DB_USER,
-    password: env.DB_PASSWORD,
+    host: ENV.DB_HOST,
+    port: ENV.DB_PORT,
+    username: ENV.DB_USER,
+    password: ENV.DB_PASSWORD,
     database: 'postgres', // Use the default postgres database
     synchronize: false,
     logging: false,
@@ -123,8 +119,8 @@ async function createTestDatabase() {
 
   await adminConnection.initialize();
 
-  await adminConnection.query(`DROP DATABASE IF EXISTS "${env.TEST_DATABASE}"`);
-  await adminConnection.query(`CREATE DATABASE "${env.TEST_DATABASE}"`);
+  await adminConnection.query(`DROP DATABASE IF EXISTS "${ENV.TEST_DATABASE}"`);
+  await adminConnection.query(`CREATE DATABASE "${ENV.TEST_DATABASE}"`);
   await adminConnection.destroy();
 }
 

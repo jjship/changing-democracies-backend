@@ -21,4 +21,4 @@ const envSchema = z.object({
   BUNNY_STREAM_COLLECTION_ID: z.string(),
 });
 
-export const env = envSchema.parse(process.env);
+export const ENV = envSchema.parse(process.env);

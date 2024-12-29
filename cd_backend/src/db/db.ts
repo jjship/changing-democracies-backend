@@ -1,18 +1,18 @@
 import 'reflect-metadata';
 import { ConnectionNotFoundError, DataSource, DataSourceOptions } from 'typeorm';
-import { env } from '../env';
+import { ENV } from '../env';
 
 export { createDbConnection, getDbConnection };
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'postgres',
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  database: env.DB_DATABASE,
-  username: env.DB_USER,
-  password: env.DB_PASSWORD,
-  synchronize: env.NODE_ENV !== 'production',
-  logging: env.NODE_ENV === 'development' ? ['query', 'error', 'schema', 'warn', 'info', 'log'] : ['error'],
+  host: ENV.DB_HOST,
+  port: ENV.DB_PORT,
+  database: ENV.DB_DATABASE,
+  username: ENV.DB_USER,
+  password: ENV.DB_PASSWORD,
+  synchronize: ENV.NODE_ENV !== 'production',
+  logging: ENV.NODE_ENV === 'development' ? ['query', 'error', 'schema', 'warn', 'info', 'log'] : ['error'],
   entities: [`${__dirname}/entities/*.{js,ts}`],
   migrations: [`${__dirname}/migrations/*.{js,ts}`],
   migrationsRun: true,

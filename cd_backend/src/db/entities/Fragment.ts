@@ -1,4 +1,15 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, ManyToMany, JoinTable, OneToMany, JoinTableOptions } from 'typeorm';
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+  JoinTableOptions,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { PersonEntity } from './Person';
 import { TagEntity } from './Tag';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
@@ -7,6 +18,12 @@ import { NarrativeFragmentEntity } from './NarrativeFragment';
 export class FragmentEntity {
   @PrimaryColumn('uuid')
   id: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
 
   @Column({ type: 'text' })
   title: string;

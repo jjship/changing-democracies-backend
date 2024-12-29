@@ -2,6 +2,12 @@ import axios, { AxiosError } from 'axios';
 import axiosRetry, { IAxiosRetryConfig } from 'axios-retry';
 import { FastifyBaseLogger } from 'fastify';
 import { Agent } from 'https';
+import { createVideosApi } from './api/videos';
+
+export { createBunnyStreamClient, BunnyStreamApiClient };
+export { BunnyVideo } from './api/videos';
+
+type BunnyStreamApiClient = ReturnType<ReturnType<typeof createBunnyStreamClient>>;
 
 const createBunnyStreamClient =
   ({ logger }: { logger: FastifyBaseLogger }) =>
@@ -33,6 +39,10 @@ const createBunnyStreamClient =
         AccessKey: apiKey,
       },
     });
+
+    axiosRetry(bunnyAxios, retry);
+
+    return createVideosApi({ axios: bunnyAxios, logger: serviceLogger })({ collectionId });
   };
 
 const shouldRetry: (error: AxiosError) => boolean = (err) => axiosRetry.isNetworkOrIdempotentRequestError(err);
