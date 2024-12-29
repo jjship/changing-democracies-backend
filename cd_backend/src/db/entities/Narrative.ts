@@ -1,10 +1,16 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany, AfterInsert, AfterUpdate, AfterRemove } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
 
 @Entity()
 export class NarrativeEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @CreateDateColumn({ type: 'timestamptz' })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
 
   @Column({ type: 'text' })
   title: string;
