@@ -3,11 +3,11 @@ import sinon from 'sinon';
 import { createDbConnection, getDbConnection } from '../../db/db';
 import { createTestDatabase } from '../../db/db.spec';
 import { syncFragments } from './syncFragments';
-import pino from 'pino';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { ENV } from '../../env';
 import uuid4 from 'uuid4';
 import { parseVideoToFragment } from './utils';
+import { logger } from '../../services/logger/logger';
 
 describe('syncFragments', () => {
   beforeEach(async () => {
@@ -37,7 +37,7 @@ describe('syncFragments', () => {
       getVideos: sinon.stub().resolves(mockVids),
     };
 
-    await syncFragments({ dbConnection, bunnyStreamApi: bunnyStreamApiMock, logger: pino() });
+    await syncFragments({ dbConnection, bunnyStreamApi: bunnyStreamApiMock, logger: logger });
 
     const dbFragments = await dbConnection.getRepository(FragmentEntity).find();
 
@@ -80,7 +80,7 @@ describe('syncFragments', () => {
       getVideos: sinon.stub().resolves(currVids),
     };
 
-    await syncFragments({ dbConnection, bunnyStreamApi: bunnyStreamApiMock, logger: pino() });
+    await syncFragments({ dbConnection, bunnyStreamApi: bunnyStreamApiMock, logger: logger });
 
     const currDbFragments = await dbConnection.getRepository(FragmentEntity).find();
 
