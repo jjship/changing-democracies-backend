@@ -15,6 +15,7 @@ const envSchema = z.object({
   DB_DATABASE: z.string(),
   TEST_DATABASE: z.string(),
 
+  BUNNY_STREAM_BASE_URL: z.string(),
   BUNNY_STREAM_API_KEY: z.string(),
   BUNNY_STREAM_LIBRARY_ID: z.string(),
   BUNNY_STREAM_PULL_ZONE: z.string(),

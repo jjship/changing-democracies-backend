@@ -22,7 +22,7 @@ const createBunnyStreamClient =
     apiKey: string;
     libraryId: string;
     collectionId: string;
-    retry: IAxiosRetryConfig;
+    retry?: IAxiosRetryConfig;
   }) => {
     const serviceLogger = logger.child({ serviceName: 'bunny_stream' });
 
