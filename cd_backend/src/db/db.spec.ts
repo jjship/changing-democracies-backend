@@ -11,28 +11,7 @@ import { TagEntity } from './entities/Tag';
 import { NarrativeEntity } from './entities/Narrative';
 import { NarrativeFragmentEntity } from './entities/NarrativeFragment';
 
-export { createTestDatabase };
-
 describe('Database', () => {
-  before(async function () {
-    this.timeout(10000);
-    await createTestDatabase();
-
-    await createDbConnection({
-      database: ENV.TEST_DATABASE,
-    });
-  });
-
-  beforeEach(async () => {
-    const connection = getDbConnection();
-    await clearDatabase(connection);
-  });
-
-  after(async () => {
-    const connection = getDbConnection();
-    await connection.destroy();
-  });
-
   it('should insert and retrieve test data', async () => {
     const testFragmentId = uuid();
     let testTag: TagEntity | undefined;
@@ -104,31 +83,3 @@ describe('Database', () => {
     expect(dbFragment?.narrativeFragments![0].id).to.equal(testNarrativeFragment!.id);
   });
 });
-
-async function createTestDatabase() {
-  const adminConnection = new DataSource({
-    type: 'postgres',
-    host: ENV.DB_HOST,
-    port: ENV.DB_PORT,
-    username: ENV.DB_USER,
-    password: ENV.DB_PASSWORD,
-    database: 'postgres', // Use the default postgres database
-    synchronize: false,
-    logging: false,
-  });
-
-  await adminConnection.initialize();
-
-  await adminConnection.query(`DROP DATABASE IF EXISTS "${ENV.TEST_DATABASE}"`);
-  await adminConnection.query(`CREATE DATABASE "${ENV.TEST_DATABASE}"`);
-  await adminConnection.destroy();
-}
-
-async function clearDatabase(connection: DataSource) {
-  const entities = connection.entityMetadatas;
-
-  for (const entity of entities) {
-    const repository = connection.getRepository(entity.name);
-    await repository.query(`TRUNCATE TABLE "${entity.tableName}" RESTART IDENTITY CASCADE`);
-  }
-}

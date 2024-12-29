@@ -8,9 +8,10 @@
   },
   "scripts": {
     "start": "nodemon main.ts",
-    "test:integration": "NODE_ENV=test mocha --config ./.mocharc.spec.json"
+    "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json"
   },
   "dependencies": {
+    "@fastify/type-provider-typebox": "^5.1.0",
     "@sinclair/typebox": "^0.34.13",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
@@ -27,6 +28,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.4.0",
     "@types/sinon": "^17.0.3",
+    "@types/sinon-chai": "^4.0.0",
     "@types/uuid4": "^2.0.3",
     "@typescript-eslint/eslint-plugin": "^8.18.2",
     "@typescript-eslint/parser": "^8.18.2",
@@ -35,10 +37,12 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-unicorn": "^56.0.1",
+    "light-my-request": "^6.4.0",
     "mocha": "^11.0.1",
     "nodemon": "^3.1.7",
     "prettier": "^3.4.2",
     "sinon": "^19.0.2",
+    "sinon-chai": "^4.0.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.0",
     "uuid4": "^2.0.3"
