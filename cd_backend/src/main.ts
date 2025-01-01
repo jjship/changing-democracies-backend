@@ -1,27 +1,17 @@
-// import pg from 'pg';
+import { createDbConnection } from './db/db';
+import { createBunnyStreamClient } from './services/bunnyStream/bunnyStreamApiClient';
+import { ENV } from './env';
+import { syncFragments } from './domain/fragments/syncFragments';
+import { logger } from './services/logger/logger';
 
-// const pool = new pg.Pool({
-//   host: process.env.POSTGRES_HOST,
-//   port: process.env.POSTGRES_PORT,
-//   user: process.env.POSTGRES_USER,
-//   password: process.env.POSTGRES_PASSWORD,
-//   database: process.env.POSTGRES_DB,
-// });
+async function main() {
+  const dbConnection = await createDbConnection();
+  const bunnyStream = createBunnyStreamClient({ logger: logger })({
+    baseUrl: ENV.BUNNY_STREAM_BASE_URL,
+    apiKey: ENV.BUNNY_STREAM_API_KEY,
+    libraryId: ENV.BUNNY_STREAM_LIBRARY_ID,
+    collectionId: ENV.BUNNY_STREAM_COLLECTION_ID,
+  });
 
-// async function main() {
-//   const dbClient = await pool.connect();
-
-//   try {
-//     const { rows } = await dbClient.query('SELECT * FROM fragments');
-//     console.log({ rows });
-//   } catch (err) {
-//     console.error({ err });
-//   } finally {
-//     dbClient.release();
-//   }
-// }
-
-// main()
-//   .then(() => console.log('Connected to db!'))
-//   .catch((err) => console.error('Error connecting to db', { err }));
-console.log('MAIN');
+  await syncFragments({ dbConnection, bunnyStream, logger });
+}

@@ -6,14 +6,14 @@ import { parseVideoToFragment } from './utils';
 
 export async function syncFragments({
   dbConnection,
-  bunnyStreamApi,
+  bunnyStream,
   logger,
 }: {
   dbConnection: DataSource;
-  bunnyStreamApi: BunnyStreamApiClient;
+  bunnyStream: BunnyStreamApiClient;
   logger: FastifyBaseLogger;
 }) {
-  const bunnyVideos = await bunnyStreamApi.getVideos();
+  const bunnyVideos = await bunnyStream.getVideos();
 
   const dbFragments = await dbConnection.getRepository(FragmentEntity).find();
 
