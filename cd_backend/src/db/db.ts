@@ -5,12 +5,8 @@ import { ENV } from '../env';
 export { createDbConnection, getDbConnection };
 
 const dataSourceOptions: DataSourceOptions = {
-  type: 'postgres',
-  host: ENV.DB_HOST,
-  port: ENV.DB_PORT,
-  database: ENV.DB_DATABASE,
-  username: ENV.DB_USER,
-  password: ENV.DB_PASSWORD,
+  type: 'sqlite',
+  database: './data/database.sqlite',
   synchronize: ENV.NODE_ENV !== 'production',
   logging: ENV.NODE_ENV === 'development' ? ['query', 'error', 'schema', 'warn', 'info', 'log'] : ['error'],
   entities: [`${__dirname}/entities/*.{js,ts}`],

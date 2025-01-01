@@ -18,10 +18,10 @@ export class FragmentEntity {
   @PrimaryColumn('uuid')
   id: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ type: 'datetime' })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
+  @UpdateDateColumn({ type: 'datetime' })
   updatedAt: Date;
 
   @Column({ type: 'text' })

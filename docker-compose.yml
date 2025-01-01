@@ -10,8 +10,7 @@ services:
       - ${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
       - ./cd_backend:/cd_backend
-    depends_on:
-      - db
+      - db_data:/cd_backend/data
 
   cd_cms:
     image: cd_cms:1.0.0
@@ -22,20 +21,6 @@ services:
       - ${CMS_PORT}:${CMS_PORT}
     volumes:
       - ./cd_cms:/cd_cms
-    depends_on:
-      - db
-
-  db:
-    image: postgres:17-alpine
-    container_name: ${DB_HOST}
-    environment:
-      POSTGRES_USER: '${DB_USER}'
-      POSTGRES_PASSWORD: '${DB_PASSWORD}'
-      POSTGRES_DB: '${DB_DATABASE}'
-    ports:
-      - ${DB_PORT}:${DB_PORT}
-    volumes:
-      - db_data:/var/lib/postgresql/data
 
 volumes:
   db_data:

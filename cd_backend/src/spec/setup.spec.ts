@@ -5,6 +5,8 @@ import { DataSource } from 'typeorm';
 import { createDbConnection } from '../db/db';
 import { ENV } from '../env';
 import { setupTestApp } from './testApp';
+import path from 'path';
+import fs from 'fs';
 
 chai.use(sinonChai);
 chai.should();
@@ -18,15 +20,6 @@ before(async function () {
 
   connection = await createDbConnection({
     database: ENV.TEST_DATABASE,
-    connectTimeoutMS: 1900,
-    extra: {
-      // query timeout, to early identification of slow queries
-      statement_timeout: 1900,
-      // ensures the connection doesn't terminate when we're using fake timers
-      // https://node-postgres.com/api/pool#constructor
-      idleTimeoutMillis: 0,
-      max: 1,
-    },
   });
 
   await setupTestApp();
@@ -43,18 +36,14 @@ after(async () => {
 
 async function cleanupTables() {
   if (connection) {
-    await connection.transaction(async (manager) => {
-      // this mode disables all database triggers, constraints etc.
-      // without it, it is not possible to delete rows that have relations.
-      // additionally it increases performance of the process
-      await manager.query('SET session_replication_role = replica');
+    const entities = connection.entityMetadatas;
 
-      for (const entityMeta of manager.connection.entityMetadatas) {
-        await manager.delete(entityMeta.target, {});
-      }
-
-      await manager.query('SET session_replication_role = DEFAULT');
-    });
+    await connection.query('PRAGMA foreign_keys = OFF;'); // Disable foreign key constraints
+    for (const entity of entities) {
+      const repository = connection.getRepository(entity.name);
+      await repository.query(`DELETE FROM "${entity.tableName}"`);
+    }
+    await connection.query('PRAGMA foreign_keys = ON;'); // Re-enable foreign key constraints
   }
 }
 
@@ -64,20 +53,9 @@ async function closeDatabaseConnection() {
   }
 }
 async function createTestDatabase() {
-  const adminConnection = new DataSource({
-    type: 'postgres',
-    host: ENV.DB_HOST,
-    port: ENV.DB_PORT,
-    username: ENV.DB_USER,
-    password: ENV.DB_PASSWORD,
-    database: 'postgres', // Use the default postgres database
-    synchronize: false,
-    logging: false,
-  });
-
-  await adminConnection.initialize();
-
-  await adminConnection.query(`DROP DATABASE IF EXISTS "${ENV.TEST_DATABASE}"`);
-  await adminConnection.query(`CREATE DATABASE "${ENV.TEST_DATABASE}"`);
-  await adminConnection.destroy();
+  const dbPath = path.join(__dirname, '../data/test-database.sqlite');
+  if (fs.existsSync(dbPath)) {
+    fs.unlinkSync(dbPath); // Remove the existing test database file
+  }
+  ENV.TEST_DATABASE = dbPath; // Set the test database path in the environment variable
 }

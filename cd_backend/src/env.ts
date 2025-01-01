@@ -8,10 +8,6 @@ const envSchema = z.object({
   BACKEND_HOST: z.string(),
   BACKEND_PORT: portSchema.default('8083'),
 
-  DB_HOST: z.string(),
-  DB_PORT: portSchema.default('8084'),
-  DB_USER: z.string(),
-  DB_PASSWORD: z.string(),
   DB_DATABASE: z.string(),
   TEST_DATABASE: z.string(),
 
