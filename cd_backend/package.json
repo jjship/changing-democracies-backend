@@ -7,7 +7,7 @@
     "email": "devontheroof@gmail.com"
   },
   "scripts": {
-    "start": "nodemon main.ts",
+    "start": "ts-node-dev --respawn ./src/main.ts",
     "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json"
   },
   "dependencies": {
