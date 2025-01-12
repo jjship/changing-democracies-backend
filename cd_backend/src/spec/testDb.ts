@@ -10,6 +10,7 @@ import { parseVideoToFragment } from '../domain/fragments/fragments.api';
 import { DescriptionEntity } from '../db/entities/Description';
 import { LanguageEntity } from '../db/entities/Language';
 import { NameEntity } from '../db/entities/Name';
+import { NarrativeFragmentEntity } from '../db/entities/NarrativeFragment';
 
 export const testDb = {
   async saveTestCountries(countries: { name: string; code: string }[]) {
@@ -52,7 +53,7 @@ export const testDb = {
     await getDbConnection().transaction(async (entityManager) => {
       for (const tag of tags) {
         const testTag = new TagEntity();
-        testTag.names = [entityManager.getRepository(NameEntity).create({ name: tag.name })];
+        testTag.names = [entityManager.getRepository(NameEntity).create({ name: tag.name, type: 'Tag' })];
         await entityManager.save(TagEntity, testTag);
       }
     });
@@ -71,10 +72,11 @@ export const testDb = {
     });
   },
 
-  async saveTestPersons(persons: Pick<PersonEntity, 'name'>[]) {
+  async saveTestPersons(persons: { name: string; id?: string }[]) {
     await getDbConnection().transaction(async (entityManager) => {
       for (const person of persons) {
         const testPerson = new PersonEntity();
+        if (person.id) testPerson.id = person.id;
         testPerson.name = person.name;
         await entityManager.save(PersonEntity, testPerson);
       }
@@ -98,5 +100,75 @@ export const testDb = {
         await entityManager.save(DescriptionEntity, testDescription);
       }
     });
+  },
+
+  async createTestDescriptions(
+    descriptions: Array<{ languageCode: string; description: string[]; narrative: NarrativeEntity }>
+  ) {
+    const dbConnection = getDbConnection();
+    const languageRepo = dbConnection.getRepository(LanguageEntity);
+
+    const descriptionEntities = await Promise.all(
+      descriptions.map(async (desc) => {
+        const language = await languageRepo.findOneBy({ code: desc.languageCode });
+        if (!language) {
+          throw new Error(`Language with code '${desc.languageCode}' not found`);
+        }
+        const description = new DescriptionEntity();
+        description.language = language;
+        description.description = desc.description;
+        description.narrative = desc.narrative;
+        return description;
+      })
+    );
+
+    return dbConnection.manager.save(descriptionEntities);
+  },
+
+  async createTestNames(
+    names: Array<{ languageCode: string; name: string; type: string; narrative: NarrativeEntity }>
+  ) {
+    const dbConnection = getDbConnection();
+    const languageRepo = dbConnection.getRepository(LanguageEntity);
+
+    const nameEntities = await Promise.all(
+      names.map(async (name) => {
+        const language = await languageRepo.findOneBy({ code: name.languageCode });
+        if (!language) {
+          throw new Error(`Language with code '${name.languageCode}' not found`);
+        }
+        const nameEntity = new NameEntity();
+        nameEntity.language = language;
+        nameEntity.name = name.name;
+        nameEntity.type = name.type as any;
+        nameEntity.narrative = name.narrative;
+        return nameEntity;
+      })
+    );
+
+    return dbConnection.manager.save(nameEntities);
+  },
+
+  async createTestNarrativeFragments(
+    fragments: Array<{ fragmentId: string; sequence: number; narrative: NarrativeEntity }>
+  ) {
+    const dbConnection = getDbConnection();
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+
+    const fragmentEntities = await Promise.all(
+      fragments.map(async (fragment) => {
+        const fragmentEntity = await fragmentRepo.findOneBy({ id: fragment.fragmentId });
+        const narrativeFragment = new NarrativeFragmentEntity();
+        if (!fragmentEntity) {
+          throw new Error(`Fragment with id '${fragment.fragmentId}' not found`);
+        }
+        narrativeFragment.fragment = fragmentEntity;
+        narrativeFragment.sequence = fragment.sequence;
+        narrativeFragment.narrative = fragment.narrative;
+        return narrativeFragment;
+      })
+    );
+
+    return dbConnection.manager.save(fragmentEntities);
   },
 };

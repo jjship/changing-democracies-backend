@@ -6,7 +6,7 @@ import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 
 describe('POST /narratives', () => {
-  it.only('should save the new narrative in db', async () => {
+  it('should save the new narrative in db', async () => {
     await testDb.saveTestLanguages([{ name: 'English', code: 'EN' }]);
     const testApp = await setupTestApp();
 
@@ -71,6 +71,10 @@ describe('POST /narratives', () => {
     expect(newNarrative!.narrativeFragments![2].sequence).to.equal(3);
 
     const { createdAt, updatedAt, ...otherAttributes } = parsedRes.data.attributes;
+
+    expect(createdAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(updatedAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
     expect(otherAttributes).to.deep.equal({
       names: [{ languageCode: 'EN', name: 'New Narrative' }],
       totalDurationSec: 6,
