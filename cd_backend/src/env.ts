@@ -25,6 +25,16 @@ const envSchema = z.object({
     .refine((val) => typeof val === 'boolean', {
       message: 'SYNC_COUNTRIES must be a boolean',
     }),
+
+  // Supabase authentication
+  SUPABASE_JWT_SECRET: z.string(),
 });
 
-export const ENV = envSchema.parse(process.env);
+const parsed = envSchema.safeParse(process.env);
+
+if (!parsed.success) {
+  console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  throw new Error('Invalid environment variables');
+}
+
+export const env = parsed.data;
