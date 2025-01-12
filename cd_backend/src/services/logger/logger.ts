@@ -1,11 +1,11 @@
 import pinoPretty from 'pino-pretty';
-import pino, { BaseLogger } from 'pino';
+import pino, { BaseLogger, Bindings, ChildLoggerOptions } from 'pino';
 
 export { logger };
 export type { Logger };
 
 type Logger = BaseLogger & {
-  child(bindings: pino.Bindings): Logger;
+  child: (bindings: Bindings, options?: ChildLoggerOptions) => Logger;
 };
 
 const logLevel = process.env.LOG_LEVEL ?? 'info';

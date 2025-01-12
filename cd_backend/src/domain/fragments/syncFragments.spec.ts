@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { createDbConnection, getDbConnection } from '../../db/db';
+import { getDbConnection } from '../../db/db';
 import { syncFragments } from './syncFragments';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { ENV } from '../../env';
 import uuid4 from 'uuid4';
-import { parseVideoToFragment } from './utils';
 import { logger } from '../../services/logger/logger';
+import { parseVideoToFragment } from './fragments.api';
+import { NarrativeEntity } from '../../db/entities/Narrative';
 
 describe('syncFragments', () => {
   it('should parse new videos and save them in database', async () => {
@@ -34,9 +34,9 @@ describe('syncFragments', () => {
       expect(fragment).to.deep.include({
         id: mockVids[index].guid,
         title: mockVids[index].title,
-        duration_sec: mockVids[index].length,
-        player_url: `https://iframe.mediadelivery.net/embed/239326/${mockVids[index].guid}`,
-        thumbnail_url: `https://vz-cac74041-8b3.b-cdn.net/${mockVids[index].guid}/thumbnail.jpg`,
+        durationSec: mockVids[index].length,
+        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${mockVids[index].guid}`,
+        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${mockVids[index].guid}/thumbnail.jpg`,
         person: undefined,
         tags: undefined,
         narrativeFragments: undefined,
@@ -78,9 +78,9 @@ describe('syncFragments', () => {
       expect(fragment).to.deep.include({
         id: currVids[index].guid,
         title: currVids[index].title,
-        duration_sec: currVids[index].length,
-        player_url: `https://iframe.mediadelivery.net/embed/239326/${currVids[index].guid}`,
-        thumbnail_url: `https://vz-cac74041-8b3.b-cdn.net/${currVids[index].guid}/thumbnail.jpg`,
+        durationSec: currVids[index].length,
+        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${currVids[index].guid}`,
+        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${currVids[index].guid}/thumbnail.jpg`,
         person: undefined,
         tags: undefined,
         narrativeFragments: undefined,

@@ -2,7 +2,7 @@ import { FastifyBaseLogger } from 'fastify';
 import { DataSource } from 'typeorm';
 import { BunnyStreamApiClient, BunnyVideo } from '../../services/bunnyStream/bunnyStreamApiClient';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { parseVideoToFragment } from './utils';
+import { parseVideoToFragment } from './fragments.api';
 
 export async function syncFragments({
   dbConnection,
@@ -28,7 +28,7 @@ export async function syncFragments({
   });
 
   if (videosToAdd.length) {
-    const newFragments = videosToAdd.map((video) => parseVideoToFragment(video));
+    const newFragments = await Promise.all(videosToAdd.map(async (video) => await parseVideoToFragment(video)));
 
     await dbConnection.getRepository(FragmentEntity).save(newFragments);
 

@@ -12,6 +12,7 @@ import {
 import { PersonEntity } from './Person';
 import { TagEntity } from './Tag';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
+import { NameEntity } from './Name';
 
 @Entity()
 export class FragmentEntity {
@@ -28,13 +29,13 @@ export class FragmentEntity {
   title: string;
 
   @Column({ default: 0 })
-  duration_sec: number = 0;
+  durationSec: number = 0;
 
   @Column({ type: 'text' })
-  player_url: string;
+  playerUrl: string;
 
   @Column({ type: 'text' })
-  thumbnail_url: string;
+  thumbnailUrl: string;
 
   @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT' })
   person?: PersonEntity;

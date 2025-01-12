@@ -7,6 +7,7 @@ import { ENV } from '../env';
 import { setupTestApp } from './testApp';
 import path from 'path';
 import fs from 'fs';
+import { testDb } from './testDb';
 
 chai.use(sinonChai);
 chai.should();

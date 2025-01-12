@@ -3,7 +3,7 @@
   "require": ["ts-node/register"],
   "extension": ["ts"],
   "spec": ["src/**/*.spec.ts"],
-  "watch-files": ["src/**/*.spec.ts"],
+  "watch-files": ["src/**/*.ts"],
   "ui": "bdd",
   "timeout": "5000"
 }

@@ -1,9 +1,8 @@
-import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { Type } from '@sinclair/typebox';
+import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
 import { fragmentSchema } from './fragment.schema';
-import { getFragments } from '../../domain/fragments/getFragments';
+import { getFragments } from '../../domain/fragments/fragments.api';
 
 export const registerGetFragmentsController =
   (app: FastifyInstance) =>
@@ -12,8 +11,8 @@ export const registerGetFragmentsController =
       method: 'GET',
       url: '/fragments',
       schema: getFragmentsSchema(),
-      handler: async (req, reply) => {
-        const fragmets = await getFragments({ dbConnection, logger: req.log });
+      handler: async (_req, reply) => {
+        const fragmets = await getFragments({ dbConnection });
 
         return reply.status(200).send({
           data: fragmets,
@@ -27,7 +26,13 @@ export const registerGetFragmentsController =
         tags: ['fragments'] as string[],
         response: {
           200: Type.Object({
-            data: Type.Array(fragmentSchema),
+            data: Type.Array(
+              Type.Object({
+                id: Type.String(),
+                type: Type.Literal('fragment'),
+                attributes: fragmentSchema,
+              })
+            ),
           }),
         },
       };
