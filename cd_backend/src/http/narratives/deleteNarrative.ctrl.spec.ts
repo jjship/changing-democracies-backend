@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 
-describe.only('DELETE /narratives/:id', () => {
+describe('DELETE /narratives/:id', () => {
   it('should delete the narrative and all related entities', async () => {
     // Setup test data
     await testDb.saveTestLanguages([{ name: 'English', code: 'EN' }]);

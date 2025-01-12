@@ -7,6 +7,7 @@ import { syncFragments } from './domain/fragments/fragments.api';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
 import { registerUpdateNarrativeController } from './http/narratives/updateNarrative.ctrl';
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
+import { registerUpdateFragmentsController } from './http/fragments/updateFragments.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -17,6 +18,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   const app = fastify({ loggerInstance: logger as FastifyBaseLogger });
 
   registerGetFragmentsController(app)({ dbConnection });
+  registerUpdateFragmentsController(app)({ dbConnection });
   registerCreateNarrativeController(app)({ dbConnection });
   registerUpdateNarrativeController(app)({ dbConnection });
   registerDeleteNarrativeController(app)({ dbConnection });

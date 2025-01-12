@@ -53,7 +53,7 @@ export const testDb = {
     await getDbConnection().transaction(async (entityManager) => {
       for (const tag of tags) {
         const testTag = new TagEntity();
-        testTag.names = [entityManager.getRepository(NameEntity).create({ name: tag.name })];
+        testTag.names = [entityManager.getRepository(NameEntity).create({ name: tag.name, type: 'Tag' })];
         await entityManager.save(TagEntity, testTag);
       }
     });
@@ -72,10 +72,11 @@ export const testDb = {
     });
   },
 
-  async saveTestPersons(persons: Pick<PersonEntity, 'name'>[]) {
+  async saveTestPersons(persons: { name: string; id?: string }[]) {
     await getDbConnection().transaction(async (entityManager) => {
       for (const person of persons) {
         const testPerson = new PersonEntity();
+        if (person.id) testPerson.id = person.id;
         testPerson.name = person.name;
         await entityManager.save(PersonEntity, testPerson);
       }
