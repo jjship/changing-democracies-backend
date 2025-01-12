@@ -5,6 +5,8 @@ import { BunnyStreamApiClient } from './services/bunnyStream/bunnyStreamApiClien
 import { registerGetFragmentsController } from './http/fragments/getFragments.ctrl';
 import { syncFragments } from './domain/fragments/fragments.api';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
+import { registerUpdateNarrativeController } from './http/narratives/updateNarrative.ctrl';
+import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -16,7 +18,8 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   registerGetFragmentsController(app)({ dbConnection });
   registerCreateNarrativeController(app)({ dbConnection });
-
+  registerUpdateNarrativeController(app)({ dbConnection });
+  registerDeleteNarrativeController(app)({ dbConnection });
   await syncFragments({ dbConnection, bunnyStream, logger: logger.child({ module: 'setup-app' }) });
 
   return app;
