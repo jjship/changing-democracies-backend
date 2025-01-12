@@ -8,10 +8,6 @@ const envSchema = z.object({
   BACKEND_HOST: z.string(),
   BACKEND_PORT: portSchema.default('8083'),
 
-  DB_HOST: z.string(),
-  DB_PORT: portSchema.default('8084'),
-  DB_USER: z.string(),
-  DB_PASSWORD: z.string(),
   DB_DATABASE: z.string(),
   TEST_DATABASE: z.string(),
 
@@ -20,6 +16,15 @@ const envSchema = z.object({
   BUNNY_STREAM_LIBRARY_ID: z.string(),
   BUNNY_STREAM_PULL_ZONE: z.string(),
   BUNNY_STREAM_COLLECTION_ID: z.string(),
+
+  COUNTRY_LAYER_BASE_URL: z.string(),
+  COUNTRY_LAYER_API_KEY: z.string(),
+  SYNC_COUNTRIES: z
+    .string()
+    .transform((val) => (val === 'true' || val === 'false' ? val === 'true' : val))
+    .refine((val) => typeof val === 'boolean', {
+      message: 'SYNC_COUNTRIES must be a boolean',
+    }),
 });
 
 export const ENV = envSchema.parse(process.env);

@@ -37,14 +37,44 @@ export type BunnyVideo = {
   transcodingMessages: any[];
 };
 
+type GetVideosResponse = {
+  totalItems: number;
+  currentPage: number;
+  itemsPerPage: number;
+  items: BunnyVideo[];
+};
+
 export const createVideosApi =
   ({ axios, logger }: { axios: AxiosInstance; logger: FastifyBaseLogger }) =>
   ({ collectionId }: { collectionId: string }) => ({
     async getVideos() {
       try {
-        const res = await axios.get<BunnyVideo[]>(`/videos?collectionId=${collectionId}`);
+        let allVideos: BunnyVideo[] = [];
+        let currentPage = 1;
+        let totalItems: number | null = null;
+        const itemsPerPage = 100;
 
-        return res.data;
+        do {
+          const res = await axios.get<GetVideosResponse>(`/videos`, {
+            params: {
+              collectionId,
+              page: currentPage,
+              itemsPerPage,
+            },
+          });
+
+          const { items, totalItems: fetchedTotalItems } = res.data;
+
+          allVideos = [...allVideos, ...items];
+
+          if (totalItems === null) {
+            totalItems = fetchedTotalItems;
+          }
+
+          currentPage++;
+        } while (totalItems && allVideos.length < totalItems);
+
+        return allVideos;
       } catch (err) {
         logger.error({ err }, 'Error while fetching videos.');
         throw err;

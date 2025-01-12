@@ -7,7 +7,6 @@ import { FastifyInstance } from 'fastify';
 
 type TestApp = {
   request: () => ReturnType<FastifyInstance['inject']>;
-  parseResponse: typeof parseResponse;
   raw: () => FastifyInstance;
 };
 
@@ -21,22 +20,6 @@ export async function setupTestApp({ dbConnection, bunnyStream }: Partial<AppDep
 
   return {
     request: () => app.inject(),
-    parseResponse,
     raw: () => app,
   };
-}
-
-function parseResponse(res: Response) {
-  try {
-    expect(res.body.length).to.be.above(0);
-
-    return JSON.parse(res.body);
-  } catch (err: unknown) {
-    if (err instanceof Error) {
-      const req = `${res.raw.req.method} ${res.raw.req.url}`;
-      throw new Error(`Can not parse request "${req}" response body: ${err.message}`);
-    }
-
-    throw err;
-  }
 }
