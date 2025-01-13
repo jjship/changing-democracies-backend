@@ -1,7 +1,6 @@
 import { expect } from 'chai';
 import { createDbConnection, getDbConnection } from './db';
 import { FragmentEntity } from './entities/Fragment';
-import { ENV } from '../env';
 import { DataSource } from 'typeorm';
 import uuid from 'uuid4';
 import { PersonEntity } from './entities/Person';

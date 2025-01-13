@@ -7,7 +7,7 @@ export class TagEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @OneToMany(() => NameEntity, (name) => name.name, { cascade: true })
+  @OneToMany(() => NameEntity, (name) => name.tag, { cascade: true })
   names?: NameEntity[];
 
   @ManyToMany(() => FragmentEntity, (fragment) => fragment.tags)

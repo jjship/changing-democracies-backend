@@ -29,7 +29,7 @@ export const testDb = {
       for (const language of languages) {
         const testLanguage = new LanguageEntity();
         testLanguage.name = language.name;
-        testLanguage.code = language.code;
+        testLanguage.code = language.code.toUpperCase();
         await entityManager.save(LanguageEntity, testLanguage);
       }
     });

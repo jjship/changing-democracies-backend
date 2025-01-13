@@ -4,13 +4,25 @@ import { testDb } from '../../spec/testDb';
 import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
+import { DataSource, In } from 'typeorm';
+import { FragmentEntity } from '../../db/entities/Fragment';
 
 describe('DELETE /narratives/:id', () => {
-  it('should delete the narrative and all related entities', async () => {
-    // Setup test data
-    await testDb.saveTestLanguages([{ name: 'English', code: 'EN' }]);
-    const testApp = await setupTestApp();
+  let dbConnection: DataSource;
+  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
+  let authToken: string;
 
+  beforeEach(async () => {
+    testApp = await setupTestApp();
+    dbConnection = getDbConnection();
+    authToken = testApp.createAuthToken();
+
+    await testDb.saveTestLanguages([
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+    ]);
+  });
+  it('should delete the narrative and all related entities', async () => {
     // Create test fragments
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -65,7 +77,12 @@ describe('DELETE /narratives/:id', () => {
     expect(narrativeBeforeDelete!.narrativeFragments).to.have.length(2);
 
     // Perform delete request
-    const res = await testApp.request().delete(`/narratives/${narrative.id}`).end();
+    const res = await testApp
+      .request()
+      .delete(`/narratives/${narrative.id}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .end();
+
     expect(res.statusCode).to.equal(204);
 
     // Verify narrative and related entities are deleted
@@ -74,13 +91,23 @@ describe('DELETE /narratives/:id', () => {
       relations: ['descriptions', 'names', 'narrativeFragments'],
     });
     expect(narrativeAfterDelete).to.be.null;
+
+    // Verify fragments are not deleted
+    const fragmmentsAfterDelete = await dbConnection.getRepository(FragmentEntity).find({
+      where: { id: In([guid1, guid2]) },
+    });
+    expect(fragmmentsAfterDelete).to.have.length(2);
   });
 
   it('should return 404 when narrative not found', async () => {
-    const testApp = await setupTestApp();
     const nonExistentId = uuid4();
 
-    const res = await testApp.request().delete(`/narratives/${nonExistentId}`).end();
+    const res = await testApp
+      .request()
+      .delete(`/narratives/${nonExistentId}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .end();
+
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);

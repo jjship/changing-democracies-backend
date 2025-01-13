@@ -4,12 +4,24 @@ import { testDb } from '../../spec/testDb';
 import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { In } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 
 describe('PATCH /fragments', () => {
-  it('should update multiple fragments', async () => {
-    const testApp = await setupTestApp();
+  let dbConnection: DataSource;
+  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
+  let authToken: string;
 
+  beforeEach(async () => {
+    testApp = await setupTestApp();
+    dbConnection = getDbConnection();
+    authToken = testApp.createAuthToken();
+
+    await testDb.saveTestLanguages([
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+    ]);
+  });
+  it('should update multiple fragments', async () => {
     // Create test data
     const personId = uuid4();
     await testDb.saveTestPersons([{ name: 'Test Person', id: personId }]);
@@ -43,7 +55,12 @@ describe('PATCH /fragments', () => {
       ],
     };
 
-    const res = await testApp.request().patch('/fragments').body(updatePayload).end();
+    const res = await testApp
+      .request()
+      .patch('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .body(updatePayload)
+      .end();
     expect(res.statusCode).to.equal(200);
 
     const fragments = await dbConnection.getRepository(FragmentEntity).find({
@@ -67,7 +84,6 @@ describe('PATCH /fragments', () => {
   });
 
   it('should return 404 when fragment not found', async () => {
-    const testApp = await setupTestApp();
     const nonExistentId = uuid4();
 
     const updatePayload = {
@@ -79,7 +95,12 @@ describe('PATCH /fragments', () => {
       ],
     };
 
-    const res = await testApp.request().patch('/fragments').body(updatePayload).end();
+    const res = await testApp
+      .request()
+      .patch('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .body(updatePayload)
+      .end();
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
@@ -95,7 +116,6 @@ describe('PATCH /fragments', () => {
   });
 
   it('should return 404 when person not found', async () => {
-    const testApp = await setupTestApp();
     const fragmentId = uuid4();
     const nonExistentPersonId = uuid4();
 
@@ -110,7 +130,12 @@ describe('PATCH /fragments', () => {
       ],
     };
 
-    const res = await testApp.request().patch('/fragments').body(updatePayload).end();
+    const res = await testApp
+      .request()
+      .patch('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .body(updatePayload)
+      .end();
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
@@ -126,7 +151,6 @@ describe('PATCH /fragments', () => {
   });
 
   it('should return 404 when tag not found', async () => {
-    const testApp = await setupTestApp();
     const fragmentId = uuid4();
     const nonExistentTagId = uuid4();
 
@@ -141,7 +165,12 @@ describe('PATCH /fragments', () => {
       ],
     };
 
-    const res = await testApp.request().patch('/fragments').body(updatePayload).end();
+    const res = await testApp
+      .request()
+      .patch('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .body(updatePayload)
+      .end();
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);

@@ -4,12 +4,24 @@ import { testDb } from '../../spec/testDb';
 import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
+import { DataSource } from 'typeorm';
 
 describe('POST /narratives', () => {
-  it('should save the new narrative in db', async () => {
-    await testDb.saveTestLanguages([{ name: 'English', code: 'EN' }]);
-    const testApp = await setupTestApp();
+  let dbConnection: DataSource;
+  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
+  let authToken: string;
 
+  beforeEach(async () => {
+    testApp = await setupTestApp();
+    dbConnection = getDbConnection();
+    authToken = testApp.createAuthToken();
+
+    await testDb.saveTestLanguages([
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+    ]);
+  });
+  it('should save the new narrative in db', async () => {
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
@@ -48,9 +60,13 @@ describe('POST /narratives', () => {
       },
     };
 
-    const res = await testApp.request().post('/narratives').body({ data: createNarrativePayload }).end();
+    const res = await testApp
+      .request()
+      .post('/narratives')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .body({ data: createNarrativePayload })
+      .end();
     const parsedRes = await res.json();
-    const dbConnection = getDbConnection();
 
     const [newNarrative] = await dbConnection.getRepository(NarrativeEntity).find({
       relations: ['names', 'narrativeFragments', 'descriptions', 'descriptions.language'],

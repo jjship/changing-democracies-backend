@@ -17,7 +17,7 @@ export const saveNewLanguages =
       if (!(await languagesRepo.exists({ where: { code } }))) {
         const newLanguage = new LanguageEntity();
         newLanguage.name = name;
-        newLanguage.code = code;
+        newLanguage.code = code.toUpperCase();
 
         newLanguages.push({ name, code });
 
