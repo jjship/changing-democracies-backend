@@ -15,7 +15,15 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+          echo -e "Host *\n\tStrictHostKeyChecking no\n\tLogLevel DEBUG3\n\n" > ~/.ssh/config
+
+      - name: Test SSH Connection
+        env:
+          VM_HOST: ${{ secrets.VM_HOST }}
+          VM_USER: ${{ secrets.VM_USER }}
+        run: |
+          echo "Testing SSH connection..."
+          ssh -i ~/.ssh/deploy_key -v $VM_USER@$VM_HOST 'echo "SSH connection successful"'
 
       - name: Deploy to VM
         env:
@@ -23,19 +31,24 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
         run: |
           ssh -i ~/.ssh/deploy_key $VM_USER@$VM_HOST '
+            set -ex
+            echo "Starting deployment..."
+            
             # Navigate to app directory
-            cd /opt/cd_backend
-
+            cd /opt/cd_backend || exit 1
+            
             # Pull latest changes
             if [ -d ".git" ]; then
               git pull
             else
               git clone ${{ github.server_url }}/${{ github.repository }} .
             fi
-
+            
             # Ensure scripts are executable
             chmod +x scripts/load-env.sh scripts/deploy.sh
-
+            
             # Run deployment script
             ./scripts/deploy.sh
+            
+            echo "Deployment completed"
           '
