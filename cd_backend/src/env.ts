@@ -38,3 +38,4 @@ if (!parsed.success) {
 }
 
 export const ENV = parsed.data;
+

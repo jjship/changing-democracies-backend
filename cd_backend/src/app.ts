@@ -12,6 +12,7 @@ import { registerUpdateNarrativeController } from './http/narratives/updateNarra
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 import { registerTagControllers } from './http/tags/tags.ctrl';
 
+
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -34,9 +35,12 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   registerDeleteNarrativeController(authenticatedApp)({ dbConnection });
   registerTagControllers(authenticatedApp)({ dbConnection });
 
+
   await syncFragments({ dbConnection, bunnyStream, logger: logger.child({ module: 'setup-app' }) });
 
   app.get('/health', async () => ({ status: 'ok' }));
+
+  app.get('/health', { config: { auth: false } }, async () => ({ status: 'ok' }));
 
   return app;
 }

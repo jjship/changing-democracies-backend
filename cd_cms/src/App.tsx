@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ChakraProvider } from '@chakra-ui/react';
 import { Login } from './pages/Login';
+
 import { supabase } from './lib/supabase';
 import { TagsPage } from './pages/TagsPage';
+
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -49,6 +51,7 @@ export default function App() {
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/tags" element={<TagsPage />} />
+
         </Routes>
       </BrowserRouter>
     </ChakraProvider>

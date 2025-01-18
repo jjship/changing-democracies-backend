@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Box, Button, FormControl, FormLabel, Input, VStack, Text, useToast, Container } from '@chakra-ui/react';
 import { supabase } from '../lib/supabase';
 
+
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
