@@ -13,6 +13,6 @@ FROM base as production
 RUN npm ci
 COPY . .
 RUN npm run build
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 ENV NODE_ENV=production
 CMD ["npm", "run", "start:prod"]
