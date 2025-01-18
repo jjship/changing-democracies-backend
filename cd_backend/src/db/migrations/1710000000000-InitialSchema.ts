@@ -48,7 +48,7 @@ export class InitialSchema1710000000000 implements MigrationInterface {
       )
     `);
 
-    // Create fragment_entity table
+    // Create fragment_entity table with URLs
     await queryRunner.query(`
       CREATE TABLE "fragment_entity" (
         "id" varchar PRIMARY KEY NOT NULL,
@@ -56,6 +56,8 @@ export class InitialSchema1710000000000 implements MigrationInterface {
         "updatedAt" datetime NOT NULL DEFAULT (datetime('now')),
         "title" text NOT NULL,
         "durationSec" integer NOT NULL DEFAULT (0),
+        "playerUrl" text NOT NULL,
+        "thumbnailUrl" text NOT NULL,
         "personId" varchar,
         CONSTRAINT "FK_fragment_person" FOREIGN KEY ("personId") REFERENCES "person_entity" ("id") ON DELETE RESTRICT
       )
