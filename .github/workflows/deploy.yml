@@ -12,10 +12,15 @@ jobs:
 
       - name: Set up SSH
         run: |
-          mkdir -p ~/.ssh
+          set -x  # Enable debug mode
+          mkdir -p ~/.ssh || { echo "Failed to create ~/.ssh directory"; exit 1; }
+          echo "SSH directory created, setting up deploy key..."
+          [[ -n "${{ secrets.VM_SSH_PRIVATE_KEY }}" ]] || { echo "VM_SSH_PRIVATE_KEY secret is empty"; exit 1; }
           echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts  # Add this line
+          echo "Deploy key written, setting permissions..."
+          chmod 600 ~/.ssh/deploy_key || { echo "Failed to set deploy key permissions"; exit 1; }
+          echo "Adding host key..."
+          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts || { echo "Failed to add host key"; exit 1; }
 
       - name: Test SSH Connection
         env:
