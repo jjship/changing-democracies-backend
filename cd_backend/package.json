@@ -8,14 +8,18 @@
   },
   "scripts": {
     "start": "ts-node-dev --respawn ./src/main.ts",
-    "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json"
+    "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json",
+    "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts"
   },
   "dependencies": {
+    "@fastify/jwt": "^9.0.3",
+    "@fastify/sensible": "^6.0.2",
     "@fastify/type-provider-typebox": "^5.1.0",
     "@sinclair/typebox": "^0.34.13",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
     "fastify": "^5.2.0",
+    "fastify-plugin": "^4.5.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.13.1",
     "pino": "^9.6.0",

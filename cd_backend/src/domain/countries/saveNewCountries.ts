@@ -45,7 +45,7 @@ export const saveNewCountries =
           }
 
           newCountry.names = newNames;
-          newCountry.code = alpha2Code;
+          newCountry.code = alpha2Code.toUpperCase();
 
           newCountries.push(newCountry);
         }

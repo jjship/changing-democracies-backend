@@ -2,18 +2,28 @@ import { expect } from 'chai';
 import { setupTestApp } from '../../spec/testApp';
 import uuid4 from 'uuid4';
 import { testDb } from '../../spec/testDb';
+import { DataSource } from 'typeorm';
+import { getDbConnection } from '../../db/db';
 
 describe('PATCH /narratives/:id', async () => {
-  it('should update narrative with new names and descriptions', async () => {
-    const testApp = await setupTestApp();
+  let dbConnection: DataSource;
+  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
+  let authToken: string;
 
+  beforeEach(async () => {
+    testApp = await setupTestApp();
+    dbConnection = getDbConnection();
+    authToken = testApp.createAuthToken();
+
+    await testDb.saveTestLanguages([
+      { code: 'en', name: 'English' },
+      { code: 'es', name: 'Spanish' },
+    ]);
+  });
+  it('should update narrative with new names and descriptions', async () => {
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
-    await testDb.saveTestLanguages([
-      { name: 'English', code: 'EN' },
-      { name: 'Spanish', code: 'ES' },
-    ]);
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -26,6 +36,7 @@ describe('PATCH /narratives/:id', async () => {
     const resNarrative = await testApp
       .request()
       .post('/narratives')
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -67,6 +78,7 @@ describe('PATCH /narratives/:id', async () => {
     const res = await testApp
       .request()
       .patch(`/narratives/${testData.narrative.id}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -113,15 +125,9 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should update narrative fragments sequence', async () => {
-    const testApp = await setupTestApp();
-
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
-    await testDb.saveTestLanguages([
-      { name: 'English', code: 'EN' },
-      { name: 'Spanish', code: 'ES' },
-    ]);
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -134,6 +140,7 @@ describe('PATCH /narratives/:id', async () => {
     const resNarrative = await testApp
       .request()
       .post('/narratives')
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -180,6 +187,7 @@ describe('PATCH /narratives/:id', async () => {
     const res = await testApp
       .request()
       .patch(`/narratives/${testData.narrative.id}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -205,10 +213,10 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should return 404 when narrative not found', async () => {
-    const testApp = await setupTestApp();
     const res = await testApp
       .request()
       .patch(`/narratives/${uuid4()}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -225,15 +233,9 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should return 404 when language not found', async () => {
-    const testApp = await setupTestApp();
-
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
-    await testDb.saveTestLanguages([
-      { name: 'English', code: 'EN' },
-      { name: 'Spanish', code: 'ES' },
-    ]);
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -246,6 +248,7 @@ describe('PATCH /narratives/:id', async () => {
     const resNarrative = await testApp
       .request()
       .post('/narratives')
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -283,6 +286,7 @@ describe('PATCH /narratives/:id', async () => {
     const res = await testApp
       .request()
       .patch(`/narratives/${id}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -299,15 +303,9 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should return 404 when fragment not found', async () => {
-    const testApp = await setupTestApp();
-
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
-    await testDb.saveTestLanguages([
-      { name: 'English', code: 'EN' },
-      { name: 'Spanish', code: 'ES' },
-    ]);
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -320,6 +318,7 @@ describe('PATCH /narratives/:id', async () => {
     const resNarrative = await testApp
       .request()
       .post('/narratives')
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',
@@ -357,6 +356,7 @@ describe('PATCH /narratives/:id', async () => {
     const res = await testApp
       .request()
       .patch(`/narratives/${id}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
           type: 'narrative',

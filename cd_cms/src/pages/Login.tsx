@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Box, Button, FormControl, FormLabel, Input, VStack, Text, useToast, Container } from '@chakra-ui/react';
-import { supabase } from '../config';
+import { supabase } from '../lib/supabase';
+
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),

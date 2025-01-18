@@ -18,12 +18,12 @@ export class NameEntity {
   @Column({ type: 'text' })
   type: 'Country' | 'Narrative' | 'Tag';
 
-  @ManyToOne(() => CountryEntity, (country) => country.names)
+  @ManyToOne(() => CountryEntity, (country) => country.names, { onDelete: 'CASCADE' })
   country?: CountryEntity;
 
-  @ManyToOne(() => NarrativeEntity, (narrative) => narrative.names)
+  @ManyToOne(() => NarrativeEntity, (narrative) => narrative.names, { onDelete: 'CASCADE' })
   narrative?: NarrativeEntity;
 
-  @ManyToOne(() => TagEntity, (tag) => tag.names)
+  @ManyToOne(() => TagEntity, (tag) => tag.names, { onDelete: 'CASCADE' })
   tag?: TagEntity;
 }

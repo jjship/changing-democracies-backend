@@ -6,6 +6,7 @@ import { expect } from 'chai';
 describe('GET /fragments', () => {
   it('should return all fragments from db', async () => {
     const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -18,7 +19,12 @@ describe('GET /fragments', () => {
 
     await testDb.saveTestFragments(testVideos);
 
-    const res = await testApp.request().get('/fragments').end();
+    const res = await testApp
+      .request()
+      .get('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .end();
+
     const parsedRes = res.json();
 
     expect(
