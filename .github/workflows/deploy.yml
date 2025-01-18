@@ -39,7 +39,7 @@ jobs:
         id: save_state
         run: |
           ssh deployment_target '
-            cd /opt/cd_backend
+            cd /opt/cd_admin
             if [ -d ".git" ]; then
               # Save current commit hash
               echo "PREVIOUS_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
@@ -57,7 +57,7 @@ jobs:
             set -eo pipefail
             
             echo "Starting deployment of commit $GITHUB_SHA..."
-            cd /opt/cd_backend
+            cd /opt/cd_admin
             
             # Pull latest changes
             if [ -d ".git" ]; then
@@ -90,7 +90,7 @@ jobs:
           echo "Deployment failed, initiating rollback..."
           ssh deployment_target '
             set -eo pipefail
-            cd /opt/cd_backend
+            cd /opt/cd_admin
 
             echo "Rolling back to commit ${{ env.PREVIOUS_COMMIT }}"
             
