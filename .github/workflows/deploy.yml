@@ -13,14 +13,13 @@ jobs:
       - name: Set up SSH
         run: |
           set -x  # Enable debug mode
-          mkdir -p ~/.ssh || { echo "Failed to create ~/.ssh directory"; exit 1; }
-          echo "SSH directory created, setting up deploy key..."
-          [[ -n "${{ secrets.VM_SSH_PRIVATE_KEY }}" ]] || { echo "VM_SSH_PRIVATE_KEY secret is empty"; exit 1; }
+          mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
           echo "Deploy key written, setting permissions..."
-          chmod 600 ~/.ssh/deploy_key || { echo "Failed to set deploy key permissions"; exit 1; }
-          echo "Adding host key..."
-          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts || { echo "Failed to add host key"; exit 1; }
+          echo "Attempting to scan host key..."
+          # Add port number to ssh-keyscan
+          ssh-keyscan -v -p ${{ secrets.VM_SSH_PORT }} -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts || echo "ssh-keyscan failed: $?"
 
       - name: Test SSH Connection
         env:
@@ -28,7 +27,7 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
         run: |
           echo "Testing SSH connection..."
-          ssh -i ~/.ssh/deploy_key -v $VM_USER@$VM_HOST 'echo "SSH connection successful"'
+          ssh -p ${{ secrets.VM_SSH_PORT }} -i ~/.ssh/deploy_key -v $VM_USER@$VM_HOST 'echo "SSH connection successful"'
 
       - name: Deploy to VM
         env:
@@ -36,7 +35,7 @@ jobs:
           VM_USER: ${{ secrets.VM_USER }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ssh -i ~/.ssh/deploy_key $VM_USER@$VM_HOST '
+          ssh -p ${{ secrets.VM_SSH_PORT }} -i ~/.ssh/deploy_key $VM_USER@$VM_HOST '
             # Check Docker permissions
             groups
              docker ps || { echo "Docker permission error"; exit 1; }
