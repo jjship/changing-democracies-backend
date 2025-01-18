@@ -15,7 +15,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo -e "Host *\n\tStrictHostKeyChecking no\n\tLogLevel DEBUG3\n\n" > ~/.ssh/config
+          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts  # Add this line
 
       - name: Test SSH Connection
         env:
@@ -29,13 +29,25 @@ jobs:
         env:
           VM_HOST: ${{ secrets.VM_HOST }}
           VM_USER: ${{ secrets.VM_USER }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ssh -i ~/.ssh/deploy_key $VM_USER@$VM_HOST '
+            # Check Docker permissions
+            groups
+             docker ps || { echo "Docker permission error"; exit 1; }
             set -ex
             echo "Starting deployment..."
+            pwd
+            ls -la
+
+            # Configure Git
+            git config --global credential.helper store
+            echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
             
             # Navigate to app directory
             cd /opt/cd_backend || exit 1
+            pwd
+            ls -la
             
             # Pull latest changes
             if [ -d ".git" ]; then
