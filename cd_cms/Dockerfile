@@ -14,6 +14,6 @@ FROM base as production
 RUN npm ci
 COPY . .
 RUN npm run build
-RUN npm ci --only=production
+RUN npm ci --omit=dev
 EXPOSE 5173
 CMD ["npm", "run", "start"]
