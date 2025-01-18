@@ -1,33 +1,40 @@
+version: '3.8'
+
 services:
   cd_backend:
-    image: cd_backend:1.0.0
-    container_name: ${BACKEND_HOST}
-    build: ./cd_backend
+    build:
+      context: ./cd_backend
+      dockerfile: Dockerfile
+      target: development
     env_file: .env
     environment:
+      NODE_ENV: development
       NODE_OPTIONS: --disable-warning=ExperimentalWarning
     ports:
-      - ${BACKEND_PORT}:${BACKEND_PORT}
+      - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
       - ./cd_backend:/cd_backend
+      - /cd_backend/node_modules
       - db_data:/cd_backend/data
+    command: npm start
 
   cd_cms:
-    image: cd_cms:1.0.0
-    container_name: ${CMS_HOST}
     build:
       context: ./cd_cms
       dockerfile: Dockerfile
+      target: development
     env_file: .env
     environment:
+      NODE_ENV: development
       VITE_BACKEND_URL: http://${BACKEND_HOST}:${BACKEND_PORT}
       VITE_SUPABASE_URL: ${SUPABASE_URL}
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     ports:
-      - ${CMS_PORT}:${CMS_PORT}
+      - 127.0.0.1:${CMS_PORT}:${CMS_PORT}
     volumes:
       - ./cd_cms:/cd_cms
       - /cd_cms/node_modules
+    command: npm run dev
     depends_on:
       - cd_backend
 
