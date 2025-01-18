@@ -18,7 +18,7 @@ async function main() {
       libraryId: ENV.BUNNY_STREAM_LIBRARY_ID,
       collectionId: ENV.BUNNY_STREAM_COLLECTION_ID,
     });
-    const countriesApiClient = await createCountryLayerApiClient({ logger })({
+    const countriesApiClient = createCountryLayerApiClient({ logger })({
       baseUrl: ENV.COUNTRY_LAYER_BASE_URL,
       apiKey: ENV.COUNTRY_LAYER_API_KEY,
     });
