@@ -64,7 +64,10 @@ jobs:
               git fetch origin main
               git reset --hard origin/main
             else
-              git clone ${{ github.server_url }}/${{ github.repository }} .
+              # Clone repository to temp and move files
+              git clone ${{ github.server_url }}/${{ github.repository }} /tmp/cd_admin_temp
+              cp -r /tmp/cd_admin_temp/. .
+              rm -rf /tmp/cd_admin_temp
             fi
             
             # Run deployment script
