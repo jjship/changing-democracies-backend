@@ -2,69 +2,136 @@ name: Deploy
 
 on:
   push:
-    branches: [main] # or your production branch
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production_environment
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Set up SSH
         run: |
-          set -x  # Enable debug mode
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          echo "Deploy key written, setting permissions..."
-          echo "Attempting to scan host key..."
-          # Add port number to ssh-keyscan
-          ssh-keyscan -v -p ${{ secrets.VM_SSH_PORT }} -H "${{ secrets.VM_HOST }}" >> ~/.ssh/known_hosts || echo "ssh-keyscan failed: $?"
+          cat >> ~/.ssh/config << EOF
+          Host deployment_target
+            HostName ${{ secrets.VM_HOST }}
+            User ${{ secrets.VM_USER }}
+            Port ${{ secrets.VM_SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
 
-      - name: Test SSH Connection
-        env:
-          VM_HOST: ${{ secrets.VM_HOST }}
-          VM_USER: ${{ secrets.VM_USER }}
+      - name: Save current state for rollback
+        id: save_state
         run: |
-          echo "Testing SSH connection..."
-          ssh -p ${{ secrets.VM_SSH_PORT }} -i ~/.ssh/deploy_key -v $VM_USER@$VM_HOST 'echo "SSH connection successful"'
+          ssh deployment_target '
+            cd /opt/cd_backend
+            if [ -d ".git" ]; then
+              # Save current commit hash
+              echo "PREVIOUS_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
+              # Save current docker compose state
+              docker compose ps > docker-compose.state
+            fi
+          '
 
       - name: Deploy to VM
+        id: deploy
         env:
-          VM_HOST: ${{ secrets.VM_HOST }}
-          VM_USER: ${{ secrets.VM_USER }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_SHA: ${{ github.sha }}
         run: |
-          ssh -p ${{ secrets.VM_SSH_PORT }} -i ~/.ssh/deploy_key $VM_USER@$VM_HOST '
-            # Check Docker permissions
-            groups
-             docker ps || { echo "Docker permission error"; exit 1; }
-            set -ex
-            echo "Starting deployment..."
-            pwd
-            ls -la
-
-            # Configure Git
-            git config --global credential.helper store
-            echo "https://oauth2:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
+          ssh deployment_target '
+            set -eo pipefail
             
-            # Navigate to app directory
-            cd /opt/cd_backend || exit 1
-            pwd
-            ls -la
+            echo "Starting deployment of commit $GITHUB_SHA..."
+            cd /opt/cd_backend
             
             # Pull latest changes
             if [ -d ".git" ]; then
-              git pull
+              git fetch origin main
+              git reset --hard origin/main
             else
               git clone ${{ github.server_url }}/${{ github.repository }} .
             fi
             
-            # Ensure scripts are executable
-            chmod +x scripts/load-env.sh scripts/deploy.sh
-            
             # Run deployment script
-            ./scripts/deploy.sh
-            
-            echo "Deployment completed"
+            if ! ./scripts/deploy.sh; then
+              echo "::error::Deployment script failed"
+              exit 1
+            fi
           '
+
+      - name: Verify Deployment
+        id: verify
+        run: |
+          # Wait for services to start
+          sleep 10
+          if ! curl -sSf http://${{ secrets.VM_HOST }}:8083/health; then
+            echo "::error::Health check failed"
+            exit 1
+          fi
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          ssh deployment_target '
+            set -eo pipefail
+            cd /opt/cd_backend
+
+            echo "Rolling back to commit ${{ env.PREVIOUS_COMMIT }}"
+            
+            # Rollback git
+            git reset --hard ${{ env.PREVIOUS_COMMIT }}
+            
+            # Stop current containers
+            docker compose down
+            
+            # Restore previous container state
+            if [ -f "docker-compose.state" ]; then
+              echo "Restoring previous container state..."
+              while read container; do
+                if [ ! -z "$container" ]; then
+                  docker compose up -d $(echo $container | awk "{print $1}")
+                fi
+              done < docker-compose.state
+            else
+              echo "No previous state found, starting with default configuration..."
+              ./scripts/deploy.sh
+            fi
+            
+            echo "Rollback completed"
+          '
+
+      - name: Verify Rollback
+        if: failure()
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.VM_HOST }}:8083/health; then
+            echo "::error::Rollback verification failed"
+            exit 1
+          fi
+          echo "Rollback verified successfully"
+
+      - name: Notify on Status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Deployment successful"
+          elif [ "${{ job.status }}" == "failure" ]; then
+            echo "Deployment failed and rolled back"
+          fi
+          # Add notification logic here (e.g., Slack, email)
