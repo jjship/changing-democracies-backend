@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Box,
   Button,
@@ -15,7 +14,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
-import { tagsApi, TagName } from '../api/tags';
+import { tagsApi } from '../api/tags';
 
 const tagSchema = z.object({
   names: z
