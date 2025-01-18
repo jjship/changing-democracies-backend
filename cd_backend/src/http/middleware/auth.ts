@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
-import { env } from '../../env';
+import { ENV } from '../../env';
 
 interface SupabaseJWT {
   aud: string;
@@ -18,7 +18,7 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, env.SUPABASE_JWT_SECRET) as SupabaseJWT;
+    const decoded = jwt.verify(token, ENV.SUPABASE_JWT_SECRET) as SupabaseJWT;
 
     // Add user info to request for use in controllers
     request.user = {
