@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  cd_backend:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    volumes:
+      - db_data:/cd_backend/data
+    command: npm run start:prod
+    restart: unless-stopped
+    networks:
+      - app_network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  cd_cms:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    volumes: []
+    command: npm run start
+    restart: unless-stopped
+    networks:
+      - app_network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+networks:
+  app_network:
+    driver: bridge

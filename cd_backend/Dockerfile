@@ -1,10 +1,18 @@
-FROM node:22.12-alpine
-
+FROM node:22.12-alpine as base
 WORKDIR /cd_backend
-
 COPY package*.json ./
-RUN npm i
 
+# Development stage
+FROM base as development
+RUN npm install
 COPY . .
+CMD ["npm", "start"]
 
-CMD ["npm", "run", "start"]
+# Production stage
+FROM base as production
+RUN npm ci
+COPY . .
+RUN npm run build
+RUN npm ci --only=production
+ENV NODE_ENV=production
+CMD ["npm", "run", "start:prod"]
