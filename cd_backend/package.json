@@ -11,7 +11,8 @@
     "start:prod": "node dist/main.js",
     "build": "tsc",
     "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json",
-    "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts"
+    "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fastify/jwt": "^9.0.3",
