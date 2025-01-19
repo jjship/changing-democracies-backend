@@ -4,5 +4,8 @@ set -e
 # Load environment variables
 source scripts/load-env.sh
 
-# Build and start services
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build 
+# Force rebuild images
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build --no-cache
+
+# Start services
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d

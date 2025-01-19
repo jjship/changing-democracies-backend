@@ -21,5 +21,6 @@ RUN echo "Building TypeScript..." && \
 FROM base as production
 RUN npm ci --omit=dev
 COPY --from=builder /cd_backend/dist ./dist
+COPY --from=builder /cd_backend/package*.json ./
 ENV NODE_ENV=production
 CMD ["npm", "run", "start:prod"]
