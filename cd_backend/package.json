@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "ts-node-dev --respawn ./src/main.ts",
-    "start:prod": "node ./dist/src/main.js",
+    "start:prod": "node dist/main.js",
     "build": "tsc",
     "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json",
     "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
