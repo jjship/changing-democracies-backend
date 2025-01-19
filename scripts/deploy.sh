@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 # Load environment variables
 source scripts/load-env.sh
