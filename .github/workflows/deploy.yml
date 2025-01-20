@@ -71,10 +71,7 @@ jobs:
             fi
             
             # Run deployment script
-            if ! ./scripts/deploy.sh; then
-              echo "::error::Deployment script failed"
-              exit 1
-            fi
+            ./scripts/deploy.sh;
           '
 
       - name: Verify Deployment
