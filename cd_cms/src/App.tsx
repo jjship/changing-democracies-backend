@@ -8,7 +8,6 @@ import { TagsPage } from './pages/TagsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  console.log('test');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {

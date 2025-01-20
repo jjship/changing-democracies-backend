@@ -7,7 +7,6 @@ services:
     ports:
       - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
-      - /cd_backend/node_modules
       - db_data:/cd_backend/data
     env_file: .env
     environment:

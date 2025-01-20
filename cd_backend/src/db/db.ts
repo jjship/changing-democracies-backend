@@ -6,7 +6,7 @@ export { createDbConnection, getDbConnection };
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'sqlite',
-  database: './data/database.sqlite',
+  database: '../data/database.sqlite',
   synchronize: ENV.NODE_ENV !== 'production',
   logging: ENV.NODE_ENV === 'development' ? ['query', 'error', 'schema', 'warn', 'info', 'log'] : ['error'],
   entities: [`${__dirname}/entities/*.{js,ts}`],

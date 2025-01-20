@@ -54,7 +54,7 @@ async function closeDatabaseConnection() {
   }
 }
 async function createTestDatabase() {
-  const dbPath = path.join(__dirname, '../data/test-database.sqlite');
+  const dbPath = path.join(__dirname, '../../data/test-database.sqlite');
   if (fs.existsSync(dbPath)) {
     fs.unlinkSync(dbPath); // Remove the existing test database file
   }
