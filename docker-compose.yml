@@ -31,7 +31,7 @@ services:
       VITE_SUPABASE_URL: ${SUPABASE_URL}
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     ports:
-      - 127.0.0.1:${CMS_PORT}:5173
+      - 127.0.0.1:${CMS_PORT}:${CMS_PORT}
     volumes:
       - ./cd_cms:/cd_cms
       - ./cd_cms/node_modules:/cd_cms/node_modules
