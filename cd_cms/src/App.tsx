@@ -6,9 +6,9 @@ import { Login } from './pages/Login';
 import { supabase } from './lib/supabase';
 import { TagsPage } from './pages/TagsPage';
 
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  console.log('test');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,7 +51,6 @@ export default function App() {
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/tags" element={<TagsPage />} />
-
         </Routes>
       </BrowserRouter>
     </ChakraProvider>

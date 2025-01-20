@@ -1,26 +1,26 @@
-FROM node:22.12-alpine as base
+FROM node:22.12-alpine AS base
+RUN apk add --no-cache bash python3 make g++
 WORKDIR /cd_backend
 COPY package*.json ./
 
-# Development stage
-FROM base as development
+FROM base AS development
 RUN npm install
 COPY . .
 CMD ["npm", "start"]
 
-# Build stage
-FROM base as builder
-RUN npm ci
+FROM base AS builder
+RUN npm ci --omit=optional
 COPY . .
-RUN echo "Building TypeScript..." && \
-    npm run build && \
-    echo "Build complete, contents of dist:" && \
-    ls -la dist/
+RUN npm run build
+RUN npm prune --production
 
-# Production stage
-FROM base as production
-RUN npm ci --omit=dev
-COPY --from=builder /cd_backend/dist ./dist
-COPY --from=builder /cd_backend/package*.json ./
+
+FROM node:22.12-alpine AS production
+WORKDIR /cd_backend
 ENV NODE_ENV=production
-CMD ["npm", "run", "start:prod"]
+RUN apk add --no-cache bash dumb-init
+COPY --from=builder /cd_backend/dist ./      
+COPY --from=builder /cd_backend/package.json ./ 
+COPY --from=builder /cd_backend/node_modules ./node_modules
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["node", "main.js"]

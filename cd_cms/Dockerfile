@@ -1,27 +1,36 @@
-FROM node:22.12-alpine as base
+FROM node:22.12-alpine AS base
 WORKDIR /cd_cms
 COPY package*.json ./
 
 # Development stage
-FROM base as development
+FROM base AS development
 RUN npm install
 COPY . .
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_BACKEND_URL
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 EXPOSE 5173
 CMD ["npm", "run", "dev"]
 
 # Build stage
-FROM base as builder
+FROM base AS builder
 RUN npm ci
 COPY . .
-RUN echo "Building Vite app..." && \
-    npm run build && \
-    echo "Build complete, contents of dist:" && \
-    ls -la dist/
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+ARG VITE_BACKEND_URL
+ENV VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+ENV VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
+RUN npm run build
 
 # Production stage
-FROM base as production
-RUN npm ci --omit=dev
-COPY --from=builder /cd_cms/dist ./dist
-EXPOSE 5173
-ENV NODE_ENV=production
-CMD ["npm", "run", "start"]
+FROM nginx AS production
+WORKDIR /cd_cms
+COPY --from=builder /cd_cms/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
