@@ -18,25 +18,26 @@ export type AppDeps = {
 };
 
 export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
-  await syncFragments({ dbConnection, bunnyStream, logger: logger.child({ module: 'setup-app' }) });
-
   const app = fastify({
     loggerInstance: logger as FastifyBaseLogger,
-  }).withTypeProvider<TypeBoxTypeProvider>();
+  });
 
   app.get('/health', async () => ({ status: 'ok' }));
 
-  await app.register(authPlugin);
+  // Register public routes
+  registerGetFragmentsController(app)({ dbConnection });
 
-  const authenticatedApp = app.withTypeProvider<TypeBoxTypeProvider>();
-  authenticatedApp.addHook('onRequest', app.authenticate);
+  // Register authentication plugin and authenticated routes
+  await app.register(async (app) => {
+    await app.register(authPlugin);
+    app.addHook('onRequest', app.authenticate);
 
-  registerGetFragmentsController(authenticatedApp)({ dbConnection });
-  registerUpdateFragmentsController(authenticatedApp)({ dbConnection });
-  registerCreateNarrativeController(authenticatedApp)({ dbConnection });
-  registerUpdateNarrativeController(authenticatedApp)({ dbConnection });
-  registerDeleteNarrativeController(authenticatedApp)({ dbConnection });
-  registerTagControllers(authenticatedApp)({ dbConnection });
+    registerUpdateFragmentsController(app)({ dbConnection });
+    registerCreateNarrativeController(app)({ dbConnection });
+    registerUpdateNarrativeController(app)({ dbConnection });
+    registerDeleteNarrativeController(app)({ dbConnection });
+    registerTagControllers(app)({ dbConnection });
+  });
 
   return app;
 }
