@@ -1,14 +1,17 @@
-version: '3.8'
-
 services:
   cd_backend:
     build:
+      context: ./cd_backend
+      dockerfile: Dockerfile
       target: production
-    environment:
-      NODE_ENV: production
+    ports:
+      - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
       - db_data:/cd_backend/data
-    command: npm run start:prod
+    env_file: .env
+    environment:
+      NODE_ENV: production
+    command: node main.js
     restart: unless-stopped
     networks:
       - app_network
@@ -20,11 +23,20 @@ services:
 
   cd_cms:
     build:
+      context: ./cd_cms
+      dockerfile: Dockerfile
       target: production
+      args:
+        VITE_BACKEND_URL: http://${BACKEND_HOST}:${BACKEND_PORT}
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    env_file: .env
     environment:
       NODE_ENV: production
-    volumes: []
-    command: npm run start
+    ports:
+      - 127.0.0.1:${CMS_PORT}:80
+    depends_on:
+      - cd_backend
     restart: unless-stopped
     networks:
       - app_network
@@ -37,3 +49,6 @@ services:
 networks:
   app_network:
     driver: bridge
+
+volumes:
+  db_data:
