@@ -26,6 +26,13 @@ const envSchema = z.object({
       message: 'SYNC_COUNTRIES must be a boolean',
     }),
 
+  SYNC_LEGACY_FRAGMENTS: z
+    .string()
+    .transform((val) => (val === 'true' || val === 'false' ? val === 'true' : val))
+    .refine((val) => typeof val === 'boolean', {
+      message: 'SYNC_COUNTRIES must be a boolean',
+    }),
+
   // Supabase authentication
   SUPABASE_JWT_SECRET: z.string(),
 });
@@ -38,4 +45,3 @@ if (!parsed.success) {
 }
 
 export const ENV = parsed.data;
-

@@ -6,6 +6,7 @@ import { logger } from './services/logger/logger';
 import { setupApp } from './app';
 import { createCountryLayerApiClient } from './services/coutriesApi/countriesApiClient';
 import { syncCountriesAndLanguages } from './domain/syncCountriesAndLanguages';
+import { syncLegacyFragments } from './domain/fragments/syncLegacyFragments';
 
 main();
 
@@ -28,6 +29,10 @@ async function main() {
     }
 
     await syncFragments({ dbConnection, bunnyStream, logger });
+
+    if (ENV.SYNC_LEGACY_FRAGMENTS) {
+      await syncLegacyFragments({ dbConnection, bunnyStream, logger });
+    }
 
     const app = await setupApp({ dbConnection, bunnyStream });
 

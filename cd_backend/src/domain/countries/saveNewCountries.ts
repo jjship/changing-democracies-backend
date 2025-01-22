@@ -14,16 +14,19 @@ export const saveNewCountries =
       const countriesRepo = entityManager.getRepository(CountryEntity);
       const languageRepo = entityManager.getRepository(LanguageEntity);
 
-      const englishLanguage = await languageRepo.findOne({ where: { code: 'EN' } });
+      let englishLanguage = await languageRepo.findOne({ where: { code: 'EN' } });
       if (!englishLanguage) {
-        throw new Error('English language not found');
+        englishLanguage = new LanguageEntity();
+        englishLanguage.name = 'English';
+        englishLanguage.code = 'EN';
+        await languageRepo.save(englishLanguage);
       }
 
       for (const country of countriesData) {
         const isAlreadyInDb = await countriesRepo.exists({ where: { code: country.alpha2Code } });
 
         if (!isAlreadyInDb) {
-          const { name, alpha2Code, translations } = country;
+          const { name, alpha2Code } = country;
 
           const newCountry = new CountryEntity();
           const englishName = new NameEntity();
@@ -32,17 +35,6 @@ export const saveNewCountries =
           englishName.language = englishLanguage;
 
           const newNames = [englishName];
-
-          for (const [languageCode, translation] of Object.entries(translations)) {
-            const language = await languageRepo.findOne({ where: { code: languageCode } });
-            if (language) {
-              const newName = new NameEntity();
-              newName.name = translation;
-              newName.type = 'Country';
-              newName.language = language;
-              newNames.push(newName);
-            }
-          }
 
           newCountry.names = newNames;
           newCountry.code = alpha2Code.toUpperCase();

@@ -15,36 +15,6 @@ export type CountryData = {
   capital: string;
   altSpellings: string[];
   region: string;
-  subregion: string;
-  population: number;
-  latlng: [number, number];
-  demonym: string;
-  area: number;
-  gini: number;
-  timezones: string[];
-  borders: string[];
-  nativeName: string;
-  numericCode: string;
-  currencies: {
-    code: string;
-    name: string;
-    symbol: string;
-  }[];
-  languages: {
-    iso639_1: string;
-    iso639_2: string;
-    name: string;
-    nativeName: string;
-  }[];
-  translations: {
-    [key: string]: string;
-  };
-  flag: string;
-  regionalBlocs: {
-    acronym: string;
-    name: string;
-  }[];
-  cioc: string;
 };
 
 const createCountryLayerApiClient =
@@ -77,7 +47,7 @@ const shouldRetry: (error: AxiosError) => boolean = (err) => axiosRetry.isNetwor
 const createGetEuropeanCountries = ({ axios, logger }: { axios: AxiosInstance; logger: FastifyBaseLogger }) => ({
   async getEuropeanCountries() {
     try {
-      const res = await axios.get<CountryData[]>('/region/europe');
+      const res = await axios.get<CountryData[]>('/region/Europe');
 
       return res.data;
     } catch (err) {
