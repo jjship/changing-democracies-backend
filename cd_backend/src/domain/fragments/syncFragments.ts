@@ -28,7 +28,7 @@ export async function syncFragments({
   });
 
   if (videosToAdd.length) {
-    const newFragments = await Promise.all(videosToAdd.map(async (video) => await parseVideoToFragment(video)));
+    const newFragments = await Promise.all(videosToAdd.map(async (video) => parseVideoToFragment(video)));
 
     await dbConnection.getRepository(FragmentEntity).save(newFragments);
 

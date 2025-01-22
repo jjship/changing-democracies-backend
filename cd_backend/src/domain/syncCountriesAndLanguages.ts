@@ -15,7 +15,7 @@ export const syncCountriesAndLanguages = async ({
 }) => {
   const countriesData = await countriesApiClient.getEuropeanCountries();
 
-  await saveNewLanguages({ dbConnection, logger })(countriesData);
+  await saveNewLanguages({ dbConnection, logger });
 
   await saveNewCountries({ dbConnection, logger })(countriesData);
 };
