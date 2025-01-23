@@ -2,8 +2,8 @@ name: Database Backup
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # Runs at 1 AM every night
-  workflow_dispatch:  # Allows manual triggering
+    - cron: "0 1 * * *" # Runs at 1 AM every night
+  workflow_dispatch: # Allows manual triggering
   workflow_run:
     workflows: ["Deploy"]
     types:
@@ -35,14 +35,8 @@ jobs:
       - name: Create Database Backup
         run: |
           ssh deployment_target '
-            cd /opt/cd_admin
+            mkdir -p /opt/cd_admin/backups
             BACKUP_DIR="/opt/cd_admin/backups"
-            BACKUP_FILE="$BACKUP_DIR/database_backup_$(date +%Y%m%d_%H%M%S).sql"
-            
-            # Create backups directory if it doesn't exist
-            mkdir -p $BACKUP_DIR
-            
-            # Backup the database volume
             docker run --rm \
               -v db_data:/data \
               -v $BACKUP_DIR:/backup \
