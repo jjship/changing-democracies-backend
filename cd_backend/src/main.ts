@@ -28,7 +28,7 @@ async function main() {
       await syncCountriesAndLanguages({ dbConnection, countriesApiClient, logger });
     }
 
-    // await syncFragments({ dbConnection, bunnyStream, logger });
+    await syncFragments({ dbConnection, bunnyStream, logger });
 
     if (ENV.SYNC_LEGACY_FRAGMENTS) {
       await syncLegacyFragments({ dbConnection, bunnyStream, logger });
