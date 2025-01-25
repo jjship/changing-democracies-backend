@@ -21,9 +21,9 @@ ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 RUN npm run build
 
 # Production stage
-FROM nginx AS production
+FROM node:22.12-alpine AS production
 WORKDIR /cd_cms
-COPY --from=builder /cd_cms/dist /usr/share/nginx/html
+COPY --from=builder /cd_cms/dist ./dist
+RUN npm install -g serve
 
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "-s", "dist", "-l", "80"]
