@@ -60,4 +60,19 @@ export const tagsApi = {
 
     if (!response.ok) throw new Error('Failed to delete tag');
   },
+
+  async get(): Promise<Tag[]> {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const response = await fetch(`${BACKEND_URL}/tags`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${session?.access_token}`,
+      },
+    });
+
+    if (!response.ok) throw new Error('Failed to fetch tags');
+    return response.json();
+  },
 };
