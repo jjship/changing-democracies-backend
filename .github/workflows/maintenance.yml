@@ -37,7 +37,7 @@ jobs:
             
             bash -s' < scripts/docker-cleanup.sh
             
-            docker compose -f docker-compose.prod.yml up -d
+            bash -s' < scripts/deploy.sh
           '
       - name: Notify on Status
         if: failure()
