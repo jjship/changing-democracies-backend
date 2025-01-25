@@ -52,3 +52,6 @@ networks:
 
 volumes:
   db_data:
+    name: db_data
+    labels:
+      - 'keep=true'
