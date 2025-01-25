@@ -42,21 +42,27 @@ jobs:
       - name: Save current state for rollback
         id: save_state
         run: |
-          ssh deployment_target '
+          PREVIOUS_COMMIT=$(ssh deployment_target '
             cd /opt/cd_admin
             if [ -d ".git" ]; then
-              echo "PREVIOUS_COMMIT=$(git rev-parse HEAD)" >> $GITHUB_ENV
-              CONTAINERS=$(docker compose ps --format "{{.Name}}" | tr "\n" " ")
-              # Set default value if no containers are running
-              if [ -z "$CONTAINERS" ]; then
-                echo "ACTIVE_CONTAINERS=none" >> $GITHUB_ENV
-              else
-                echo "ACTIVE_CONTAINERS=$CONTAINERS" >> $GITHUB_ENV
-              fi
-            else
-              echo "ACTIVE_CONTAINERS=none" >> $GITHUB_ENV
+              git rev-parse HEAD
             fi
-          '
+          ')
+
+          CONTAINERS=$(ssh deployment_target '
+            cd /opt/cd_admin
+            docker compose ps --format "{{.Name}}" | tr "\n" " "
+          ')
+
+          if [ ! -z "$PREVIOUS_COMMIT" ]; then
+            echo "PREVIOUS_COMMIT=$PREVIOUS_COMMIT" >> $GITHUB_ENV
+          fi
+
+          if [ -z "$CONTAINERS" ]; then
+            echo "ACTIVE_CONTAINERS=none" >> $GITHUB_ENV
+          else
+            echo "ACTIVE_CONTAINERS=$CONTAINERS" >> $GITHUB_ENV
+          fi
 
       - name: Deploy to VM
         id: deploy
