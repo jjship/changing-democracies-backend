@@ -30,15 +30,11 @@ jobs:
 
       - name: Perform deep cleanup
         run: |
-          ssh deployment_target '
-            cd /opt/cd_admin
+          ssh deployment_target "cd /opt/cd_admin && \
+          docker compose -f docker-compose.prod.yml down && \
+          $(cat scripts/docker-cleanup.sh) && \
+          $(cat scripts/deploy.sh)"
 
-            docker compose -f docker-compose.prod.yml down
-            
-            bash -s' < scripts/docker-cleanup.sh
-            
-            bash -s' < scripts/deploy.sh
-          '
       - name: Notify on Status
         if: failure()
         uses: actions/github-script@v7
