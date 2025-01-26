@@ -14,7 +14,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
-import { tagsApi } from '../api/tags';
+import { createTag } from '../api/tags';
 
 const tagSchema = z.object({
   names: z
@@ -45,7 +45,7 @@ export function TagsPage() {
 
   const onSubmit = async (data: TagFormData) => {
     try {
-      await tagsApi.create(data.names);
+      await createTag(data.names);
       toast({
         title: 'Tag created successfully',
         status: 'success',
