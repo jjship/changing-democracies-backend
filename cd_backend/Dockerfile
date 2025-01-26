@@ -5,7 +5,7 @@ COPY package*.json ./
 
 FROM base AS development
 RUN npm install
-RUN mkdir -p /cd_backend/data
+RUN mkdir -p /cd_backend/data && chown node:node /cd_backend/data
 COPY . .
 CMD ["npm", "start"]
 
@@ -20,7 +20,7 @@ WORKDIR /cd_backend
 ENV NODE_ENV=production
 RUN apk add --no-cache bash dumb-init sqlite
 
-RUN mkdir -p /cd_backend/data
+RUN mkdir -p /cd_backend/data && chown node:node /cd_backend/data
 COPY --from=builder /cd_backend/dist/. ./
 COPY --from=builder /cd_backend/package.json ./ 
 COPY --from=builder /cd_backend/node_modules ./node_modules
