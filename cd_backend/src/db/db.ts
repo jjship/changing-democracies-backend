@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import { ConnectionNotFoundError, DataSource, DataSourceOptions } from 'typeorm';
 import { ENV } from '../env';
+import path from 'path';
 
 export { createDbConnection, getDbConnection };
 
 const dataSourceOptions: DataSourceOptions = {
   type: 'sqlite',
-  database: '../data/database.sqlite',
+  database: path.join(process.cwd(), 'data', 'database.sqlite'),
   synchronize: ENV.NODE_ENV !== 'production',
   logging: ENV.NODE_ENV === 'development' ? ['error', 'schema', 'warn', 'info'] : ['error'],
   entities: [`${__dirname}/entities/*.{js,ts}`],
