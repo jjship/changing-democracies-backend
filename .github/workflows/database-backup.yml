@@ -66,23 +66,22 @@ jobs:
             ls -lh $BACKUP_DIR
           '
 
-      - name: Prepare Backup Directory
-        run: mkdir -p ./backups
-
       - name: Copy Backup to Runner
         run: |
-          ssh deployment_target '
+          LATEST_BACKUP=$(ssh deployment_target '
             cd /opt/cd_admin/backups
-            LATEST_BACKUP=$(ls -t db_backup_*.tar.gz | head -n 1)
-            if [ -n "$LATEST_BACKUP" ]; then
-              echo "Found latest backup: $LATEST_BACKUP"
-            else
-              echo "No backup found"
-              exit 1
-            fi
-          '
+            ls -t db_backup_*.tar.gz | head -n 1
+          ')
 
-          scp deployment_target:/opt/cd_admin/backups/$(ssh deployment_target 'ls -t /opt/cd_admin/backups/db_backup_*.tar.gz | head -n 1') ./backups/
+          if [ -z "$LATEST_BACKUP" ]; then
+            echo "No backup found"
+            exit 1
+          fi
+
+          echo "Found latest backup: $LATEST_BACKUP"
+
+          mkdir -p ./backups
+          scp "deployment_target:/opt/cd_admin/backups/$LATEST_BACKUP" ./backups/
 
       - name: Upload Backup to GitHub Artifacts
         uses: actions/upload-artifact@v4
