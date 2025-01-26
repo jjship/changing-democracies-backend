@@ -39,13 +39,11 @@ jobs:
             BACKUP_DIR="/opt/cd_admin/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
             
-            # Use the correct volume name
-            docker run --rm \
-              -v cd_admin_db_data:/data \
+            docker run --rm \gtcam ""
+              -v cd_admin-db_data:/data \
               -v $BACKUP_DIR:/backup \
               alpine tar czf /backup/db_backup_$TIMESTAMP.tar.gz -C /data .
             
-            # Verify backup was created
             if [ ! -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
               echo "Backup failed to create"
               exit 1
@@ -59,14 +57,11 @@ jobs:
           ssh deployment_target '
             BACKUP_DIR="/opt/cd_admin/backups"
             
-            # Keep only last 30 days of backups
             find $BACKUP_DIR -type f -name "db_backup_*.tar.gz" -mtime +30 -delete
             
-            # Keep at least the 5 most recent backups regardless of age
             cd $BACKUP_DIR
             ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --
             
-            # Print remaining backups
             echo "Current backups:"
             ls -lh $BACKUP_DIR
           '
@@ -78,7 +73,6 @@ jobs:
         run: |
           ssh deployment_target '
             cd /opt/cd_admin/backups
-            # Get the most recent backup
             LATEST_BACKUP=$(ls -t db_backup_*.tar.gz | head -n 1)
             if [ -n "$LATEST_BACKUP" ]; then
               echo "Found latest backup: $LATEST_BACKUP"
