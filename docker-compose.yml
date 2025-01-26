@@ -10,6 +10,7 @@ services:
       NODE_OPTIONS: --disable-warning=ExperimentalWarning
     ports:
       - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
+    user: node
     volumes:
       - ./cd_backend:/cd_backend
       - ./cd_backend/node_modules:/cd_backend/node_modules
