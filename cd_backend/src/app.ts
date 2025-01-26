@@ -3,6 +3,7 @@ import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { logger } from './services/logger/logger';
 import authPlugin from './plugins/auth';
 import { syncFragments } from './domain/fragments/fragments.api';
+import cors from '@fastify/cors';
 import { registerGetFragmentsController } from './http/fragments/getFragments.ctrl';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
 import { BunnyStreamApiClient } from './services/bunnyStream/bunnyStreamApiClient';
@@ -11,6 +12,7 @@ import { registerUpdateFragmentsController } from './http/fragments/updateFragme
 import { registerUpdateNarrativeController } from './http/narratives/updateNarrative.ctrl';
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 import { registerTagControllers } from './http/tags/tags.ctrl';
+import { ENV } from './env';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -22,12 +24,16 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     loggerInstance: logger as FastifyBaseLogger,
   });
 
+  await app.register(cors, {
+    origin: ENV.CMS_URL,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   app.get('/health', async () => ({ status: 'ok' }));
 
-  // Register public routes
   registerGetFragmentsController(app)({ dbConnection });
 
-  // Register authentication plugin and authenticated routes
   await app.register(async (app) => {
     await app.register(authPlugin);
     app.addHook('onRequest', app.authenticate);

@@ -7,7 +7,7 @@ import { LanguageEntity } from '../../db/entities/Language';
 
 export const saveNewCountries =
   ({ dbConnection, logger }: { dbConnection: DataSource; logger: FastifyBaseLogger }) =>
-  async (countriesData: CountryData[]) => {
+  async (countriesData: Pick<CountryData, 'name' | 'alpha2Code'>[]) => {
     const newCountries: CountryEntity[] = [];
 
     await dbConnection.transaction(async (entityManager) => {

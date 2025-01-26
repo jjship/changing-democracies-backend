@@ -17,6 +17,3 @@ source .env
 
 # Turn off auto-export
 set +a
-
-# Optional: Print confirmation (comment out in production)
-echo "Environment variables loaded successfully" 

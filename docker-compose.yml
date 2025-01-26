@@ -13,7 +13,7 @@ services:
     volumes:
       - ./cd_backend:/cd_backend
       - ./cd_backend/node_modules:/cd_backend/node_modules
-      - db_data:/cd_backend/data
+      - db_data:/cd_backend/src/data
     command: npm run start
     networks:
       - app_network
@@ -46,3 +46,5 @@ networks:
 
 volumes:
   db_data:
+    external: true
+    name: cd_admin-db_data

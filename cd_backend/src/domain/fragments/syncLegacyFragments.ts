@@ -4,10 +4,8 @@ import { BunnyStreamApiClient } from '../../services/bunnyStream/bunnyStreamApiC
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { PersonEntity } from '../../db/entities/Person';
 import { CountryEntity } from '../../db/entities/Country';
-import { TagEntity } from '../../db/entities/Tag';
 import { serializeFilmsCollection } from './parseLegacyFragments';
 import { LanguageEntity } from '../../db/entities/Language';
-import { NameEntity } from '../../db/entities/Name';
 
 export async function syncLegacyFragments({
   dbConnection,
@@ -24,10 +22,6 @@ export async function syncLegacyFragments({
   const bunnyVideos = await bunnyStream.getVideos();
 
   const { films } = serializeFilmsCollection({ videos: bunnyVideos });
-
-  moduleLogger.warn({ filmsLen: films.length });
-
-  moduleLogger.info({ filmsLength: films.length });
 
   let englishLanguage = await dbConnection.getRepository(LanguageEntity).findOne({ where: { code: 'EN' } });
   if (!englishLanguage) {
@@ -60,7 +54,7 @@ export async function syncLegacyFragments({
 
       if (!fragment) {
         moduleLogger.warn({ id: guid }, 'Could not find fragment');
-        continue;
+        break;
       }
 
       let person = await entityManager.findOne(PersonEntity, {
@@ -89,7 +83,7 @@ export async function syncLegacyFragments({
 
       if (!country) {
         moduleLogger.error({ countryName }, 'COULD NOT FIND COUNTRY');
-        continue;
+        break;
       }
 
       if (!country?.persons?.find((p) => p.id === person.id)) {
@@ -99,7 +93,6 @@ export async function syncLegacyFragments({
       await entityManager.save(CountryEntity, country);
 
       await entityManager.save(FragmentEntity, fragment);
-      moduleLogger.info({ fragment }, 'saved');
     }
   });
 
