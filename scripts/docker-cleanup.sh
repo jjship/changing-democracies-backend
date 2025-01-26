@@ -29,6 +29,6 @@ run_cleanup_step "Volume cleanup" \
 
 run_cleanup_step "Network cleanup" "docker network prune -f"
 
-run_cleanup_step "Network cleanup" "docker builder prune -f --filter until=12h"
+run_cleanup_step "Cache cleanup" "docker builder prune -f --filter until=12h"
 
 echo "Finished Docker cleanup"
