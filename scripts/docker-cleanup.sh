@@ -6,17 +6,14 @@ run_cleanup_step() {
     local description=$1
     local command=$2
     
-    echo "Running: $description"
     if output=$(eval "$command" 2>&1); then
         echo "✓ $description completed successfully"
         if [ ! -z "$output" ]; then
-            echo "Output:"
             echo "$output"
         fi
     else
         echo "⚠️  Warning: $description had some issues, continuing anyway"
         if [ ! -z "$output" ]; then
-            echo "Error output:"
             echo "$output"
         fi
     fi

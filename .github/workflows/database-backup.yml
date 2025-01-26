@@ -39,7 +39,7 @@ jobs:
             BACKUP_DIR="/opt/cd_admin/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
             
-            docker run --rm \gtcam ""
+            docker run --rm \
               -v cd_admin-db_data:/data \
               -v $BACKUP_DIR:/backup \
               alpine tar czf /backup/db_backup_$TIMESTAMP.tar.gz -C /data .
