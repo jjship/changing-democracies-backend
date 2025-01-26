@@ -5,6 +5,8 @@ import { Login } from './pages/Login';
 
 import { supabase } from './lib/supabase';
 import { TagsPage } from './pages/TagsPage';
+import { PersonsPage } from './pages/PersonPage';
+import { NarrativesPage } from './pages/NarrativesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -49,7 +51,30 @@ export default function App() {
             }
           />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/tags" element={<TagsPage />} />
+          <Route
+            path="/tags"
+            element={
+              <ProtectedRoute>
+                <TagsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/persons"
+            element={
+              <ProtectedRoute>
+                <PersonsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/narratives"
+            element={
+              <ProtectedRoute>
+                <NarrativesPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </ChakraProvider>

@@ -4,13 +4,23 @@ import { type FragmentPayload, parseFragmentEntity } from './fragments.api';
 
 export { getFragments, getFragmentById };
 
-const getFragments = async ({ dbConnection }: { dbConnection: DataSource }): Promise<FragmentPayload[]> => {
-  const dbFragments = await dbConnection
-    .getRepository(FragmentEntity)
-    .find({ relations: ['person', 'person.country', 'tags', 'narrativeFragments', 'narrativeFragments.narrative'] });
+async function getFragments({
+  dbConnection,
+  personIds,
+}: {
+  dbConnection: DataSource;
+  personIds?: string[];
+}): Promise<FragmentPayload[]> {
+  const queryBuilder = dbConnection.getRepository(FragmentEntity).createQueryBuilder('fragment');
+
+  if (personIds && personIds.length > 0) {
+    queryBuilder.leftJoinAndSelect('fragment.person', 'person').andWhere('person.id IN (:...personIds)', { personIds });
+  }
+
+  const dbFragments = await queryBuilder.getMany();
 
   return dbFragments.map((entity) => parseFragmentEntity(entity));
-};
+}
 
 const getFragmentById =
   ({ dbConnection }: { dbConnection: DataSource }) =>

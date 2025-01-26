@@ -213,9 +213,10 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should return 404 when narrative not found', async () => {
+    const notFoundId = uuid4();
     const res = await testApp
       .request()
-      .patch(`/narratives/${uuid4()}`)
+      .patch(`/narratives/${notFoundId}`)
       .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
@@ -229,7 +230,7 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Narrative Not Found');
+    expect(parsedRes.error).to.equal(`Narrative with id '${notFoundId}' not found`);
   });
 
   it('should return 404 when language not found', async () => {
@@ -299,13 +300,14 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Language Not Found');
+    expect(parsedRes.error).to.equal("Language with code 'XX' not found");
   });
 
   it('should return 404 when fragment not found', async () => {
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
+    const guid4 = uuid4();
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -361,7 +363,7 @@ describe('PATCH /narratives/:id', async () => {
         data: {
           type: 'narrative',
           attributes: {
-            fragmentsSequence: [{ fragmentId: uuid4(), sequence: 1 }],
+            fragmentsSequence: [{ fragmentId: guid4, sequence: 1 }],
           },
         },
       })
@@ -369,6 +371,7 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Fragment Not Found');
+    console.dir({ parsedRes });
+    expect(parsedRes.error).to.equal(`Fragment with id '${guid4}' not found`);
   });
 });

@@ -3,6 +3,7 @@ import fastifyJwt from '@fastify/jwt';
 import fastifySensible from '@fastify/sensible';
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ENV } from '../env';
+import { UnauthorizedError } from '../errors';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -47,7 +48,7 @@ export default fp(async (fastify: FastifyInstance) => {
         role: jwtUser.role,
       };
     } catch (err) {
-      throw fastify.httpErrors.unauthorized(err instanceof Error ? err.message : 'Authentication failed');
+      throw new UnauthorizedError('Unauthorized');
     }
   });
 });

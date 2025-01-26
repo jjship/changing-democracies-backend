@@ -14,14 +14,34 @@ import { NarrativeFragmentEntity } from '../db/entities/NarrativeFragment';
 
 export const testDb = {
   async saveTestCountries(countries: { name: string; code: string }[]) {
+    const ids: string[] = [];
+
     await getDbConnection().transaction(async (entityManager) => {
       for (const country of countries) {
         const testCountry = new CountryEntity();
         testCountry.names = [entityManager.getRepository(NameEntity).create({ name: country.name, type: 'Country' })];
         testCountry.code = country.code;
-        await entityManager.save(CountryEntity, testCountry);
+        const savedCountry = await entityManager.save(CountryEntity, testCountry);
+        ids.push(savedCountry.id);
       }
     });
+
+    return ids;
+  },
+
+  async saveTestPersons(names: string[]): Promise<string[]> {
+    const ids: string[] = [];
+
+    await getDbConnection().transaction(async (entityManager) => {
+      for (const name of names) {
+        const testPerson = new PersonEntity();
+        testPerson.name = name;
+        const savedPerson = await entityManager.save(PersonEntity, testPerson);
+        ids.push(savedPerson.id);
+      }
+    });
+
+    return ids;
   },
 
   async saveTestLanguages(languages: Pick<LanguageEntity, 'name' | 'code'>[]) {
@@ -72,21 +92,18 @@ export const testDb = {
     });
   },
 
-  async saveTestPersons(persons: { name: string; id?: string }[]) {
-    await getDbConnection().transaction(async (entityManager) => {
-      for (const person of persons) {
-        const testPerson = new PersonEntity();
-        if (person.id) testPerson.id = person.id;
-        testPerson.name = person.name;
-        await entityManager.save(PersonEntity, testPerson);
-      }
-    });
-  },
-
-  async saveTestFragments(videos: Pick<BunnyVideo, 'guid' | 'title' | 'length'>[]) {
+  async saveTestFragments(videos: (Pick<BunnyVideo, 'guid' | 'title' | 'length'> & { personId?: string })[]) {
     await getDbConnection().transaction(async (entityManager) => {
       for (const video of videos) {
-        const testFragment = await parseVideoToFragment(video as any);
+        const testFragment = parseVideoToFragment(video as any);
+
+        if (video.personId) {
+          const person = await entityManager.findOne(PersonEntity, { where: { id: video.personId } });
+          if (person) {
+            testFragment.person = person;
+          }
+        }
+
         await entityManager.save(FragmentEntity, testFragment);
       }
     });

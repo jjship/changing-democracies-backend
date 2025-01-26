@@ -13,6 +13,9 @@ import { registerUpdateNarrativeController } from './http/narratives/updateNarra
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 import { registerTagControllers } from './http/tags/tags.ctrl';
 import { ENV } from './env';
+import { registerPersonControllers } from './http/persons/persons.ctrl';
+import { registerCountryControllers } from './http/countries/countries.ctrl';
+import { HttpError } from './errors';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -30,9 +33,13 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.setErrorHandler((error, request, reply) => {
+    app.log.error(error);
+    const statusCode = error instanceof HttpError ? error.statusCode : 500;
+    reply.status(statusCode).send({ ok: false, error: error.message });
+  });
 
-  registerGetFragmentsController(app)({ dbConnection });
+  app.get('/health', async () => ({ status: 'ok' }));
 
   await app.register(async (app) => {
     await app.register(authPlugin);
@@ -43,6 +50,9 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerUpdateNarrativeController(app)({ dbConnection });
     registerDeleteNarrativeController(app)({ dbConnection });
     registerTagControllers(app)({ dbConnection });
+    registerPersonControllers(app)({ dbConnection });
+    registerCountryControllers(app)({ dbConnection });
+    registerGetFragmentsController(app)({ dbConnection });
   });
 
   return app;

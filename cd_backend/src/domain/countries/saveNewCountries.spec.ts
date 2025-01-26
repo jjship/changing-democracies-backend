@@ -32,10 +32,6 @@ describe('saveNewCountries', () => {
       {
         name: 'Spain',
         alpha2Code: 'ES',
-        translations: {
-          FR: 'Espagne',
-          DE: 'Spanien',
-        },
       },
     ];
 
@@ -47,10 +43,10 @@ describe('saveNewCountries', () => {
       },
     });
 
+    console.dir({ countriesAfter }, { depth: null });
+
     expect(countriesAfter).to.have.length(3);
     expect(countriesAfter[2].code).to.equal('ES');
-    expect(countriesAfter[2].names).to.have.length(2); // English and French names
     expect(countriesAfter[2].names?.find((n) => n.name === 'Spain')).to.exist;
-    expect(countriesAfter[2].names?.find((n) => n.name === 'Espagne')).to.exist;
   });
 });

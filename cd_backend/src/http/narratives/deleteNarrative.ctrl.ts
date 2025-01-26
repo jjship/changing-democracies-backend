@@ -2,6 +2,7 @@ import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
 import { NarrativeEntity } from '../../db/entities/Narrative';
+import { NotFoundError } from '../../errors';
 
 export const registerDeleteNarrativeController =
   (app: FastifyInstance) =>
@@ -20,16 +21,7 @@ export const registerDeleteNarrativeController =
           });
 
           if (!existingNarrative) {
-            throw {
-              statusCode: 404,
-              errors: [
-                {
-                  status: '404',
-                  title: 'Narrative Not Found',
-                  detail: `Narrative with id '${req.params.id}' not found`,
-                },
-              ],
-            };
+            throw new NotFoundError(`Narrative with id '${req.params.id}' not found`);
           }
 
           // Remove related entities first
@@ -63,15 +55,6 @@ function deleteNarrativeSchema() {
     }),
     response: {
       204: Type.Null(),
-      404: Type.Object({
-        errors: Type.Array(
-          Type.Object({
-            status: Type.String(),
-            title: Type.String(),
-            detail: Type.String(),
-          })
-        ),
-      }),
     },
   };
 }

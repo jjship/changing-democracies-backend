@@ -5,6 +5,7 @@ import { TagEntity } from '../../db/entities/Tag';
 import { NameEntity } from '../../db/entities/Name';
 import { tagSchema, createTagSchema, updateTagSchema } from './tag.schema';
 import { LanguageEntity } from '../../db/entities/Language';
+import { NotFoundError } from '../../errors';
 
 export const registerTagControllers =
   (app: FastifyInstance) =>
@@ -75,7 +76,7 @@ export const registerTagControllers =
         });
 
         if (!tag) {
-          throw app.httpErrors.notFound('Tag not found');
+          throw new NotFoundError('Tag not found');
         }
 
         // Delete existing names
