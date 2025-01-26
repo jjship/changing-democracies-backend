@@ -84,14 +84,12 @@ jobs:
               rm -rf /tmp/cd_admin_temp
             fi
             
-            # Run deployment script
             ./scripts/deploy.sh;
           '
 
       - name: Verify Deployment
         id: verify
         run: |
-          # Wait for services to start
           sleep 10
           if ! curl -sSf http://${{ secrets.API_URL }}/health; then
             echo "::error::Health check failed"
@@ -110,7 +108,7 @@ jobs:
             
             git reset --hard ${{ env.PREVIOUS_COMMIT }}
             
-            docker compose down
+            docker compose -f docker-compose.prod.yml down --volumes=false
             
             if [ "${{ env.ACTIVE_CONTAINERS }}" != "none" ]; then
               echo "Restoring containers: ${{ env.ACTIVE_CONTAINERS }}"

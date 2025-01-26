@@ -13,7 +13,7 @@ ROLLBACK_COMMIT="$1"
 git reset --hard "$ROLLBACK_COMMIT"
 
 # Stop current containers
-docker compose down
+docker compose -f docker-compose.prod.yml down --volumes=false
 
 # Rebuild and restart
 ./scripts/deploy.sh
