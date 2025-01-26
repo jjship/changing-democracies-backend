@@ -22,11 +22,13 @@ run_cleanup_step() {
 
 run_cleanup_step "Container cleanup" "docker container prune -f"
 
-run_cleanup_step "Image cleanup" "docker image prune -a --force --filter 'until=24h'"
+run_cleanup_step "Image cleanup" "docker image prune -a --force --filter 'until=12h'"
 
 run_cleanup_step "Volume cleanup" \
     "docker volume ls -q | grep -v 'cd_admin-db_data' | while read vol; do docker volume rm \$vol || echo \"Could not remove volume \$vol\"; done"
 
 run_cleanup_step "Network cleanup" "docker network prune -f"
+
+run_cleanup_step "Network cleanup" "docker builder prune -f --filter until=12h"
 
 echo "Finished Docker cleanup"
