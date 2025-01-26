@@ -27,7 +27,7 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        VITE_BACKEND_URL: https://${BACKEND_HOST}:${BACKEND_PORT}
+        VITE_BACKEND_URL: ${BACKEND_URL}
         VITE_SUPABASE_URL: ${SUPABASE_URL}
         VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
     env_file: .env
