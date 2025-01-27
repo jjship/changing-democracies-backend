@@ -98,11 +98,13 @@ export const registerPersonControllers =
         });
 
         return reply.send(
-          persons.map((person) => ({
-            id: person.id,
-            name: person.name,
-            countryId: person.country?.id,
-          }))
+          persons
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((person) => ({
+              id: person.id,
+              name: person.name,
+              countryId: person.country?.id,
+            }))
         );
       },
     });
