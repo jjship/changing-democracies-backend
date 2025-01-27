@@ -39,5 +39,10 @@ export async function cdApiRequest<T>({
   };
 
   const response = await fetchWithRetry(1);
+
+  if (response.status === 204) {
+    return null as unknown as T;
+  }
+
   return response.json();
 }

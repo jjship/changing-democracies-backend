@@ -1,5 +1,15 @@
-import { Box, Text, Button } from '@chakra-ui/react';
+import { Box, Text, Button, Flex } from '@chakra-ui/react';
 import { Narrative } from '../../api/narratives';
+
+function pickName(narrative: Narrative) {
+  const englishName = narrative.names.find((nm) => nm.languageCode === 'EN')?.name;
+
+  if (!englishName) {
+    return narrative.names.find((name) => name.name.length > 0)?.name ?? '';
+  }
+
+  return englishName;
+}
 
 export function NarrativeList({
   narratives,
@@ -13,15 +23,23 @@ export function NarrativeList({
   onAdd: () => void;
 }) {
   return (
-    <Box>
-      <Button onClick={onAdd}>Add Narrative</Button>
+    <Flex m={'auto'} gap={4} p={4} direction="column">
       {narratives.map((narrative) => (
-        <Box key={narrative.id} p={4} borderWidth={1} borderRadius="md">
-          <Text>{narrative.names[0].name}</Text>
-          <Button onClick={() => onEdit(narrative)}>Edit</Button>
-          <Button onClick={() => onDelete(narrative.id)}>Delete</Button>
-        </Box>
+        <Flex direction="column" gap={4} key={narrative.id} p={4} borderWidth={1} borderRadius="md">
+          <Text>{pickName(narrative)}</Text>
+          <Flex gap={4}>
+            <Button colorScheme={'teal'} aria-label="Edit narrative" onClick={() => onEdit(narrative)}>
+              Edit
+            </Button>
+            <Button colorScheme={'orange'} aria-label="Delete narrative" onClick={() => onDelete(narrative.id)}>
+              Delete
+            </Button>
+          </Flex>
+        </Flex>
       ))}
-    </Box>
+      <Button colorScheme={'green'} onClick={onAdd}>
+        Add Narrative
+      </Button>
+    </Flex>
   );
 }

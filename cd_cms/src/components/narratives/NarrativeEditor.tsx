@@ -14,10 +14,13 @@ import {
   Flex,
   FormLabel,
   Stack,
+  IconButton,
 } from '@chakra-ui/react';
 import { Narrative, narrativesApi } from '../../api/narratives';
 import { Fragment, fragmentsApi } from '../../api/fragments';
 import { Person } from '../../api/persons';
+import { CloseIcon } from '@chakra-ui/icons';
+import { Language, languagesApi } from '../../api/languages';
 
 export default function NarrativeEditor({
   narrative,
@@ -31,9 +34,24 @@ export default function NarrativeEditor({
   persons: Person[];
 }) {
   const [currentNarrative, setCurrentNarrative] = useState<Narrative | null>(narrative);
-  const [descriptionLanguage, setDescriptionLanguage] = useState('EN');
+  const [descriptionLanguage, setDescriptionLanguage] = useState<Language | null>(null);
   const [filteredFragments, setFilteredFragments] = useState<Fragment[]>(fragments);
-  const [selectedPerson, setSelectedPerson] = useState<string | undefined>(undefined);
+  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
+  const [languages, setLanguages] = useState<Language[]>([]);
+  const [saveColor, setSaveColor] = useState<
+    | 'whiteAlpha'
+    | 'blackAlpha'
+    | 'gray'
+    | 'red'
+    | 'orange'
+    | 'yellow'
+    | 'green'
+    | 'teal'
+    | 'blue'
+    | 'cyan'
+    | 'purple'
+    | 'pink'
+  >('whiteAlpha');
 
   useEffect(() => {
     if (narrative) {
@@ -52,6 +70,16 @@ export default function NarrativeEditor({
   useEffect(() => {
     setFilteredFragments(fragments);
   }, [fragments]);
+
+  useEffect(() => {
+    const fetchLanguages = async () => {
+      const fetchedLanguages = await languagesApi.getLanguages();
+      setLanguages(fetchedLanguages);
+      setDescriptionLanguage(fetchedLanguages.find((lg) => lg.code === 'EN') ?? null);
+    };
+
+    fetchLanguages();
+  }, []);
 
   const handlePersonChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const personId = e.target.value;
@@ -75,6 +103,8 @@ export default function NarrativeEditor({
         fragmentsSequence: newFragmentsSequence,
       });
     }
+
+    setSaveColor('orange');
   };
 
   const handleDragEnd = (result: any) => {
@@ -95,35 +125,55 @@ export default function NarrativeEditor({
       ...currentNarrative,
       fragmentsSequence: newFragmentsSequence,
     });
+
+    setSaveColor('orange');
+  };
+
+  const handleRemoveFragment = (fragmentId: string) => {
+    if (!currentNarrative) return;
+
+    const newFragmentsSequence = currentNarrative.fragmentsSequence
+      .filter((fragment) => fragment.fragmentId !== fragmentId)
+      .map((fragment, index) => ({ ...fragment, sequence: index + 1 }));
+    setCurrentNarrative({
+      ...currentNarrative,
+      fragmentsSequence: newFragmentsSequence,
+    });
+
+    setSaveColor('orange');
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!currentNarrative) return;
+    if (!currentNarrative || !descriptionLanguage) return;
 
     const updatedNames = currentNarrative.names.map((name) =>
-      name.languageCode === descriptionLanguage ? { ...name, name: e.target.value } : name
+      name.languageCode === descriptionLanguage?.code ? { ...name, name: e.target.value } : name
     );
 
-    if (!currentNarrative.names.some((name) => name.languageCode === descriptionLanguage)) {
-      updatedNames.push({ languageCode: descriptionLanguage, name: e.target.value });
+    if (!currentNarrative.names.some((name) => name.languageCode === descriptionLanguage.code)) {
+      updatedNames.push({ languageCode: descriptionLanguage?.code, name: e.target.value });
     }
+
+    setSaveColor('orange');
 
     setCurrentNarrative({ ...currentNarrative, names: updatedNames });
   };
 
   const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (!currentNarrative) return;
+    if (!currentNarrative || !descriptionLanguage) return;
 
     const updatedDescriptions = currentNarrative.descriptions.map((desc) =>
-      desc.languageCode === descriptionLanguage ? { ...desc, description: e.target.value.split('\n') } : desc
+      desc.languageCode === descriptionLanguage.code ? { ...desc, description: e.target.value.split('\n') } : desc
     );
 
-    if (!currentNarrative.descriptions.some((desc) => desc.languageCode === descriptionLanguage)) {
+    if (!currentNarrative.descriptions.some((desc) => desc.languageCode === descriptionLanguage.code)) {
       updatedDescriptions.push({
-        languageCode: descriptionLanguage,
+        languageCode: descriptionLanguage.code,
         description: e.target.value.split('\n'),
       });
     }
+
+    setSaveColor('orange');
 
     setCurrentNarrative({ ...currentNarrative, descriptions: updatedDescriptions });
   };
@@ -136,6 +186,8 @@ export default function NarrativeEditor({
     } else {
       await narrativesApi.createNarrative(currentNarrative);
     }
+
+    setSaveColor('whiteAlpha');
     onSave();
   };
 
@@ -147,15 +199,16 @@ export default function NarrativeEditor({
             <VStack flex={1} spacing={6} align="stretch">
               <Select
                 placeholder="Language"
-                defaultValue="EN"
                 onChange={(e) => {
-                  setDescriptionLanguage(e.target.value);
+                  const targetLanguge = languages.find((lg) => lg.code === e.target.value) ?? null;
+                  setDescriptionLanguage(targetLanguge);
                 }}
               >
-                <option value="EN">English</option>
-                <option value="ES">Spanish</option>
-                <option value="FR">French</option>
-                {/* Add more language options as needed */}
+                {languages.map((language) => (
+                  <option key={language.code} value={language.code}>
+                    {language.name}
+                  </option>
+                ))}
               </Select>
               <Box>
                 <FormLabel fontSize="sm" fontWeight="medium">
@@ -163,7 +216,9 @@ export default function NarrativeEditor({
                 </FormLabel>
                 <HStack mb={2}>
                   <Textarea
-                    value={currentNarrative.names.find((name) => name.languageCode === descriptionLanguage)?.name ?? ''}
+                    value={
+                      currentNarrative.names.find((name) => name.languageCode === descriptionLanguage?.code)?.name ?? ''
+                    }
                     onChange={handleNameChange}
                     placeholder="Name"
                   />
@@ -178,7 +233,7 @@ export default function NarrativeEditor({
                   <Textarea
                     value={
                       currentNarrative.descriptions
-                        .find((desc) => desc.languageCode === descriptionLanguage)
+                        .find((desc) => desc.languageCode === descriptionLanguage?.code)
                         ?.description.join('\n') ?? ''
                     }
                     onChange={handleDescriptionChange}
@@ -232,16 +287,25 @@ export default function NarrativeEditor({
                           .map((fragment, index) => (
                             <Draggable key={fragment.fragmentId} draggableId={fragment.fragmentId} index={index}>
                               {(provided) => (
-                                <Box
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  p={3}
-                                  borderBottomWidth={index === currentNarrative.fragmentsSequence.length - 1 ? 0 : 1}
-                                >
-                                  SEQUENCE {fragment.sequence}:{' '}
-                                  {fragments?.find((fr) => fr.id === fragment.fragmentId)?.attributes.title ?? ''}
-                                </Box>
+                                <Flex>
+                                  <IconButton
+                                    aria-label="Remove fragment"
+                                    icon={<CloseIcon />}
+                                    colorScheme="yellow"
+                                    size="xs"
+                                    onClick={() => handleRemoveFragment(fragment.fragmentId)}
+                                  />
+                                  <Box
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    p={3}
+                                    borderBottomWidth={index === currentNarrative.fragmentsSequence.length - 1 ? 0 : 1}
+                                  >
+                                    {fragment.sequence}:{' '}
+                                    {fragments?.find((fr) => fr.id === fragment.fragmentId)?.attributes.title ?? ''}
+                                  </Box>
+                                </Flex>
                               )}
                             </Draggable>
                           ))}
@@ -253,7 +317,14 @@ export default function NarrativeEditor({
               </Box>
             </VStack>
           </Flex>
-          <Button onClick={handleSave}>Save</Button>
+          <Flex gap={4}>
+            <Button aria-label="Cancel editing" onClick={handleSave} colorScheme={'teal'}>
+              Cancel
+            </Button>
+            <Button aria-label="Save edited narrative" onClick={handleSave} colorScheme={saveColor}>
+              Save
+            </Button>
+          </Flex>
         </CardBody>
       </Card>
     )

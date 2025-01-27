@@ -43,8 +43,6 @@ describe('saveNewCountries', () => {
       },
     });
 
-    console.dir({ countriesAfter }, { depth: null });
-
     expect(countriesAfter).to.have.length(3);
     expect(countriesAfter[2].code).to.equal('ES');
     expect(countriesAfter[2].names?.find((n) => n.name === 'Spain')).to.exist;

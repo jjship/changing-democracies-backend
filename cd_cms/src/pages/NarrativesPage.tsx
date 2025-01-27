@@ -38,11 +38,16 @@ export function NarrativesPage() {
   };
 
   return (
-    <Box>
-      <NarrativeList narratives={narratives} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} />
-      {editingNarrative !== undefined && (
-        <NarrativeEditor narrative={editingNarrative} onSave={handleSave} fragments={fragments} persons={persons} />
-      )}
-    </Box>
+    fragments.length && (
+      <Box>
+        {editingNarrative === undefined && (
+          <NarrativeList narratives={narratives} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} />
+        )}
+
+        {editingNarrative !== undefined && (
+          <NarrativeEditor narrative={editingNarrative} onSave={handleSave} fragments={fragments} persons={persons} />
+        )}
+      </Box>
+    )
   );
 }

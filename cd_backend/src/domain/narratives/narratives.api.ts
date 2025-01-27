@@ -7,7 +7,7 @@ export { parseNarrativeEntity };
 
 export type NarrativeAttributes = typeof narrativeSchema.static;
 
-export type NarrativePayload = { type: 'narrative'; id?: string; attributes: NarrativeAttributes };
+export type NarrativePayload = { type: 'narrative'; id: string; attributes: NarrativeAttributes };
 
 function parseNarrativeEntity(narrative: NarrativeEntity): NarrativePayload {
   return {

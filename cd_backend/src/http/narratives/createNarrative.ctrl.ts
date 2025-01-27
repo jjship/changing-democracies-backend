@@ -112,10 +112,8 @@ export const registerCreateNarrativeController =
         });
 
         return res.status(200).send({
-          data: {
-            ...parseNarrativeEntity(newNarrative),
-            id: newNarrative.id,
-          },
+          ...parseNarrativeEntity(newNarrative),
+          id: newNarrative.id,
         });
       },
     });
@@ -139,11 +137,9 @@ function createNarrativeSchema() {
     }),
     response: {
       200: Type.Object({
-        data: Type.Object({
-          type: Type.Literal('narrative'),
-          id: Type.String(),
-          attributes: narrativeSchema,
-        }),
+        type: Type.Literal('narrative'),
+        id: Type.String(),
+        attributes: narrativeSchema,
       }),
       404: Type.Object({
         errors: Type.Array(

@@ -67,9 +67,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id, attributes: narrativeAttributes },
-    } = await resNarrative.json();
+    const { id, attributes: narrativeAttributes } = await resNarrative.json();
 
     const testData = {
       narrative: { id, ...narrativeAttributes },
@@ -108,7 +106,7 @@ describe('PATCH /narratives/:id', async () => {
     expect(res.statusCode).to.equal(200);
     const parsedRes = await res.json();
 
-    const { createdAt, updatedAt, ...attributes } = parsedRes.data.attributes;
+    const { createdAt, updatedAt, ...attributes } = parsedRes.attributes;
 
     expect(createdAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(updatedAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
@@ -171,9 +169,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id, attributes: narrativeAttributes },
-    } = await resNarrative.json();
+    const { id, attributes: narrativeAttributes } = await resNarrative.json();
 
     const testData = {
       narrative: { id, ...narrativeAttributes },
@@ -204,7 +200,7 @@ describe('PATCH /narratives/:id', async () => {
     expect(res.statusCode).to.equal(200);
     const parsedRes = await res.json();
 
-    const { fragmentsSequence, totalDurationSec } = parsedRes.data.attributes;
+    const { fragmentsSequence, totalDurationSec } = parsedRes.attributes;
     expect(fragmentsSequence).to.deep.equal([
       { fragmentId: guid3, sequence: 1 },
       { fragmentId: guid1, sequence: 2 },
@@ -280,9 +276,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id },
-    } = await resNarrative.json();
+    const { id } = await resNarrative.json();
 
     const res = await testApp
       .request()
@@ -351,9 +345,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id },
-    } = await resNarrative.json();
+    const { id } = await resNarrative.json();
 
     const res = await testApp
       .request()
@@ -371,7 +363,6 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    console.dir({ parsedRes });
     expect(parsedRes.error).to.equal(`Fragment with id '${guid4}' not found`);
   });
 });

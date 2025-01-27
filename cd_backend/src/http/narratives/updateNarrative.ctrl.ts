@@ -124,12 +124,7 @@ export const registerUpdateNarrativeController =
           return existingNarrative;
         });
 
-        return res.status(200).send({
-          data: {
-            ...parseNarrativeEntity(narrative),
-            id: narrative.id,
-          },
-        });
+        return res.status(200).send(parseNarrativeEntity(narrative));
       },
     });
   };
@@ -157,11 +152,9 @@ function updateNarrativeSchema() {
     }),
     response: {
       200: Type.Object({
-        data: Type.Object({
-          type: Type.Literal('narrative'),
-          id: Type.String(),
-          attributes: narrativeSchema,
-        }),
+        type: Type.Literal('narrative'),
+        id: Type.String(),
+        attributes: narrativeSchema,
       }),
     },
   };

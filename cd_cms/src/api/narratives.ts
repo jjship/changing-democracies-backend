@@ -26,12 +26,33 @@ export type CreateNarrativeRequest = {
 
 export type UpdateNarrativeAttributes = CreateNarrativeAttributes;
 
+export type NarrativePayload = {
+  id: string;
+  type: 'narrative';
+  attributes: {
+    names: Name[];
+    descriptions: NarrativeDescription[];
+    fragmentsSequence: NarrativeFragment[];
+    totalDurationSec: number;
+  };
+};
+
 export type Narrative = {
   id: string;
   names: Name[];
   descriptions: NarrativeDescription[];
   fragmentsSequence: NarrativeFragment[];
   totalDurationSec: number;
+};
+
+export const parseNarrativePayload = (payload: NarrativePayload): Narrative => {
+  return {
+    id: payload.id,
+    names: payload.attributes.names,
+    descriptions: payload.attributes.descriptions,
+    fragmentsSequence: payload.attributes.fragmentsSequence,
+    totalDurationSec: payload.attributes.totalDurationSec,
+  };
 };
 
 export const narrativesApi = {
@@ -43,13 +64,19 @@ export const narrativesApi = {
       },
     };
 
-    return cdApiRequest<Narrative>({
-      endpoint: '/narratives',
-      options: {
-        method: 'POST',
-        body: JSON.stringify(requestPayload),
-      },
-    });
+    try {
+      const response = await cdApiRequest<NarrativePayload>({
+        endpoint: '/narratives',
+        options: {
+          method: 'POST',
+          body: JSON.stringify(requestPayload),
+        },
+      });
+      return parseNarrativePayload(response);
+    } catch (error) {
+      console.error('Error creating narrative:', error);
+      throw error;
+    }
   },
 
   async updateNarrative(id: string, attributes: UpdateNarrativeAttributes): Promise<Narrative> {
@@ -60,30 +87,48 @@ export const narrativesApi = {
       },
     };
 
-    return cdApiRequest<Narrative>({
-      endpoint: `/narratives/${id}`,
-      options: {
-        method: 'PUT',
-        body: JSON.stringify(requestPayload),
-      },
-    });
+    try {
+      const response = await cdApiRequest<NarrativePayload>({
+        endpoint: `/narratives/${id}`,
+        options: {
+          method: 'PATCH',
+          body: JSON.stringify(requestPayload),
+        },
+      });
+      return parseNarrativePayload(response);
+    } catch (error) {
+      console.error('Error updating narrative:', error);
+      throw error;
+    }
   },
 
   async deleteNarrative(id: string): Promise<void> {
-    await cdApiRequest<void>({
-      endpoint: `/narratives/${id}`,
-      options: {
-        method: 'DELETE',
-      },
-    });
+    try {
+      await cdApiRequest<void>({
+        endpoint: `/narratives/${id}`,
+        options: {
+          method: 'DELETE',
+          body: JSON.stringify({ id }),
+        },
+      });
+    } catch (error) {
+      console.error('Error deleting narrative:', error);
+      throw error;
+    }
   },
 
   async getNarratives(): Promise<Narrative[]> {
-    return cdApiRequest<Narrative[]>({
-      endpoint: '/narratives',
-      options: {
-        method: 'GET',
-      },
-    });
+    try {
+      const response = await cdApiRequest<NarrativePayload[]>({
+        endpoint: '/narratives',
+        options: {
+          method: 'GET',
+        },
+      });
+      return response.map(parseNarrativePayload);
+    } catch (error) {
+      console.error('Error fetching narratives:', error);
+      throw error;
+    }
   },
 };

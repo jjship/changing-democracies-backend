@@ -16,6 +16,8 @@ import { ENV } from './env';
 import { registerPersonControllers } from './http/persons/persons.ctrl';
 import { registerCountryControllers } from './http/countries/countries.ctrl';
 import { HttpError } from './errors';
+import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
+import { registerLanguageControllers } from './http/languages/languages.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -29,7 +31,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   await app.register(cors, {
     origin: ENV.CMS_URL,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
@@ -49,10 +51,12 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerCreateNarrativeController(app)({ dbConnection });
     registerUpdateNarrativeController(app)({ dbConnection });
     registerDeleteNarrativeController(app)({ dbConnection });
+    registerGetNarrativesController(app)({ dbConnection });
     registerTagControllers(app)({ dbConnection });
     registerPersonControllers(app)({ dbConnection });
     registerCountryControllers(app)({ dbConnection });
     registerGetFragmentsController(app)({ dbConnection });
+    registerLanguageControllers(app)({ dbConnection });
   });
 
   return app;
