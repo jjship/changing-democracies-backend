@@ -8,6 +8,7 @@ import { TagsPage } from './pages/TagsPage';
 import { PersonsPage } from './pages/PersonPage';
 import { NarrativesPage } from './pages/NarrativesPage';
 import ErrorBoundary from './components/ErrorBoundary';
+import { NavigationPanel } from './components/NavigationPanel';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -30,11 +31,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return null; // or loading spinner
   }
 
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
-}
-
-function Dashboard() {
-  return <div>Dashboard (Protected Route)</div>;
+  return isAuthenticated ? (
+    <>
+      {' '}
+      <NavigationPanel />
+      {children}
+    </>
+  ) : (
+    <Navigate to="/login" />
+  );
 }
 
 export default function App() {
@@ -44,15 +49,7 @@ export default function App() {
         <ErrorBoundary>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/narratives" replace />} />
             <Route
               path="/tags"
               element={
