@@ -132,5 +132,3 @@ dist
 # Database files
 *.sqlite
 *.sqlite-journal
-
-notes.*
