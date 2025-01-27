@@ -9,6 +9,7 @@ import { LanguageEntity } from '../../db/entities/Language';
 import { NameEntity } from '../../db/entities/Name';
 import { NarrativeFragmentEntity } from '../../db/entities/NarrativeFragment';
 import { FragmentEntity } from '../../db/entities/Fragment';
+import { NotFoundError } from '../../errors';
 
 export const registerUpdateNarrativeController =
   (app: FastifyInstance) =>
@@ -34,16 +35,7 @@ export const registerUpdateNarrativeController =
           });
 
           if (!existingNarrative) {
-            throw {
-              statusCode: 404,
-              errors: [
-                {
-                  status: '404',
-                  title: 'Narrative Not Found',
-                  detail: `Narrative with id '${req.params.id}' not found`,
-                },
-              ],
-            };
+            throw new NotFoundError(`Narrative with id '${req.params.id}' not found`);
           }
 
           const { attributes } = req.body.data;
@@ -65,16 +57,7 @@ export const registerUpdateNarrativeController =
             attributes.names?.find((name) => !languageMap.has(name.languageCode));
 
           if (missingLanguage) {
-            throw {
-              statusCode: 404,
-              errors: [
-                {
-                  status: '404',
-                  title: 'Language Not Found',
-                  detail: `Language with code '${(missingLanguage as any).languageCode}' not found`,
-                },
-              ],
-            };
+            throw new NotFoundError(`Language with code '${(missingLanguage as any).languageCode}' not found`);
           }
 
           if (attributes.descriptions) {
@@ -118,16 +101,7 @@ export const registerUpdateNarrativeController =
                   where: { id: fragment.fragmentId },
                 });
                 if (!fragmentEntity) {
-                  throw {
-                    statusCode: 404,
-                    errors: [
-                      {
-                        status: '404',
-                        title: 'Fragment Not Found',
-                        detail: `Fragment with id '${fragment.fragmentId}' not found`,
-                      },
-                    ],
-                  };
+                  throw new NotFoundError(`Fragment with id '${fragment.fragmentId}' not found`);
                 }
 
                 totalDurationSec += fragmentEntity.durationSec;
@@ -150,12 +124,7 @@ export const registerUpdateNarrativeController =
           return existingNarrative;
         });
 
-        return res.status(200).send({
-          data: {
-            ...parseNarrativeEntity(narrative),
-            id: narrative.id,
-          },
-        });
+        return res.status(200).send(parseNarrativeEntity(narrative));
       },
     });
   };
@@ -183,20 +152,9 @@ function updateNarrativeSchema() {
     }),
     response: {
       200: Type.Object({
-        data: Type.Object({
-          type: Type.Literal('narrative'),
-          id: Type.String(),
-          attributes: narrativeSchema,
-        }),
-      }),
-      404: Type.Object({
-        errors: Type.Array(
-          Type.Object({
-            status: Type.String(),
-            title: Type.String(),
-            detail: Type.String(),
-          })
-        ),
+        type: Type.Literal('narrative'),
+        id: Type.String(),
+        attributes: narrativeSchema,
       }),
     },
   };

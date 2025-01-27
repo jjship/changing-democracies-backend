@@ -11,11 +11,13 @@ export const registerGetFragmentsController =
       method: 'GET',
       url: '/fragments',
       schema: getFragmentsSchema(),
-      handler: async (_req, reply) => {
-        const fragmets = await getFragments({ dbConnection });
+      handler: async (req, reply) => {
+        const { personIds } = req.query;
+
+        const fragments = await getFragments({ dbConnection, personIds });
 
         return reply.status(200).send({
-          data: fragmets,
+          data: fragments,
         });
       },
     });
@@ -24,6 +26,9 @@ export const registerGetFragmentsController =
       return {
         description: 'Get all video fragments',
         tags: ['fragments'] as string[],
+        querystring: Type.Object({
+          personIds: Type.Optional(Type.Array(Type.String())),
+        }),
         response: {
           200: Type.Object({
             data: Type.Array(

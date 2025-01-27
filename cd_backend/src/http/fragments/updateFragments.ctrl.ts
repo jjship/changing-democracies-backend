@@ -5,6 +5,7 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { PersonEntity } from '../../db/entities/Person';
 import { TagEntity } from '../../db/entities/Tag';
 import { parseFragmentEntity } from '../../domain/fragments/fragments.api';
+import { errorResponseSchema, NotFoundError } from '../../errors';
 
 export const registerUpdateFragmentsController =
   (app: FastifyInstance) =>
@@ -28,14 +29,7 @@ export const registerUpdateFragmentsController =
           const notFoundIds = fragmentIds.filter((id) => !existingFragments.find((fragment) => fragment.id === id));
 
           if (notFoundIds.length > 0) {
-            throw {
-              statusCode: 404,
-              errors: notFoundIds.map((id) => ({
-                status: '404',
-                title: 'Fragment Not Found',
-                detail: `Fragment with id '${id}' not found`,
-              })),
-            };
+            throw new NotFoundError(`Fragments with ids '${notFoundIds.join(', ')}' not found`);
           }
 
           const updates = await Promise.all(
@@ -49,16 +43,7 @@ export const registerUpdateFragmentsController =
               if (update.personId) {
                 const person = await personRepo.findOne({ where: { id: update.personId } });
                 if (!person) {
-                  throw {
-                    statusCode: 404,
-                    errors: [
-                      {
-                        status: '404',
-                        title: 'Person Not Found',
-                        detail: `Person with id '${update.personId}' not found`,
-                      },
-                    ],
-                  };
+                  throw new NotFoundError(`Person with id '${update.personId}' not found`);
                 }
                 fragment.person = person;
               }
@@ -71,14 +56,7 @@ export const registerUpdateFragmentsController =
                 const notFoundTagIds = update.tagIds.filter((id) => !tags.find((tag) => tag.id === id));
 
                 if (notFoundTagIds.length > 0) {
-                  throw {
-                    statusCode: 404,
-                    errors: notFoundTagIds.map((id) => ({
-                      status: '404',
-                      title: 'Tag Not Found',
-                      detail: `Tag with id '${id}' not found`,
-                    })),
-                  };
+                  throw new NotFoundError(`Tags with ids '${notFoundTagIds.join(', ')}' not found`);
                 }
 
                 fragment.tags = tags;
@@ -156,15 +134,6 @@ function updateFragmentsSchema() {
                 })
               ),
             }),
-          })
-        ),
-      }),
-      404: Type.Object({
-        errors: Type.Array(
-          Type.Object({
-            status: Type.String(),
-            title: Type.String(),
-            detail: Type.String(),
           })
         ),
       }),

@@ -100,25 +100,17 @@ describe('DELETE /narratives/:id', () => {
   });
 
   it('should return 404 when narrative not found', async () => {
-    const nonExistentId = uuid4();
+    const notFoundId = uuid4();
 
     const res = await testApp
       .request()
-      .delete(`/narratives/${nonExistentId}`)
+      .delete(`/narratives/${notFoundId}`)
       .headers({ Authorization: `Bearer ${authToken}` })
       .end();
 
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
-    expect(parsedRes).to.deep.equal({
-      errors: [
-        {
-          status: '404',
-          title: 'Narrative Not Found',
-          detail: `Narrative with id '${nonExistentId}' not found`,
-        },
-      ],
-    });
+    expect(parsedRes.error).to.equal(`Narrative with id '${notFoundId}' not found`);
   });
 });

@@ -1,49 +1,47 @@
 import { cdApiRequest } from './cdApi';
+import { Name } from './commonTypes';
 
-export interface TagName {
-  languageCode: string;
-  name: string;
-}
-
-export interface Tag {
+export type Tag = {
   id: string;
-  names: TagName[];
-}
+  names: Name[];
+};
 
-export async function createTag(names: TagName[]): Promise<Tag> {
-  return cdApiRequest<Tag>({
-    endpoint: '/tags',
-    options: {
-      method: 'POST',
-      body: JSON.stringify({ names }),
-    },
-  });
-}
+export const tagsApi = {
+  async createTag(names: Name[]): Promise<Tag> {
+    return cdApiRequest<Tag>({
+      endpoint: '/tags',
+      options: {
+        method: 'POST',
+        body: JSON.stringify({ names }),
+      },
+    });
+  },
 
-export async function updateTag(id: string, names: TagName[]): Promise<Tag> {
-  return cdApiRequest<Tag>({
-    endpoint: `/tags/${id}`,
-    options: {
-      method: 'PUT',
-      body: JSON.stringify({ names }),
-    },
-  });
-}
+  async updateTag(id: string, names: Name[]): Promise<Tag> {
+    return cdApiRequest<Tag>({
+      endpoint: `/tags/${id}`,
+      options: {
+        method: 'PUT',
+        body: JSON.stringify({ names }),
+      },
+    });
+  },
 
-export async function deleteTag(id: string): Promise<void> {
-  await cdApiRequest<void>({
-    endpoint: `/tags/${id}`,
-    options: {
-      method: 'DELETE',
-    },
-  });
-}
+  async deleteTag(id: string): Promise<void> {
+    await cdApiRequest<void>({
+      endpoint: `/tags/${id}`,
+      options: {
+        method: 'DELETE',
+      },
+    });
+  },
 
-export async function getTags(): Promise<Tag[]> {
-  return cdApiRequest<Tag[]>({
-    endpoint: '/tags',
-    options: {
-      method: 'GET',
-    },
-  });
-}
+  async getTags(): Promise<Tag[]> {
+    return cdApiRequest<Tag[]>({
+      endpoint: '/tags',
+      options: {
+        method: 'GET',
+      },
+    });
+  },
+};

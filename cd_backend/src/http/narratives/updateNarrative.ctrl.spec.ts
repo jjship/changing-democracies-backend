@@ -67,9 +67,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id, attributes: narrativeAttributes },
-    } = await resNarrative.json();
+    const { id, attributes: narrativeAttributes } = await resNarrative.json();
 
     const testData = {
       narrative: { id, ...narrativeAttributes },
@@ -108,7 +106,7 @@ describe('PATCH /narratives/:id', async () => {
     expect(res.statusCode).to.equal(200);
     const parsedRes = await res.json();
 
-    const { createdAt, updatedAt, ...attributes } = parsedRes.data.attributes;
+    const { createdAt, updatedAt, ...attributes } = parsedRes.attributes;
 
     expect(createdAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(updatedAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
@@ -171,9 +169,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id, attributes: narrativeAttributes },
-    } = await resNarrative.json();
+    const { id, attributes: narrativeAttributes } = await resNarrative.json();
 
     const testData = {
       narrative: { id, ...narrativeAttributes },
@@ -204,7 +200,7 @@ describe('PATCH /narratives/:id', async () => {
     expect(res.statusCode).to.equal(200);
     const parsedRes = await res.json();
 
-    const { fragmentsSequence, totalDurationSec } = parsedRes.data.attributes;
+    const { fragmentsSequence, totalDurationSec } = parsedRes.attributes;
     expect(fragmentsSequence).to.deep.equal([
       { fragmentId: guid3, sequence: 1 },
       { fragmentId: guid1, sequence: 2 },
@@ -213,9 +209,10 @@ describe('PATCH /narratives/:id', async () => {
   });
 
   it('should return 404 when narrative not found', async () => {
+    const notFoundId = uuid4();
     const res = await testApp
       .request()
-      .patch(`/narratives/${uuid4()}`)
+      .patch(`/narratives/${notFoundId}`)
       .headers({ Authorization: `Bearer ${authToken}` })
       .body({
         data: {
@@ -229,7 +226,7 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Narrative Not Found');
+    expect(parsedRes.error).to.equal(`Narrative with id '${notFoundId}' not found`);
   });
 
   it('should return 404 when language not found', async () => {
@@ -279,9 +276,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id },
-    } = await resNarrative.json();
+    const { id } = await resNarrative.json();
 
     const res = await testApp
       .request()
@@ -299,13 +294,14 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Language Not Found');
+    expect(parsedRes.error).to.equal("Language with code 'XX' not found");
   });
 
   it('should return 404 when fragment not found', async () => {
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
+    const guid4 = uuid4();
 
     const testVideos = [
       { guid: guid1, title: 'First Title', length: 1 },
@@ -349,9 +345,7 @@ describe('PATCH /narratives/:id', async () => {
       })
       .end();
 
-    const {
-      data: { id },
-    } = await resNarrative.json();
+    const { id } = await resNarrative.json();
 
     const res = await testApp
       .request()
@@ -361,7 +355,7 @@ describe('PATCH /narratives/:id', async () => {
         data: {
           type: 'narrative',
           attributes: {
-            fragmentsSequence: [{ fragmentId: uuid4(), sequence: 1 }],
+            fragmentsSequence: [{ fragmentId: guid4, sequence: 1 }],
           },
         },
       })
@@ -369,6 +363,6 @@ describe('PATCH /narratives/:id', async () => {
 
     expect(res.statusCode).to.equal(404);
     const parsedRes = await res.json();
-    expect(parsedRes.errors[0].title).to.equal('Fragment Not Found');
+    expect(parsedRes.error).to.equal(`Fragment with id '${guid4}' not found`);
   });
 });
