@@ -1,4 +1,4 @@
-import { Box, Text, Button, Flex } from '@chakra-ui/react';
+import { Text, Button, Flex } from '@chakra-ui/react';
 import { Narrative } from '../../api/narratives';
 
 function pickName(narrative: Narrative) {

@@ -4,7 +4,6 @@ import {
   Box,
   Card,
   CardBody,
-  Input,
   Button,
   Select,
   Textarea,
@@ -36,7 +35,6 @@ export default function NarrativeEditor({
   const [currentNarrative, setCurrentNarrative] = useState<Narrative | null>(narrative);
   const [descriptionLanguage, setDescriptionLanguage] = useState<Language | null>(null);
   const [filteredFragments, setFilteredFragments] = useState<Fragment[]>(fragments);
-  const [selectedPerson, setSelectedPerson] = useState<string | null>(null);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [saveColor, setSaveColor] = useState<
     | 'whiteAlpha'
@@ -83,7 +81,6 @@ export default function NarrativeEditor({
 
   const handlePersonChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
     const personId = e.target.value;
-    setSelectedPerson(personId);
     const response = await fragmentsApi.getFragments({ personIds: [personId] });
     setFilteredFragments(response.data);
   };
