@@ -132,3 +132,5 @@ dist
 # Database files
 *.sqlite
 *.sqlite-journal
+
+.DS_Store
