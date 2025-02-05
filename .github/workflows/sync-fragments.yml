@@ -12,5 +12,5 @@ jobs:
       - name: Trigger Sync
         run: |
           curl -X POST \
-            -H "Authorization: Bearer ${{ secrets.ADMIN_API_KEY }}" \
+            -H "x-api-key: ${{ secrets.ADMIN_API_KEY }}" \
             https://${{ secrets.API_URL }}/sync-fragments
