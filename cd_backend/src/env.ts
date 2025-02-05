@@ -38,6 +38,10 @@ const envSchema = z.object({
 
   // Supabase authentication
   SUPABASE_JWT_SECRET: z.string(),
+
+  GITHUB_API_KEY: z.string(),
+
+  CLIENT_API_KEY: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);

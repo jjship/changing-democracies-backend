@@ -11,6 +11,7 @@ export const registerGetNarrativesController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'GET',
       url: '/narratives',
+      preHandler: [app.authenticate, app.authenticateClientApiKey],
       schema: {
         description: 'Get all narratives.',
         tags: ['narratives'],

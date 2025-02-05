@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { BunnyStreamApiClient, BunnyVideo } from '../../services/bunnyStream/bunnyStreamApiClient';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { parseVideoToFragment } from './fragments.api';
+import { syncLegacyFragments } from './syncLegacyFragments';
 
 export async function syncFragments({
   dbConnection,
@@ -33,6 +34,8 @@ export async function syncFragments({
     await dbConnection.getRepository(FragmentEntity).save(newFragments);
 
     logger.info({ newFragments: newFragments.map((fr) => fr.title) }, 'New Fragments added.');
+
+    await syncLegacyFragments({ dbConnection, logger })({ bunnyVideos: videosToAdd });
   }
 
   if (fragmentsToRemove.length) {

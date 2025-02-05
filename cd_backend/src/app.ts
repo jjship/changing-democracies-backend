@@ -18,6 +18,7 @@ import { registerCountryControllers } from './http/countries/countries.ctrl';
 import { HttpError } from './errors';
 import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
+import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -45,7 +46,22 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   await app.register(async (app) => {
     await app.register(authPlugin);
-    app.addHook('onRequest', app.authenticate);
+    app.addHook('onRequest', async (request, reply) => {
+      if (request.url.startsWith('/narratives')) {
+        // Allow either JWT or Client API Key for narratives
+        try {
+          await app.authenticate(request);
+        } catch (err) {
+          await app.authenticateClientApiKey(request);
+        }
+      } else if (request.url === '/sync-fragments') {
+        // Use GitHub API Key for sync-fragments
+        await app.authenticateApiKey(request);
+      } else {
+        // Default to JWT authentication
+        await app.authenticate(request);
+      }
+    });
 
     registerUpdateFragmentsController(app)({ dbConnection });
     registerCreateNarrativeController(app)({ dbConnection });
@@ -57,6 +73,13 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerCountryControllers(app)({ dbConnection });
     registerGetFragmentsController(app)({ dbConnection });
     registerLanguageControllers(app)({ dbConnection });
+  });
+
+  await app.register(async (app) => {
+    await app.register(authPlugin);
+    app.addHook('onRequest', app.authenticateApiKey);
+
+    registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
   });
 
   return app;
