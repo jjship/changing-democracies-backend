@@ -58,12 +58,6 @@ jobs:
             echo "PREVIOUS_COMMIT=$PREVIOUS_COMMIT" >> $GITHUB_ENV
           fi
 
-          if [ -z "$CONTAINERS" ]; then
-            echo "ACTIVE_CONTAINERS=none" >> $GITHUB_ENV
-          else
-            echo "ACTIVE_CONTAINERS=$CONTAINERS" >> $GITHUB_ENV
-          fi
-
       - name: Deploy to VM
         id: deploy
         env:
@@ -108,18 +102,8 @@ jobs:
             
             git reset --hard ${{ env.PREVIOUS_COMMIT }}
             
-            docker compose -f docker-compose.prod.yml down --volumes=false
-            
-            if [ "${{ env.ACTIVE_CONTAINERS }}" != "none" ]; then
-              echo "Restoring containers: ${{ env.ACTIVE_CONTAINERS }}"
-              for container in ${{ env.ACTIVE_CONTAINERS }}; do
-                echo "Starting container: $container"
-                docker compose up -d "$container"
-              done
-            else
-              echo "No previous state found or no containers were running, starting with default configuration..."
-              ./scripts/deploy.sh
-            fi
+            # Run the deploy script to set up the environment and start services
+            ./scripts/deploy.sh
             
             echo "Rollback completed"
           '
@@ -128,7 +112,7 @@ jobs:
         if: failure()
         run: |
           sleep 10
-          if ! curl -sSf http://${{ secrets.VM_HOST }}:8083/health; then
+          if ! curl -sSf http://${{ secrets.VM_HOST }}/health; then
             echo "::error::Rollback verification failed"
             exit 1
           fi
