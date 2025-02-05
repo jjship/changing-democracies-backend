@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { BunnyStreamApiClient, BunnyVideo } from '../../services/bunnyStream/bunnyStreamApiClient';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { parseVideoToFragment } from './fragments.api';
+import { syncLegacyFragments } from './syncLegacyFragments';
 
 export async function syncFragments({
   dbConnection,
@@ -13,6 +14,7 @@ export async function syncFragments({
   bunnyStream: BunnyStreamApiClient;
   logger: FastifyBaseLogger;
 }) {
+  const syncLogger = logger.child({ module: 'sync-fragments' });
   const bunnyVideos = await bunnyStream.getVideos();
 
   const dbFragments = await dbConnection.getRepository(FragmentEntity).find();
@@ -27,21 +29,22 @@ export async function syncFragments({
     fragments: dbFragments,
   });
 
+  syncLogger.info({ videosToAdd: videosToAdd.length, fragmentsToRemove: fragmentsToRemove.length });
+
   if (videosToAdd.length) {
     const newFragments = await Promise.all(videosToAdd.map(async (video) => parseVideoToFragment(video)));
 
     await dbConnection.getRepository(FragmentEntity).save(newFragments);
 
-    logger.info({ newFragments: newFragments.map((fr) => fr.title) }, 'New Fragments added.');
+    syncLogger.info({ newFragments: newFragments.map((fr) => fr.title) });
+
+    await syncLegacyFragments({ dbConnection, logger })({ bunnyVideos: videosToAdd });
   }
 
   if (fragmentsToRemove.length) {
     await dbConnection.getRepository(FragmentEntity).remove(fragmentsToRemove);
 
-    logger.warn(
-      { removedFragments: fragmentsToRemove.map((fr) => fr.title) },
-      'Removed fragments no longer found in Library'
-    );
+    syncLogger.warn({ removedFragments: fragmentsToRemove.map((fr) => fr.title) });
   }
 }
 

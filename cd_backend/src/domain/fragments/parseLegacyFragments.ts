@@ -22,16 +22,18 @@ export function serializeFilmsCollection({ videos }: { videos: BunnyVideo[] }): 
     return prev;
   }, new Set<string>());
 
-  const films: FilmData[] = videos.map((film) => ({
-    guid: film.guid,
-    title: film.title,
-    length: film.length,
-    tags: parseTags(film.metaTags),
-    person: film.title.split('_')[2]?.trim(),
-    country: film.title.split('_')[1]?.trim(),
-    playerUrl: getFilmUrl(film.guid),
-    thumbnailUrl: getThumbnail(film.guid),
-  }));
+  const films: FilmData[] = videos
+    .filter((film) => !!film.title.split('_')[2]?.trim() && !!film.title.split('_')[1]?.trim())
+    .map((film) => ({
+      guid: film.guid,
+      title: film.title,
+      length: film.length,
+      tags: parseTags(film.metaTags),
+      person: film.title.split('_')[2]?.trim(),
+      country: film.title.split('_')[1]?.trim(),
+      playerUrl: getFilmUrl(film.guid),
+      thumbnailUrl: getThumbnail(film.guid),
+    }));
 
   const countries = new Set<string>();
 
