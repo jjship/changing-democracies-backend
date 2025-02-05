@@ -9,8 +9,6 @@ const envSchema = z.object({
   BACKEND_PORT: portSchema.default('8083'),
   BACKEND_URL: z.string(),
 
-  CMS_URL: z.string(),
-
   DB_DATABASE: z.string(),
   TEST_DATABASE: z.string(),
 
@@ -36,12 +34,14 @@ const envSchema = z.object({
       message: 'SYNC_COUNTRIES must be a boolean',
     }),
 
-  // Supabase authentication
   SUPABASE_JWT_SECRET: z.string(),
 
   GITHUB_API_KEY: z.string(),
 
   CLIENT_API_KEY: z.string(),
+
+  CMS_URL: z.string(),
+  CLIENT_URL: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);

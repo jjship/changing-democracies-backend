@@ -4,6 +4,7 @@ import { DataSource } from 'typeorm';
 import { narrativeSchema } from './narrative.schema';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 import { parseNarrativeEntity } from '../../domain/narratives/narratives.api';
+import { requireApiKeyOrJwt } from '../../auth/apiKeyAuth';
 
 export const registerGetNarrativesController =
   (app: FastifyInstance) =>
@@ -11,7 +12,7 @@ export const registerGetNarrativesController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'GET',
       url: '/narratives',
-      preHandler: [app.authenticate, app.authenticateClientApiKey],
+      preHandler: [requireApiKeyOrJwt('read:client-protected')],
       schema: {
         description: 'Get all narratives.',
         tags: ['narratives'],

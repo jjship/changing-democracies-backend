@@ -1,15 +1,12 @@
 import fp from 'fastify-plugin';
 import fastifyJwt from '@fastify/jwt';
-import fastifySensible from '@fastify/sensible';
 import { FastifyInstance, FastifyRequest } from 'fastify';
 import { ENV } from '../env';
 import { UnauthorizedError } from '../errors';
 
 declare module 'fastify' {
   interface FastifyInstance {
-    authenticate: (request: FastifyRequest) => Promise<void>;
-    authenticateApiKey: (request: FastifyRequest) => Promise<void>;
-    authenticateClientApiKey: (request: FastifyRequest) => Promise<void>;
+    authenticateJwt: (request: FastifyRequest) => Promise<void>;
   }
 }
 
@@ -33,12 +30,11 @@ declare module '@fastify/jwt' {
 }
 
 export default fp(async (fastify: FastifyInstance) => {
-  await fastify.register(fastifySensible);
   await fastify.register(fastifyJwt, {
     secret: ENV.SUPABASE_JWT_SECRET,
   });
 
-  fastify.decorate('authenticate', async (request: FastifyRequest) => {
+  fastify.decorate('authenticateJwt', async (request: FastifyRequest) => {
     try {
       await request.jwtVerify();
 
@@ -51,22 +47,6 @@ export default fp(async (fastify: FastifyInstance) => {
       };
     } catch (err) {
       throw new UnauthorizedError('Unauthorized');
-    }
-  });
-
-  // Add a new function for API key authentication
-  fastify.decorate('authenticateApiKey', async (request: FastifyRequest) => {
-    const apiKey = request.headers['x-api-key'];
-    if (!apiKey || apiKey !== ENV.GITHUB_API_KEY) {
-      throw new UnauthorizedError('Invalid API Key');
-    }
-  });
-
-  // Add a new function for client API key authentication
-  fastify.decorate('authenticateClientApiKey', async (request: FastifyRequest) => {
-    const apiKey = request.headers['x-api-key'];
-    if (!apiKey || apiKey !== ENV.CLIENT_API_KEY) {
-      throw new UnauthorizedError('Invalid Client API Key');
     }
   });
 });
