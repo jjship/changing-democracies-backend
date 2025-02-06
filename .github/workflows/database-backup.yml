@@ -2,10 +2,10 @@ name: Database Backup
 
 on:
   schedule:
-    - cron: "0 1 * * *" # Runs at 1 AM every night
+    - cron: '0 1 * * *' # Runs at 1 AM every night
   workflow_dispatch: # Allows manual triggering
   workflow_run:
-    workflows: ["Deploy"]
+    workflows: ['Deploy']
     types:
       - completed
 
@@ -39,10 +39,11 @@ jobs:
             BACKUP_DIR="/opt/cd_admin/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
             
-            docker run --rm \
-              -v cd_admin-db_data:/data \
-              -v $BACKUP_DIR:/backup \
-              alpine tar czf /backup/db_backup_$TIMESTAMP.tar.gz -C /data .
+            # Use docker cp instead of alpine container
+            TEMP_DIR=$(mktemp -d)
+            docker cp cd_admin-db:/data/. "$TEMP_DIR/"
+            tar czf "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" -C "$TEMP_DIR" .
+            rm -rf "$TEMP_DIR"
             
             if [ ! -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
               echo "Backup failed to create"
