@@ -53,8 +53,8 @@ export const registerUpdateNarrativeController =
           const languageMap = new Map(languages.map((lang) => [lang.code, lang]));
 
           const missingLanguage =
-            attributes.descriptions?.find((desc) => !languageMap.has(desc.languageCode)) ||
-            attributes.names?.find((name) => !languageMap.has(name.languageCode));
+            attributes.descriptions?.find((desc) => !languageMap.has(desc.languageCode.toUpperCase())) ||
+            attributes.names?.find((name) => !languageMap.has(name.languageCode.toUpperCase()));
 
           if (missingLanguage) {
             throw new NotFoundError(`Language with code '${(missingLanguage as any).languageCode}' not found`);
@@ -65,7 +65,7 @@ export const registerUpdateNarrativeController =
 
             const descriptions = attributes.descriptions.map((desc) => {
               const newDescription = new DescriptionEntity();
-              newDescription.language = languageMap.get(desc.languageCode)!;
+              newDescription.language = languageMap.get(desc.languageCode.toUpperCase())!;
               newDescription.description = desc.description;
               newDescription.narrative = existingNarrative;
               return newDescription;
@@ -82,7 +82,7 @@ export const registerUpdateNarrativeController =
               const newName = new NameEntity();
               newName.type = 'Narrative';
               newName.name = name.name;
-              newName.language = languageMap.get(name.languageCode)!;
+              newName.language = languageMap.get(name.languageCode.toUpperCase())!;
               newName.narrative = existingNarrative;
               return newName;
             });

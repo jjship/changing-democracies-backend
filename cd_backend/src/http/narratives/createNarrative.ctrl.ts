@@ -21,15 +21,17 @@ export const registerCreateNarrativeController =
         const newNarrative = await dbConnection.transaction(async (entityManager) => {
           const { attributes } = req.body.data;
 
-          const languageCodes = attributes.descriptions.map((desc) => desc.languageCode);
+          const languageCodes = attributes.descriptions.map((desc) => desc.languageCode.toUpperCase());
           const languages = await entityManager
             .getRepository(LanguageEntity)
             .createQueryBuilder('language')
             .where('language.code IN (:...codes)', { codes: languageCodes })
             .getMany();
-          const languageMap = new Map(languages.map((lang) => [lang.code, lang]));
+          const languageMap = new Map(languages.map((lang) => [lang.code.toUpperCase(), lang]));
 
-          const missingLanguage = attributes.descriptions.find((desc) => !languageMap.has(desc.languageCode));
+          const missingLanguage = attributes.descriptions.find(
+            (desc) => !languageMap.has(desc.languageCode.toUpperCase())
+          );
           if (missingLanguage) {
             throw {
               statusCode: 404,
@@ -46,7 +48,7 @@ export const registerCreateNarrativeController =
 
           const descriptions = attributes.descriptions.map((desc) => {
             const newDescription = new DescriptionEntity();
-            newDescription.language = languageMap.get(desc.languageCode)!;
+            newDescription.language = languageMap.get(desc.languageCode.toUpperCase())!;
             newDescription.description = desc.description;
             return newDescription;
           });
@@ -59,7 +61,7 @@ export const registerCreateNarrativeController =
             const newName = new NameEntity();
             newName.type = 'Narrative';
             newName.name = name.name;
-            newName.language = languageMap.get(name.languageCode)!;
+            newName.language = languageMap.get(name.languageCode.toUpperCase())!;
             return newName;
           });
 

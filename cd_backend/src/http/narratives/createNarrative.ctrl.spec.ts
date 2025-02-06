@@ -36,10 +36,10 @@ describe('POST /narratives', () => {
     const createNarrativePayload = {
       type: 'narrative',
       attributes: {
-        names: [{ languageCode: 'EN', name: 'New Narrative' }],
+        names: [{ languageCode: 'en', name: 'New Narrative' }],
         descriptions: [
           {
-            languageCode: 'EN',
+            languageCode: 'en',
             description: ['New Narrative Description?', 'Second, line of the description!'],
           },
         ],
@@ -76,7 +76,7 @@ describe('POST /narratives', () => {
     expect(newNarrative!.names![0].name).to.equal(createNarrativePayload.attributes.names[0].name);
     expect(newNarrative!.descriptions).to.have.length(1);
     expect(newNarrative!.descriptions![0].language.code).to.equal(
-      createNarrativePayload.attributes.descriptions[0].languageCode
+      createNarrativePayload.attributes.descriptions[0].languageCode.toUpperCase()
     );
     expect(newNarrative!.descriptions![0].description).to.deep.equal(
       createNarrativePayload.attributes.descriptions[0].description

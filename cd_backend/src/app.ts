@@ -21,6 +21,7 @@ import { registerGetNarrativesController } from './http/narratives/getNarratives
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
 import fastifySensible from '@fastify/sensible';
+import { registerGetClientNarrativesController } from './http/narratives/getClientNarratives.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -66,6 +67,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   await app.register(async (app) => {
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
+    registerGetClientNarrativesController(app)({ dbConnection });
 
     registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
   });
