@@ -92,6 +92,8 @@ describe('POST /client-narratives', async () => {
         length: 120,
         sequence: 1,
         otherPaths: [],
+        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
+        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
       },
       {
         guid: guid2,
@@ -99,6 +101,8 @@ describe('POST /client-narratives', async () => {
         length: 150,
         sequence: 2,
         otherPaths: [],
+        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid2}`,
+        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid2}/thumbnail.jpg`,
       },
     ]);
   });
