@@ -131,6 +131,16 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
     onSave();
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    markUnsaved();
+  };
+
+  const handleCountryCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCountryCode(e.target.value);
+    markUnsaved();
+  };
+
   const setBio = (newBio: string) => {
     if (!languageCode) return;
 
@@ -155,13 +165,18 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
     markUnsaved();
   };
 
+  const handleBioChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setBio(e.target.value);
+    markUnsaved();
+  };
+
   return (
     <VStack spacing={4} align="stretch">
       <FormLabel>Name</FormLabel>
-      <Input value={name || ''} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+      <Input value={name || ''} onChange={handleNameChange} placeholder="Name" />
 
       <FormLabel>Country Code</FormLabel>
-      <Input value={countryCode} onChange={(e) => setCountryCode(e.target.value)} placeholder="Country Code" />
+      <Input value={countryCode} onChange={handleCountryCodeChange} placeholder="Country Code" />
 
       <FormLabel>Language</FormLabel>
       <Select value={languageCode} onChange={(e) => setLanguageCode(e.target.value)}>
@@ -175,7 +190,7 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
       <FormLabel>Bio</FormLabel>
       <Textarea
         value={bios.find((bio) => bio.languageCode === languageCode)?.bio || ''}
-        onChange={(e) => setBio(e.target.value)}
+        onChange={handleBioChange}
         placeholder="Bio"
         minH="200px"
       />
