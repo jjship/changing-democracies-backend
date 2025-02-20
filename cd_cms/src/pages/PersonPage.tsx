@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { PersonList } from '../components/persons/PersonList';
 import { PersonForm } from '../components/persons/PersonForm';
-import { Box, Heading, Container, Divider, Button, useToast } from '@chakra-ui/react';
+import { Box, Heading, Container, Button, useToast } from '@chakra-ui/react';
 import { Person } from '../api/persons';
 import { personsApi } from '../api/persons';
 export function PersonsPage() {

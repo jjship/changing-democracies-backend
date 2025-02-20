@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { personsApi, CreatePersonRequest, Person, PersonBio } from '../../api/persons';
 import { languagesApi, Language } from '../../api/languages';
-import { Box, Input, Button, Select, Textarea, useToast, VStack, FormLabel, Flex } from '@chakra-ui/react';
+import { Input, Button, Select, Textarea, useToast, VStack, FormLabel, Flex } from '@chakra-ui/react';
 import { useSaveColor } from '../../hooks/useSaveColor';
 
 export function PersonForm({ person, onSave }: { person: Person | null; onSave: () => void }) {
