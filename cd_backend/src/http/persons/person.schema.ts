@@ -2,16 +2,23 @@ import { Type } from '@fastify/type-provider-typebox';
 
 export const personSchema = Type.Object(
   {
-    id: Type.String(),
     name: Type.String(),
-    countryId: Type.Optional(Type.String()),
+    countryCode: Type.String(),
+    bios: Type.Optional(
+      Type.Array(
+        Type.Object({
+          bio: Type.String(),
+          languageCode: Type.String(),
+        })
+      )
+    ),
   },
   { $id: 'Person' }
 );
 
-export const createPersonSchema = Type.Object({
+export const updatePersonSchema = Type.Object({
   name: Type.String(),
-  countryId: Type.Optional(Type.String()),
+  countryCode: Type.Optional(Type.String()),
+  bio: Type.Optional(Type.String()),
+  languageId: Type.Optional(Type.String()),
 });
-
-export const updatePersonSchema = createPersonSchema;

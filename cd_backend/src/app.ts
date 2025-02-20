@@ -14,7 +14,6 @@ import { registerUpdateNarrativeController } from './http/narratives/updateNarra
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 import { registerTagControllers } from './http/tags/tags.ctrl';
 import { ENV } from './env';
-import { registerPersonControllers } from './http/persons/persons.ctrl';
 import { registerCountryControllers } from './http/countries/countries.ctrl';
 import { HttpError, UnauthorizedError } from './errors';
 import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
@@ -22,7 +21,11 @@ import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
 import fastifySensible from '@fastify/sensible';
 import { registerGetClientNarrativesController } from './http/narratives/getClientNarratives.ctrl';
-
+import { registerCreatePersonController } from './http/persons/createPerson.ctrl';
+import { registerUpdatePersonController } from './http/persons/updatePerson.ctrl';
+import { registerGetPersonsController } from './http/persons/getPersons.ctrl';
+import { registerDeletePersonController } from './http/persons/deletePerson.ctrl';
+import { registerFindPersonController } from './http/persons/findPerson.ctrl';
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -57,8 +60,14 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerCreateNarrativeController(app)({ dbConnection });
     registerUpdateNarrativeController(app)({ dbConnection });
     registerDeleteNarrativeController(app)({ dbConnection });
+
+    registerCreatePersonController(app)({ dbConnection });
+    registerUpdatePersonController(app)({ dbConnection });
+    registerGetPersonsController(app)({ dbConnection });
+    registerFindPersonController(app)({ dbConnection });
+    registerDeletePersonController(app)({ dbConnection });
+
     registerTagControllers(app)({ dbConnection });
-    registerPersonControllers(app)({ dbConnection });
     registerCountryControllers(app)({ dbConnection });
     registerGetFragmentsController(app)({ dbConnection });
     registerLanguageControllers(app)({ dbConnection });

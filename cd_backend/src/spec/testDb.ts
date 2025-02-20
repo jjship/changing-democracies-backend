@@ -188,4 +188,45 @@ export const testDb = {
 
     return dbConnection.manager.save(fragmentEntities);
   },
+
+  async saveTestPerson(person: {
+    name: string;
+    countryCode: string;
+    bios?: Array<{ languageCode: string; bio: string }>;
+  }): Promise<PersonEntity> {
+    const dbConnection = getDbConnection();
+
+    return await dbConnection.transaction(async (entityManager) => {
+      const testPerson = new PersonEntity();
+      testPerson.name = person.name;
+
+      const country = await entityManager.findOne(CountryEntity, {
+        where: { code: person.countryCode },
+      });
+      if (!country) {
+        throw new Error(`Country with code '${person.countryCode}' not found`);
+      }
+      testPerson.country = country;
+
+      if (person.bios) {
+        testPerson.bios = await Promise.all(
+          person.bios.map(async (bio) => {
+            const language = await entityManager.findOne(LanguageEntity, {
+              where: { code: bio.languageCode.toUpperCase() },
+            });
+            if (!language) {
+              throw new Error(`Language with code '${bio.languageCode}' not found`);
+            }
+
+            const bioEntity = new BioEntity();
+            bioEntity.bio = bio.bio;
+            bioEntity.language = language;
+            return entityManager.save(BioEntity, bioEntity);
+          })
+        );
+      }
+
+      return await entityManager.save(PersonEntity, testPerson);
+    });
+  },
 };
