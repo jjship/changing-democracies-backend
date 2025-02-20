@@ -3,6 +3,7 @@ import { personsApi, CreatePersonRequest, Person, PersonBio } from '../../api/pe
 import { languagesApi, Language } from '../../api/languages';
 import { Input, Button, Select, Textarea, useToast, VStack, FormLabel, Flex } from '@chakra-ui/react';
 import { useSaveColor } from '../../hooks/useSaveColor';
+import { countriesApi, Country } from '../../api/countries';
 
 export function PersonForm({ person, onSave }: { person: Person | null; onSave: () => void }) {
   const [name, setName] = useState(person?.name || '');
@@ -10,11 +11,13 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
   const [bios, setBios] = useState<PersonBio[]>(person?.bios || []);
   const [languageCode, setLanguageCode] = useState('');
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
   const { saveColor, markUnsaved, markSaved } = useSaveColor();
   const toast = useToast();
 
   useEffect(() => {
     loadLanguages();
+    loadCountries();
     if (person) {
       loadPersonBio();
     }
@@ -50,6 +53,11 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
         duration: 3000,
       });
     }
+  };
+
+  const loadCountries = async () => {
+    const countries = await countriesApi.getCountries();
+    setCountries(countries);
   };
 
   const handleSubmit = async () => {
@@ -136,7 +144,7 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
     markUnsaved();
   };
 
-  const handleCountryCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCountryCode(e.target.value);
     markUnsaved();
   };
@@ -175,8 +183,14 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
       <FormLabel>Name</FormLabel>
       <Input value={name || ''} onChange={handleNameChange} placeholder="Name" />
 
-      <FormLabel>Country Code</FormLabel>
-      <Input value={countryCode} onChange={handleCountryCodeChange} placeholder="Country Code" />
+      <FormLabel>Country</FormLabel>
+      <Select value={countryCode} onChange={handleCountryCodeChange}>
+        {countries.map((country) => (
+          <option key={country.code} value={country.code}>
+            {country.code}
+          </option>
+        ))}
+      </Select>
 
       <FormLabel>Language</FormLabel>
       <Select value={languageCode} onChange={(e) => setLanguageCode(e.target.value)}>

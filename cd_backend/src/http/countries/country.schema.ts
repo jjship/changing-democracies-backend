@@ -9,7 +9,7 @@ export const countrySchema = Type.Object(
         name: Type.String(),
       })
     ),
-    code: Type.Optional(Type.String({ maxLength: 2 })),
+    code: Type.String({ maxLength: 2 }),
   },
   { $id: 'Country' }
 );
