@@ -37,8 +37,8 @@ export class FragmentEntity {
   @Column({ type: 'text' })
   thumbnailUrl: string;
 
-  @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT' })
-  person?: PersonEntity;
+  @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT', nullable: true })
+  person?: PersonEntity | null;
 
   @ManyToMany(() => TagEntity, (tag) => tag.fragments)
   @JoinTable({

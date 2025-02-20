@@ -11,6 +11,9 @@ export class PersonEntity {
   @Column({ unique: true })
   name: string;
 
+  @Column({ unique: true })
+  normalizedName: string;
+
   @ManyToOne(() => CountryEntity, (country) => country.persons, { onDelete: 'RESTRICT' })
   country?: CountryEntity;
 

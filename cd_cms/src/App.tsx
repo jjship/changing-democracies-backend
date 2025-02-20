@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ChakraProvider } from '@chakra-ui/react';
+import { ChakraProvider, Flex, Box } from '@chakra-ui/react';
 import { Login } from './pages/Login';
 
 import { supabase } from './lib/supabase';
@@ -45,38 +45,42 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <ChakraProvider>
-      <BrowserRouter>
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Navigate to="/narratives" replace />} />
-            <Route
-              path="/tags"
-              element={
-                <ProtectedRoute>
-                  <TagsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/persons"
-              element={
-                <ProtectedRoute>
-                  <PersonsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/narratives"
-              element={
-                <ProtectedRoute>
-                  <NarrativesPage />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </ErrorBoundary>
-      </BrowserRouter>
+      <Flex justifyContent="center" alignItems="flex-start" minHeight="100vh" minWidth="100vw" bg="gray.50">
+        <Box width="100%" maxWidth="1200px" p={4}>
+          <BrowserRouter>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/" element={<Navigate to="/narratives" replace />} />
+                <Route
+                  path="/tags"
+                  element={
+                    <ProtectedRoute>
+                      <TagsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/persons"
+                  element={
+                    <ProtectedRoute>
+                      <PersonsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/narratives"
+                  element={
+                    <ProtectedRoute>
+                      <NarrativesPage />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </ErrorBoundary>
+          </BrowserRouter>
+        </Box>
+      </Flex>
     </ChakraProvider>
   );
 }

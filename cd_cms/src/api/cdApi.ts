@@ -26,9 +26,17 @@ export async function cdApiRequest<T>({
         },
       });
 
-      if (!response.ok) throw new Error(`Failed to ${options.method} ${endpoint}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new NotFoundError(`Resource not found: ${endpoint}`);
+        }
+        throw new ApiError(`Failed to ${options.method} ${endpoint}`, response.status, response.statusText);
+      }
       return response;
     } catch (error) {
+      if (error instanceof NotFoundError || error instanceof ApiError) {
+        throw error;
+      }
       if (attempt <= retries) {
         console.warn(`Retrying ${options.method} ${endpoint} (${attempt}/${retries})`);
         return fetchWithRetry(attempt + 1);
@@ -45,4 +53,21 @@ export async function cdApiRequest<T>({
   }
 
   return response.json();
+}
+
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'NotFoundError';
+    // Ensures proper prototype chain for instanceof checks
+    Object.setPrototypeOf(this, NotFoundError.prototype);
+  }
+}
+
+export class ApiError extends Error {
+  constructor(message: string, public status: number, public statusText: string) {
+    super(message);
+    this.name = 'ApiError';
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
 }

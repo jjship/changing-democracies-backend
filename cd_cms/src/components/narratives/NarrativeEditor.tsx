@@ -20,6 +20,7 @@ import { Fragment, fragmentsApi } from '../../api/fragments';
 import { Person } from '../../api/persons';
 import { CloseIcon } from '@chakra-ui/icons';
 import { Language, languagesApi } from '../../api/languages';
+import { useSaveColor } from '../../hooks/useSaveColor';
 
 export default function NarrativeEditor({
   narrative,
@@ -32,24 +33,11 @@ export default function NarrativeEditor({
   fragments: Fragment[];
   persons: Person[];
 }) {
+  const { saveColor, markUnsaved, markSaved } = useSaveColor();
   const [currentNarrative, setCurrentNarrative] = useState<Narrative | null>(narrative);
   const [descriptionLanguage, setDescriptionLanguage] = useState<Language | null>(null);
   const [filteredFragments, setFilteredFragments] = useState<Fragment[]>(fragments);
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [saveColor, setSaveColor] = useState<
-    | 'whiteAlpha'
-    | 'blackAlpha'
-    | 'gray'
-    | 'red'
-    | 'orange'
-    | 'yellow'
-    | 'green'
-    | 'teal'
-    | 'blue'
-    | 'cyan'
-    | 'purple'
-    | 'pink'
-  >('whiteAlpha');
 
   useEffect(() => {
     if (narrative) {
@@ -101,7 +89,7 @@ export default function NarrativeEditor({
       });
     }
 
-    setSaveColor('orange');
+    markUnsaved();
   };
 
   const handleDragEnd = (result: any) => {
@@ -123,7 +111,7 @@ export default function NarrativeEditor({
       fragmentsSequence: newFragmentsSequence,
     });
 
-    setSaveColor('orange');
+    markUnsaved();
   };
 
   const handleRemoveFragment = (fragmentId: string) => {
@@ -137,7 +125,7 @@ export default function NarrativeEditor({
       fragmentsSequence: newFragmentsSequence,
     });
 
-    setSaveColor('orange');
+    markUnsaved();
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -151,7 +139,7 @@ export default function NarrativeEditor({
       updatedNames.push({ languageCode: descriptionLanguage?.code, name: e.target.value });
     }
 
-    setSaveColor('orange');
+    markUnsaved();
 
     setCurrentNarrative({ ...currentNarrative, names: updatedNames });
   };
@@ -170,7 +158,7 @@ export default function NarrativeEditor({
       });
     }
 
-    setSaveColor('orange');
+    markUnsaved();
 
     setCurrentNarrative({ ...currentNarrative, descriptions: updatedDescriptions });
   };
@@ -184,7 +172,7 @@ export default function NarrativeEditor({
       await narrativesApi.createNarrative(currentNarrative);
     }
 
-    setSaveColor('whiteAlpha');
+    markSaved();
     onSave();
   };
 
@@ -196,6 +184,7 @@ export default function NarrativeEditor({
             <VStack flex={1} spacing={6} align="stretch">
               <Select
                 placeholder="Language"
+                value={descriptionLanguage?.code ?? ''}
                 onChange={(e) => {
                   const targetLanguge = languages.find((lg) => lg.code === e.target.value) ?? null;
                   setDescriptionLanguage(targetLanguge);
