@@ -19,7 +19,13 @@ export const testDb = {
     await getDbConnection().transaction(async (entityManager) => {
       for (const country of countries) {
         const testCountry = new CountryEntity();
-        testCountry.names = [entityManager.getRepository(NameEntity).create({ name: country.name, type: 'Country' })];
+        const language = await entityManager.findOne(LanguageEntity, { where: { code: 'EN' } });
+        if (!language) {
+          throw new Error(`Language with code 'EN' not found`);
+        }
+        testCountry.names = [
+          entityManager.getRepository(NameEntity).create({ name: country.name, type: 'Country', language }),
+        ];
         testCountry.code = country.code;
         const savedCountry = await entityManager.save(CountryEntity, testCountry);
         ids.push(savedCountry.id);
@@ -36,6 +42,7 @@ export const testDb = {
       for (const name of names) {
         const testPerson = new PersonEntity();
         testPerson.name = name;
+        testPerson.normalizedName = name.toLowerCase().replace(/\s+/g, '-');
         const savedPerson = await entityManager.save(PersonEntity, testPerson);
         ids.push(savedPerson.id);
       }
@@ -191,6 +198,7 @@ export const testDb = {
 
   async saveTestPerson(person: {
     name: string;
+    normalizedName: string;
     countryCode: string;
     bios?: Array<{ languageCode: string; bio: string }>;
   }): Promise<PersonEntity> {
@@ -199,7 +207,7 @@ export const testDb = {
     return await dbConnection.transaction(async (entityManager) => {
       const testPerson = new PersonEntity();
       testPerson.name = person.name;
-
+      testPerson.normalizedName = person.normalizedName;
       const country = await entityManager.findOne(CountryEntity, {
         where: { code: person.countryCode },
       });

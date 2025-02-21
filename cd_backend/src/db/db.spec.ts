@@ -51,6 +51,7 @@ describe('Database', () => {
       testPerson.bios = [testBio];
       testPerson.country = testCountry;
       testPerson.name = 'testName testSurname';
+      testPerson.normalizedName = 'testName-testSurname';
       await entityManager.save(PersonEntity, testPerson);
 
       const testFragment = new FragmentEntity();

@@ -7,7 +7,7 @@ import { BioEntity } from '../../db/entities/Bio';
 import { DataSource } from 'typeorm';
 import { FragmentEntity } from '../../db/entities/Fragment';
 
-describe.only('DELETE /persons/:id', () => {
+describe('DELETE /persons/:id', () => {
   let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
@@ -28,6 +28,7 @@ describe.only('DELETE /persons/:id', () => {
 
     existingPerson = await testDb.saveTestPerson({
       name: 'John Doe',
+      normalizedName: 'john-doe',
       countryCode: 'US',
       bios: [
         { languageCode: 'EN', bio: 'English biography' },

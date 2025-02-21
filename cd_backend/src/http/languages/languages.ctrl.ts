@@ -78,27 +78,6 @@ export const registerLanguageControllers =
     });
 
     app.withTypeProvider<TypeBoxTypeProvider>().route({
-      method: 'GET',
-      url: '/languages',
-      schema: {
-        response: {
-          200: Type.Array(languageSchema),
-        },
-      },
-      handler: async (_, reply) => {
-        const languages = await dbConnection.getRepository(LanguageEntity).find();
-
-        return reply.send(
-          languages.map((language) => ({
-            id: language.id,
-            name: language.name,
-            code: language.code,
-          }))
-        );
-      },
-    });
-
-    app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'DELETE',
       url: '/languages/:id',
       schema: {

@@ -35,28 +35,68 @@ jobs:
       - name: Create Database Backup
         run: |
           ssh deployment_target '
+            set -e  # Exit immediately if a command exits with non-zero status
+            
             mkdir -p /opt/cd_admin/backups
             BACKUP_DIR="/opt/cd_admin/backups"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
             
-            # Use docker cp instead of alpine container
-            TEMP_DIR=$(mktemp -d)
-            docker cp cd_admin-db:/data/. "$TEMP_DIR/"
-            tar czf "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" -C "$TEMP_DIR" .
-            rm -rf "$TEMP_DIR"
+            # Get the actual container name
+            CONTAINER_NAME=$(docker ps --format "{{.Names}}" | grep cd_backend)
             
-            if [ ! -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
-              echo "Backup failed to create"
+            if [ -z "$CONTAINER_NAME" ]; then
+              echo "Error: cd_backend container not found"
+              docker ps
               exit 1
             fi
             
-            echo "Backup created successfully: db_backup_$TIMESTAMP.tar.gz"
+            echo "Found container: $CONTAINER_NAME"
+            
+            # Create temp directory
+            TEMP_DIR=$(mktemp -d)
+            
+            # Copy the database files and check for errors
+            if ! docker cp $CONTAINER_NAME:/cd_backend/data/. "$TEMP_DIR/"; then
+              echo "Failed to copy database from container"
+              rm -rf "$TEMP_DIR"
+              exit 1
+            fi
+            
+            # Verify files were copied and not empty
+            if [ ! -f "$TEMP_DIR/database.sqlite" ]; then
+              echo "Database file not found in copied files"
+              ls -la "$TEMP_DIR"
+              rm -rf "$TEMP_DIR"
+              exit 1
+            fi
+            
+            # Create the backup
+            tar czf "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" -C "$TEMP_DIR" .
+            rm -rf "$TEMP_DIR"
+            
+            # Verify backup size
+            if [ ! -s "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
+              echo "Error: Backup file is empty"
+              rm -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz"
+              exit 1
+            fi
+            
+            BACKUP_SIZE=$(ls -lh "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" | awk "{ print \$5 }")
+            echo "Backup created successfully: db_backup_$TIMESTAMP.tar.gz (Size: $BACKUP_SIZE)"
           '
 
       - name: Cleanup Old Backups
+        if: success() # Only run if backup was successful
         run: |
           ssh deployment_target '
+            set -e
             BACKUP_DIR="/opt/cd_admin/backups"
+            
+            # Verify we have valid backups before cleanup
+            if [ ! -d "$BACKUP_DIR" ] || [ -z "$(ls -A $BACKUP_DIR)" ]; then
+              echo "No backups found to clean up"
+              exit 1
+            fi
             
             find $BACKUP_DIR -type f -name "db_backup_*.tar.gz" -mtime +30 -delete
             
