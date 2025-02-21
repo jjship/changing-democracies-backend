@@ -25,6 +25,7 @@ describe('GET /person', () => {
 
     existingPerson = await testDb.saveTestPerson({
       name: 'John Doe',
+      normalizedName: 'john-doe',
       countryCode: 'US',
       bios: [
         { languageCode: 'EN', bio: 'English biography' },

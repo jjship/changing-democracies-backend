@@ -26,6 +26,7 @@ import { registerUpdatePersonController } from './http/persons/updatePerson.ctrl
 import { registerGetPersonsController } from './http/persons/getPersons.ctrl';
 import { registerDeletePersonController } from './http/persons/deletePerson.ctrl';
 import { registerFindPersonController } from './http/persons/findPerson.ctrl';
+import { registerGetLanguagesController } from './http/languages/getLanguages.ctrl';
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -55,7 +56,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   await app.register(async (app) => {
     await app.register(jwtAuthPlugin);
     app.addHook('onRequest', app.authenticateJwt);
-
+    registerGetNarrativesController(app)({ dbConnection });
     registerUpdateFragmentsController(app)({ dbConnection });
     registerCreateNarrativeController(app)({ dbConnection });
     registerUpdateNarrativeController(app)({ dbConnection });
@@ -85,8 +86,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     await app.register(jwtAuthPlugin);
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
-
-    registerGetNarrativesController(app)({ dbConnection });
+    registerGetLanguagesController(app)({ dbConnection });
   });
 
   return app;

@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { getDbConnection } from '../../db/db';
 import uuid4 from 'uuid4';
 import { ENV } from '../../env';
+import { PersonEntity } from '../../db/entities/Person';
 
 // Describe the test suite for the getClientNarratives endpoint
 
@@ -30,9 +31,25 @@ describe('POST /client-narratives', async () => {
     const guid1 = uuid4();
     const guid2 = uuid4();
 
+    await testDb.saveTestCountries([{ code: 'US', name: 'United States' }]);
+
+    await testDb.saveTestPerson({
+      name: 'Test Person',
+      normalizedName: 'test-person',
+      countryCode: 'US',
+      bios: [
+        { languageCode: 'EN', bio: 'English bio' },
+        { languageCode: 'ES', bio: 'Spanish bio' },
+      ],
+    });
+
+    const testPerson = await dbConnection
+      .getRepository(PersonEntity)
+      .findOneOrFail({ where: { name: 'Test Person' }, relations: ['bios', 'bios.language'] });
+
     const testFragments = [
-      { guid: guid1, title: 'First Fragment', durationSec: 120, length: 120 },
-      { guid: guid2, title: 'Second Fragment', durationSec: 150, length: 150 },
+      { guid: guid1, title: 'First Fragment', durationSec: 120, length: 120, personId: testPerson.id },
+      { guid: guid2, title: 'Second Fragment', durationSec: 150, length: 150, personId: testPerson.id },
     ];
 
     await testDb.saveTestFragments(testFragments);
@@ -83,14 +100,23 @@ describe('POST /client-narratives', async () => {
     const [narrativeRes] = parsedRes;
 
     expect(narrativeRes.title).to.equal('Narrative 1');
-    expect(narrativeRes.description).to.deep.equal(['Description 1']);
+    expect(narrativeRes.descriptions).to.deep.equal([
+      {
+        languageCode: 'EN',
+        description: ['Description 1'],
+      },
+    ]);
     expect(narrativeRes.total_length).to.equal(270);
-    expect(narrativeRes.fragments).to.deep.equal([
+
+    // Create fragments without bios for deep equality check
+    const expectedFragmentsWithoutBios = [
       {
         guid: guid1,
         title: 'First Fragment',
         length: 120,
         sequence: 1,
+        person: 'Test Person',
+        country: 'United States',
         otherPaths: [],
         playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
         thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
@@ -100,11 +126,27 @@ describe('POST /client-narratives', async () => {
         title: 'Second Fragment',
         length: 150,
         sequence: 2,
+        person: 'Test Person',
+        country: 'United States',
         otherPaths: [],
         playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid2}`,
         thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid2}/thumbnail.jpg`,
       },
-    ]);
+    ];
+
+    expect(
+      narrativeRes.fragments.map(
+        ({ bios, ...rest }: { bios: { languageCode: string; bio: string }[]; [key: string]: any }) => rest
+      )
+    ).to.deep.equal(expectedFragmentsWithoutBios);
+
+    // Assert bios separately
+    narrativeRes.fragments.forEach((fragment: { bios: { languageCode: string; bio: string }[] }) => {
+      expect(fragment.bios).to.have.deep.members([
+        { languageCode: 'EN', bio: 'English bio' },
+        { languageCode: 'ES', bio: 'Spanish bio' },
+      ]);
+    });
   });
 
   it('should return an empty array when there are no narratives', async () => {

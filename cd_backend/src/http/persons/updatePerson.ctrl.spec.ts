@@ -30,6 +30,7 @@ describe('PATCH /persons/:id', () => {
     // Create an initial person to update
     existingPerson = await testDb.saveTestPerson({
       name: 'John Doe',
+      normalizedName: 'john-doe',
       countryCode: 'US',
       bios: [
         { languageCode: 'EN', bio: 'English biography' },
@@ -117,6 +118,7 @@ describe('PATCH /persons/:id', () => {
     // Create another person first
     await testDb.saveTestPerson({
       name: 'Jane Doe',
+      normalizedName: 'jane-doe',
       countryCode: 'US',
     });
 

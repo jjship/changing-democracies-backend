@@ -12,42 +12,7 @@ export const registerGetClientNarrativesController =
       method: 'POST',
       url: '/client-narratives',
       preHandler: [requireApiKey('read:client-protected')],
-      schema: {
-        description: 'Get client narratives filtered by language.',
-        tags: ['narratives'],
-        body: Type.Object({
-          languageCode: Type.String({ minLength: 2, maxLength: 2 }),
-        }),
-        response: {
-          200: Type.Array(
-            Type.Object({
-              id: Type.String(),
-              title: Type.String(),
-              description: Type.Array(Type.String()),
-              total_length: Type.Number(),
-              fragments: Type.Array(
-                Type.Object({
-                  guid: Type.String(),
-                  title: Type.String(),
-                  length: Type.Number(),
-                  person: Type.Optional(Type.String()),
-                  country: Type.Optional(Type.String()),
-                  sequence: Type.Number(),
-                  otherPaths: Type.Array(
-                    Type.Object({
-                      id: Type.String(),
-                      title: Type.String(),
-                    })
-                  ),
-                  playerUrl: Type.String(),
-                  thumbnailUrl: Type.String(),
-                  description: Type.Optional(Type.String()),
-                })
-              ),
-            })
-          ),
-        },
-      },
+      schema: getClientNarrativesSchema(),
       handler: async (req, res) => {
         const languageCode = req.body.languageCode.toUpperCase();
         const narrativeRepo = dbConnection.getRepository(NarrativeEntity);
@@ -65,6 +30,8 @@ export const registerGetClientNarrativesController =
             'narrativeFragments.fragment.person.country',
             'narrativeFragments.fragment.person.country.names',
             'narrativeFragments.fragment.person.country.names.language',
+            'narrativeFragments.fragment.person.bios',
+            'narrativeFragments.fragment.person.bios.language',
           ],
         });
 
@@ -75,7 +42,10 @@ export const registerGetClientNarrativesController =
             const descriptions =
               narrative.descriptions
                 ?.filter((desc) => desc.language.code === languageCode)
-                .flatMap((desc) => desc.description) || [];
+                .map((desc) => ({
+                  languageCode: desc.language.code,
+                  description: desc.description,
+                })) || [];
 
             const fragments = await Promise.all(
               narrative.narrativeFragments?.map(async (narrativeFragment) => {
@@ -98,6 +68,11 @@ export const registerGetClientNarrativesController =
                   length: narrativeFragment.fragment.durationSec,
                   sequence: narrativeFragment.sequence,
                   person: narrativeFragment.fragment.person?.name,
+                  bios:
+                    narrativeFragment.fragment.person?.bios?.map((bio) => ({
+                      languageCode: bio.language.code,
+                      bio: bio.bio,
+                    })) || [],
                   country: narrativeFragment.fragment.person?.country?.names?.find(
                     (name) => name.language.code === languageCode
                   )?.name,
@@ -111,7 +86,7 @@ export const registerGetClientNarrativesController =
             return {
               id: narrative.id,
               title,
-              description: descriptions,
+              descriptions,
               total_length: narrative.totalDurationSec,
               fragments,
             };
@@ -122,3 +97,44 @@ export const registerGetClientNarrativesController =
       },
     });
   };
+
+function getClientNarrativesSchema() {
+  return {
+    description: 'Get client narratives filtered by language.',
+    tags: ['narratives'],
+    body: Type.Object({
+      languageCode: Type.String({ minLength: 2, maxLength: 2 }),
+    }),
+    response: {
+      200: Type.Array(
+        Type.Object({
+          id: Type.String(),
+          title: Type.String(),
+          descriptions: Type.Array(
+            Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) })
+          ),
+          total_length: Type.Number(),
+          fragments: Type.Array(
+            Type.Object({
+              guid: Type.String(),
+              title: Type.String(),
+              length: Type.Number(),
+              person: Type.Optional(Type.String()),
+              bios: Type.Array(Type.Object({ languageCode: Type.String(), bio: Type.String() })),
+              country: Type.Optional(Type.String()),
+              sequence: Type.Number(),
+              otherPaths: Type.Array(
+                Type.Object({
+                  id: Type.String(),
+                  title: Type.String(),
+                })
+              ),
+              playerUrl: Type.String(),
+              thumbnailUrl: Type.String(),
+            })
+          ),
+        })
+      ),
+    },
+  };
+}
