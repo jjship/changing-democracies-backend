@@ -11,6 +11,7 @@ export async function deleteDuplicateCaptions({
   dryRun?: boolean;
 }) {
   const bunnyVideos = await bunnyStream.getVideos();
+  const deletedCaptions: Array<{ videoId: string; deletedCaptions: string[] }> = [];
 
   for (const video of bunnyVideos) {
     // Group captions by label
@@ -22,6 +23,8 @@ export async function deleteDuplicateCaptions({
       {} as Record<string, typeof video.captions>
     );
 
+    const videoDeletions: string[] = [];
+
     for (const labelGroup of Object.values(captionsByLabel)) {
       if (labelGroup.length > 1) {
         const autoCaption = labelGroup.find((c) => c.srclang.endsWith('-auto'));
@@ -31,8 +34,18 @@ export async function deleteDuplicateCaptions({
           if (!dryRun) {
             await bunnyStream.deleteVideoCaptions({ videoId: video.guid, srclang: autoCaption.srclang });
           }
+          videoDeletions.push(autoCaption.srclang);
         }
       }
     }
+
+    if (videoDeletions.length > 0) {
+      deletedCaptions.push({
+        videoId: video.guid,
+        deletedCaptions: videoDeletions,
+      });
+    }
   }
+
+  return deletedCaptions;
 }

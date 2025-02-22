@@ -14,5 +14,5 @@ jobs:
           curl -X POST \
             -H "x-api-key: ${{ secrets.ADMIN_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"dryRun": true}' \
+            -d '{"dryRun": false}' \
             https://${{ secrets.API_URL }}/delete-duplicate-captions

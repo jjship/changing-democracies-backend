@@ -19,9 +19,16 @@ export const registerDeleteDuplicateCaptionsController =
       },
       preHandler: [requireApiKey('write:github-protected')],
       handler: async (request, reply) => {
-        await deleteDuplicateCaptions({ bunnyStream, logger: request.log, dryRun: request.body.dryRun });
+        const deletedCaptions = await deleteDuplicateCaptions({
+          bunnyStream,
+          logger: request.log,
+          dryRun: request.body.dryRun,
+        });
 
-        return reply.status(200).send({ message: 'Fragments synced successfully' });
+        return reply.status(200).send({
+          message: request.body.dryRun ? 'Dry run completed' : 'Captions deleted successfully',
+          deletedCaptions,
+        });
       },
     });
   };
