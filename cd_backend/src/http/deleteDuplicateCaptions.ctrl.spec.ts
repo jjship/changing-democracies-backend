@@ -95,4 +95,45 @@ describe('Delete Duplicate Captions Controller', () => {
     expect(response.statusCode).to.equal(200);
     expect(bunnyStreamMock.deleteVideoCaptions.called).to.be.false;
   });
+
+  it('should return list of deleted captions', async () => {
+    const mockVideos = [
+      {
+        guid: 'video1',
+        captions: [
+          { srclang: 'nl', label: 'NL' },
+          { srclang: 'nl-auto', label: 'NL' },
+          { srclang: 'fr', label: 'FR' },
+          { srclang: 'fr-auto', label: 'FR' },
+        ],
+      },
+    ];
+
+    const bunnyStreamMock = {
+      getVideos: sinon.stub().resolves(mockVideos),
+      deleteVideoCaptions: sinon.stub().resolves(),
+    };
+
+    const app = await setupTestApp({ bunnyStream: bunnyStreamMock });
+
+    const response = await app
+      .request()
+      .post('/delete-duplicate-captions')
+      .headers({ 'x-api-key': ENV.GITHUB_API_KEY })
+      .body({
+        dryRun: true,
+      })
+      .end();
+
+    expect(response.statusCode).to.equal(200);
+    expect(JSON.parse(response.payload)).to.deep.equal({
+      message: 'Dry run completed',
+      deletedCaptions: [
+        {
+          videoId: 'video1',
+          deletedCaptions: ['nl-auto', 'fr-auto'],
+        },
+      ],
+    });
+  });
 });
