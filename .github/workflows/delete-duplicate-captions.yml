@@ -1,4 +1,4 @@
-name: Sync Fragments
+name: Delete Duplicate Captions
 
 on:
   schedule:
