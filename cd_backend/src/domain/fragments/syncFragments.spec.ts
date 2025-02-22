@@ -6,7 +6,6 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import uuid4 from 'uuid4';
 import { logger } from '../../services/logger/logger';
 import { parseVideoToFragment } from './fragments.api';
-import { NarrativeEntity } from '../../db/entities/Narrative';
 
 describe('syncFragments', () => {
   it('should parse new videos and save them in database', async () => {
@@ -23,6 +22,7 @@ describe('syncFragments', () => {
 
     const bunnyStreamApiMock = {
       getVideos: sinon.stub().resolves(mockVids),
+      deleteVideoCaptions: sinon.stub().resolves(),
     };
 
     await syncFragments({ dbConnection, bunnyStream: bunnyStreamApiMock, logger: logger });
@@ -66,6 +66,7 @@ describe('syncFragments', () => {
 
     const bunnyStreamApiMock = {
       getVideos: sinon.stub().resolves(currVids),
+      deleteVideoCaptions: sinon.stub().resolves(),
     };
 
     await syncFragments({ dbConnection, bunnyStream: bunnyStreamApiMock, logger: logger });

@@ -1,9 +1,7 @@
 import fastify, { FastifyBaseLogger } from 'fastify';
-import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { logger } from './services/logger/logger';
 import jwtAuthPlugin from './auth/jwtAuth';
 import apiKeyAuthPlugin from './auth/apiKeyAuth';
-import { syncFragments } from './domain/fragments/fragments.api';
 import cors from '@fastify/cors';
 import { registerGetFragmentsController } from './http/fragments/getFragments.ctrl';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
@@ -15,7 +13,7 @@ import { registerDeleteNarrativeController } from './http/narratives/deleteNarra
 import { registerTagControllers } from './http/tags/tags.ctrl';
 import { ENV } from './env';
 import { registerCountryControllers } from './http/countries/countries.ctrl';
-import { HttpError, UnauthorizedError } from './errors';
+import { HttpError } from './errors';
 import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
@@ -27,6 +25,7 @@ import { registerGetPersonsController } from './http/persons/getPersons.ctrl';
 import { registerDeletePersonController } from './http/persons/deletePerson.ctrl';
 import { registerFindPersonController } from './http/persons/findPerson.ctrl';
 import { registerGetLanguagesController } from './http/languages/getLanguages.ctrl';
+import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicateCaptions.ctrl';
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -80,6 +79,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerGetClientNarrativesController(app)({ dbConnection });
 
     registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
+    registerDeleteDuplicateCaptionsController(app)({ bunnyStream });
   });
 
   await app.register(async (app) => {
