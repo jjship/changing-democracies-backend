@@ -47,6 +47,15 @@ type GetVideosResponse = {
 export const createVideosApi =
   ({ axios, logger }: { axios: AxiosInstance; logger: FastifyBaseLogger }) =>
   ({ collectionId }: { collectionId: string }) => ({
+    async deleteVideoCaptions({ videoId, srclang }: { videoId: string; srclang: string }) {
+      try {
+        await axios.delete(`/videos/${videoId}/captions/${srclang}`);
+      } catch (err) {
+        logger.error({ err, videoId, srclang }, 'Error while deleting video captions.');
+        throw err;
+      }
+    },
+
     async getVideos() {
       try {
         let allVideos: BunnyVideo[] = [];
