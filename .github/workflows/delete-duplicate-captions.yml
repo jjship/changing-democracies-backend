@@ -6,11 +6,13 @@ on:
   workflow_dispatch:
 
 jobs:
-  sync:
+  delete-duplicate-captions:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Sync
+      - name: Trigger Duplicate Captions Deletion
         run: |
           curl -X POST \
             -H "x-api-key: ${{ secrets.ADMIN_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{"dryRun": true}' \
             https://${{ secrets.API_URL }}/delete-duplicate-captions
