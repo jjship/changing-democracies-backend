@@ -45,6 +45,10 @@ export function NarrativesPage() {
     setEditingNarrative(null);
   };
 
+  const handleCancel = () => {
+    setEditingNarrative(undefined);
+  };
+
   return (
     fragments.length && (
       <Box>
@@ -53,7 +57,13 @@ export function NarrativesPage() {
         )}
 
         {editingNarrative !== undefined && (
-          <NarrativeEditor narrative={editingNarrative} onSave={handleSave} fragments={fragments} persons={persons} />
+          <NarrativeEditor
+            narrative={editingNarrative}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            fragments={fragments}
+            persons={persons}
+          />
         )}
       </Box>
     )

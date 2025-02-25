@@ -6,10 +6,40 @@ import { NameEntity } from '../../db/entities/Name';
 import { tagSchema, createTagSchema, updateTagSchema } from './tag.schema';
 import { LanguageEntity } from '../../db/entities/Language';
 import { NotFoundError } from '../../errors';
+import { FragmentEntity } from '../../db/entities/Fragment';
+import { In } from 'typeorm';
 
 export const registerTagControllers =
   (app: FastifyInstance) =>
   ({ dbConnection }: { dbConnection: DataSource }) => {
+    app.withTypeProvider<TypeBoxTypeProvider>().route({
+      method: 'GET',
+      url: '/tags',
+      schema: {
+        response: {
+          200: Type.Array(tagSchema),
+        },
+      },
+      handler: async (request, reply) => {
+        const tagRepo = dbConnection.getRepository(TagEntity);
+
+        const tags = await tagRepo.find({
+          relations: ['names', 'names.language', 'fragments'],
+        });
+
+        return reply.send(
+          tags
+            .map((tag) => parseTagEntity(tag))
+            .sort(
+              (a, b) =>
+                a.names
+                  .find((n) => n.languageCode === 'EN')
+                  ?.name.localeCompare(b.names.find((n) => n.languageCode === 'EN')?.name ?? '') ?? 0
+            )
+        );
+      },
+    });
+
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'POST',
       url: '/tags',
@@ -42,14 +72,7 @@ export const registerTagControllers =
         await dbConnection.getRepository(TagEntity).save(tag);
 
         // Format response according to schema
-        return reply.status(201).send({
-          id: tag.id,
-          names:
-            tag.names?.map((n) => ({
-              languageCode: n.language.code,
-              name: n.name,
-            })) || [],
-        });
+        return reply.status(201).send(parseTagEntity(tag));
       },
     });
 
@@ -72,7 +95,7 @@ export const registerTagControllers =
         // Find existing tag
         const tag = await tagRepo.findOne({
           where: { id: request.params.id },
-          relations: ['names', 'names.language'],
+          relations: ['names', 'names.language', 'fragments'],
         });
 
         if (!tag) {
@@ -101,15 +124,20 @@ export const registerTagControllers =
         );
 
         tag.names = names;
+
+        // Handle fragment associations if fragmentIds are provided
+        if (request.body.fragmentIds && request.body.fragmentIds.length > 0) {
+          const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+          const fragments = await fragmentRepo.findBy({
+            id: In(request.body.fragmentIds),
+          });
+
+          tag.fragments = fragments;
+        }
+
         await tagRepo.save(tag);
 
-        return reply.send({
-          id: tag.id,
-          names: tag.names.map((n) => ({
-            languageCode: n.language.code,
-            name: n.name,
-          })),
-        });
+        return reply.send(parseTagEntity(tag));
       },
     });
 
@@ -125,8 +153,42 @@ export const registerTagControllers =
         },
       },
       handler: async (request, reply) => {
-        await dbConnection.getRepository(TagEntity).delete(request.params.id);
+        const tagRepo = dbConnection.getRepository(TagEntity);
+
+        // First find the tag with its fragment associations
+        const tag = await tagRepo.findOne({
+          where: { id: request.params.id },
+          relations: ['fragments'],
+        });
+
+        if (tag) {
+          // Remove fragment associations by setting fragments to empty array
+          // This will update the join table before the tag is deleted
+          tag.fragments = [];
+          await tagRepo.save(tag);
+
+          // Now delete the tag
+          await tagRepo.delete(request.params.id);
+        }
+
         return reply.status(204).send();
       },
     });
   };
+
+const parseTagEntity = (tag: TagEntity & { names?: NameEntity[] | null; fragments?: FragmentEntity[] | null }) => {
+  return {
+    id: tag.id,
+    names:
+      tag.names?.map((n) => ({
+        languageCode: n.language.code,
+        name: n.name,
+      })) || [],
+    fragments:
+      tag.fragments?.map((fragment) => ({
+        id: fragment.id,
+        title: fragment.title,
+        thumbnailUrl: fragment.thumbnailUrl,
+      })) || [],
+  };
+};

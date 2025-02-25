@@ -1,101 +1,88 @@
-import {
-  Box,
-  Button,
-  VStack,
-  useToast,
-  Heading,
-  FormControl,
-  FormLabel,
-  Input,
-  HStack,
-  IconButton,
-} from '@chakra-ui/react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { DeleteIcon, AddIcon } from '@chakra-ui/icons';
+import { useEffect, useState } from 'react';
+import { TagsList } from '../components/tags/TagsList';
+import { Box, Heading, Container, Button, useToast } from '@chakra-ui/react';
+import { Tag } from '../api/tags';
 import { tagsApi } from '../api/tags';
-
-const tagSchema = z.object({
-  names: z
-    .array(
-      z.object({
-        languageCode: z.string().min(2).max(2),
-        name: z.string().min(1),
-      })
-    )
-    .min(1),
-});
-
-type TagFormData = z.infer<typeof tagSchema>;
+import TagEditor from '../components/tags/TagEditor';
+import { Fragment, fragmentsApi } from '../api/fragments';
+import { Person, personsApi } from '../api/persons';
 
 export function TagsPage() {
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [fragments, setFragments] = useState<Fragment[]>([]);
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [refresh, setRefresh] = useState(false);
+  const [editingTag, setEditingTag] = useState<Tag | undefined | null>(undefined);
   const toast = useToast();
-  const { register, control, handleSubmit, reset } = useForm<TagFormData>({
-    resolver: zodResolver(tagSchema),
-    defaultValues: {
-      names: [{ languageCode: 'EN', name: '' }],
-    },
-  });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'names',
-  });
+  useEffect(() => {
+    loadData();
+  }, [refresh]);
 
-  const onSubmit = async (data: TagFormData) => {
+  const loadData = async () => {
     try {
-      await tagsApi.createTag(data.names);
-      toast({
-        title: 'Tag created successfully',
-        status: 'success',
-      });
-      reset();
+      const tagsData = await tagsApi.getTags();
+      setTags(tagsData);
+
+      const fragmentsResponse = await fragmentsApi.getFragments({});
+      setFragments(fragmentsResponse.data);
+
+      const personsData = await personsApi.getPersons();
+      setPersons(personsData);
     } catch (error) {
       toast({
-        title: 'Failed to create tag',
+        title: 'Error loading data, please try again',
         status: 'error',
+        duration: 3000,
       });
     }
   };
 
+  const handleSave = () => {
+    setRefresh(!refresh);
+    setEditingTag(null);
+  };
+
+  const handleEdit = (tag: Tag) => {
+    setEditingTag(tag);
+  };
+
+  const handleAdd = () => {
+    setEditingTag(null);
+  };
+
+  const handleCancel = () => {
+    setEditingTag(undefined);
+  };
+
+  const handleDelete = async (id: string) => {
+    await tagsApi.deleteTag(id);
+    setRefresh(!refresh);
+  };
+
   return (
-    <Box p={8}>
-      <Heading mb={6}>Tag Management</Heading>
+    <Container maxW="container.lg" py={8}>
+      <Heading mb={6}>Edit Tags</Heading>
 
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <VStack spacing={4} align="stretch">
-          {fields.map((field, index) => (
-            <HStack key={field.id}>
-              <FormControl>
-                <FormLabel>Language Code</FormLabel>
-                <Input {...register(`names.${index}.languageCode`)} placeholder="EN" maxLength={2} w="100px" />
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Name</FormLabel>
-                <Input {...register(`names.${index}.name`)} placeholder="Tag name" />
-              </FormControl>
-
-              <IconButton
-                aria-label="Remove language"
-                icon={<DeleteIcon />}
-                onClick={() => remove(index)}
-                disabled={fields.length === 1}
-                alignSelf="flex-end"
-              />
-            </HStack>
-          ))}
-
-          <Button leftIcon={<AddIcon />} onClick={() => append({ languageCode: '', name: '' })} size="sm">
-            Add Language
-          </Button>
-
-          <Button type="submit" colorScheme="blue">
-            Create Tag
-          </Button>
-        </VStack>
-      </form>
-    </Box>
+      <Box>
+        {editingTag === undefined && (
+          <>
+            <TagsList onEdit={handleEdit} onDelete={handleDelete} tags={tags} />
+            <Button colorScheme="green" w={'100%'} mt={6} mb={6} onClick={handleAdd}>
+              Add New Tag
+            </Button>
+          </>
+        )}
+        {editingTag !== undefined && (
+          <TagEditor
+            tag={editingTag}
+            onSave={handleSave}
+            onCancel={handleCancel}
+            fragments={fragments}
+            persons={persons}
+          />
+        )}
+      </Box>
+    </Container>
   );
 }

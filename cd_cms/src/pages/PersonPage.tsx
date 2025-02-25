@@ -7,7 +7,7 @@ import { personsApi } from '../api/persons';
 export function PersonsPage() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [refresh, setRefresh] = useState(false);
-  const [editingPerson, setEditingPerson] = useState<Person | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Person | undefined | null>(undefined);
   const toast = useToast();
 
   useEffect(() => {
@@ -40,12 +40,16 @@ export function PersonsPage() {
     setEditingPerson(null);
   };
 
+  const handleCancel = () => {
+    setEditingPerson(undefined);
+  };
+
   return (
     <Container maxW="container.lg" py={8}>
       <Heading mb={6}>Edit Persons</Heading>
 
       <Box>
-        {!editingPerson && (
+        {editingPerson === undefined && (
           <>
             <PersonList onEdit={handleEdit} persons={persons} />
             <Button colorScheme="green" w={'100%'} mt={6} mb={6} onClick={handleAdd}>
@@ -53,7 +57,9 @@ export function PersonsPage() {
             </Button>
           </>
         )}
-        {editingPerson && <PersonForm person={editingPerson} onSave={handleSave} />}
+        {editingPerson !== undefined && (
+          <PersonForm person={editingPerson} onSave={handleSave} onCancel={handleCancel} />
+        )}
       </Box>
     </Container>
   );
