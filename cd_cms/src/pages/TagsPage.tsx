@@ -40,7 +40,7 @@ export function TagsPage() {
 
   const handleSave = () => {
     setRefresh(!refresh);
-    setEditingTag(null);
+    setEditingTag(undefined);
   };
 
   const handleEdit = (tag: Tag) => {
