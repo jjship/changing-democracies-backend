@@ -25,11 +25,13 @@ import { useSaveColor } from '../../hooks/useSaveColor';
 export default function NarrativeEditor({
   narrative,
   onSave,
+  onCancel,
   fragments,
   persons,
 }: {
   narrative: Narrative | null;
   onSave: () => void;
+  onCancel: () => void;
   fragments: Fragment[];
   persons: Person[];
 }) {
@@ -173,6 +175,10 @@ export default function NarrativeEditor({
     }
 
     markSaved();
+    onSave();
+  };
+
+  const handleCancel = () => {
     onSave();
   };
 

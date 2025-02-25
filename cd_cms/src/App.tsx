@@ -51,12 +51,12 @@ export default function App() {
             <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Navigate to="/narratives" replace />} />
+                <Route path="/" element={<Navigate to="/tags" replace />} />
                 <Route
-                  path="/tags"
+                  path="/narratives"
                   element={
                     <ProtectedRoute>
-                      <TagsPage />
+                      <NarrativesPage />
                     </ProtectedRoute>
                   }
                 />
@@ -69,10 +69,10 @@ export default function App() {
                   }
                 />
                 <Route
-                  path="/narratives"
+                  path="/tags"
                   element={
                     <ProtectedRoute>
-                      <NarrativesPage />
+                      <TagsPage />
                     </ProtectedRoute>
                   }
                 />

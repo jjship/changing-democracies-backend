@@ -20,7 +20,7 @@ export async function cdApiRequest<T>({
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         ...options,
         headers: {
-          'Content-Type': 'application/json',
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
           Authorization: `Bearer ${session?.access_token}`,
           ...options.headers,
         },

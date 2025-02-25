@@ -19,7 +19,9 @@ async function getFragments({
 
   const dbFragments = await queryBuilder.getMany();
 
-  return dbFragments.map((entity) => parseFragmentEntity(entity));
+  return dbFragments
+    .map((entity) => parseFragmentEntity(entity))
+    .sort((a, b) => a.attributes.title.localeCompare(b.attributes.title));
 }
 
 const getFragmentById =

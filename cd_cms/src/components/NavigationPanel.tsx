@@ -28,14 +28,14 @@ export function NavigationPanel() {
       </Box>
       <Spacer />
       <Flex gap={4}>
-        {/* <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/tags')} _hover={{ bg: 'blue.100' }}>
-          Tags
-        </Button> */}
+        <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/narratives')} _hover={{ bg: 'blue.100' }}>
+          Narratives
+        </Button>
         <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/persons')} _hover={{ bg: 'blue.100' }}>
           Persons
         </Button>
-        <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/narratives')} _hover={{ bg: 'blue.100' }}>
-          Narratives
+        <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/tags')} _hover={{ bg: 'blue.100' }}>
+          Tags
         </Button>
         <Button colorScheme="red" variant="solid" onClick={handleLogout} _hover={{ bg: 'red.600' }}>
           Logout

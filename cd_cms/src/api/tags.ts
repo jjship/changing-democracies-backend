@@ -1,9 +1,16 @@
 import { cdApiRequest } from './cdApi';
 import { Name } from './commonTypes';
 
+export type FragmentSummary = {
+  id: string;
+  title: string;
+  thumbnailUrl: string;
+};
+
 export type Tag = {
   id: string;
   names: Name[];
+  fragments: FragmentSummary[];
 };
 
 export const tagsApi = {
@@ -17,12 +24,18 @@ export const tagsApi = {
     });
   },
 
-  async updateTag(id: string, names: Name[]): Promise<Tag> {
+  async updateTag(id: string, names: Name[], fragmentIds?: string[]): Promise<Tag> {
+    const requestBody: { names: Name[]; fragmentIds?: string[] } = { names };
+
+    if (fragmentIds && fragmentIds.length > 0) {
+      requestBody.fragmentIds = fragmentIds;
+    }
+
     return cdApiRequest<Tag>({
       endpoint: `/tags/${id}`,
       options: {
         method: 'PUT',
-        body: JSON.stringify({ names }),
+        body: JSON.stringify(requestBody),
       },
     });
   },

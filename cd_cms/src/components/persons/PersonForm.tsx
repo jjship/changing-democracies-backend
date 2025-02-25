@@ -5,7 +5,15 @@ import { Input, Button, Select, Textarea, useToast, VStack, FormLabel, Flex } fr
 import { useSaveColor } from '../../hooks/useSaveColor';
 import { countriesApi, Country } from '../../api/countries';
 
-export function PersonForm({ person, onSave }: { person: Person | null; onSave: () => void }) {
+export function PersonForm({
+  person,
+  onSave,
+  onCancel,
+}: {
+  person: Person | null;
+  onSave: () => void;
+  onCancel: () => void;
+}) {
   const [name, setName] = useState(person?.name || '');
   const [countryCode, setCountryCode] = useState(person?.countryCode || '');
   const [bios, setBios] = useState<PersonBio[]>(person?.bios || []);
@@ -136,7 +144,7 @@ export function PersonForm({ person, onSave }: { person: Person | null; onSave: 
     } else {
       setLanguageCode('');
     }
-    onSave();
+    onCancel();
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
