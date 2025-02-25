@@ -179,7 +179,7 @@ export default function NarrativeEditor({
   };
 
   const handleCancel = () => {
-    onSave();
+    onCancel();
   };
 
   return (
@@ -310,7 +310,7 @@ export default function NarrativeEditor({
             </VStack>
           </Flex>
           <Flex gap={4}>
-            <Button aria-label="Cancel editing" onClick={handleSave} colorScheme={'teal'}>
+            <Button aria-label="Cancel editing" onClick={handleCancel} colorScheme={'teal'}>
               Cancel
             </Button>
             <Button aria-label="Save edited narrative" onClick={handleSave} colorScheme={saveColor}>
