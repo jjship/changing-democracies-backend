@@ -18,9 +18,9 @@ fi
 echo "Cleaning up unused Docker resources..."
 docker system prune -f 2>/dev/null || true
 
-# Set memory limits based on 2GB total VM memory
-export BACKEND_MEMORY_LIMIT=1536m  # 1.5GB for backend
-export CMS_MEMORY_LIMIT=512m       # 512MB for CMS
+# Set memory limits based on 4GB total VM memory
+export BACKEND_MEMORY_LIMIT=3072m  # 3GB for backend
+export CMS_MEMORY_LIMIT=512m       # 512MB for CMS is plenty for static content
 
 # Inform about memory configuration
 echo "Memory limits: Backend=${BACKEND_MEMORY_LIMIT}, CMS=${CMS_MEMORY_LIMIT}"
@@ -210,14 +210,14 @@ services:
   cd_backend:
     mem_limit: ${BACKEND_MEMORY_LIMIT}
     environment:
-      NODE_OPTIONS: "--max-old-space-size=1200"  # Increased Node.js heap size to match container limit
+      NODE_OPTIONS: "--max-old-space-size=2400"  # 2.4GB Node.js heap for 3GB container
       
   cd_cms:
     mem_limit: ${CMS_MEMORY_LIMIT}
 EOF
 
 # Use memory-limited build
-echo "Building with memory limits for 2GB VM..."
+echo "Building with memory limits for 4GB VM..."
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
