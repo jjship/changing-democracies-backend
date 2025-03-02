@@ -1,0 +1,105 @@
+name: Nightly Application Restart
+
+on:
+  schedule:
+    # Run at 4 AM UTC every day
+    - cron: '0 3 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+concurrency:
+  group: restart_operation
+  cancel-in-progress: false
+
+jobs:
+  restart:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config << EOF
+          Host deployment_target
+            HostName ${{ secrets.VM_HOST }}
+            User ${{ secrets.VM_USER }}
+            Port ${{ secrets.VM_SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Restart Application
+        run: |
+          ssh deployment_target '
+            set -eo pipefail
+            
+            echo "Starting application restart process..."
+            cd /opt/cd_admin
+            
+            # Run Docker cleanup to remove unused resources
+            ./scripts/docker-cleanup.sh
+            
+            # Stop application containers
+            docker compose stop cd_backend
+            
+            # Perform system cleanup
+            echo "Performing system cleanup..."
+            # Clear system caches
+            sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
+            
+            # Restart application containers
+            echo "Restarting application..."
+            docker compose up -d cd_backend
+            
+            # Verify application is running
+            sleep 10
+            if docker compose ps | grep cd_backend | grep -q "Up"; then
+              echo "Application restarted successfully"
+            else
+              echo "Failed to restart application"
+              exit 1
+            fi
+          '
+
+      - name: Verify Health
+        run: |
+          sleep 15
+          attempt=1
+          max_attempts=5
+
+          while [ $attempt -le $max_attempts ]; do
+            echo "Health check attempt $attempt of $max_attempts"
+            if curl -sSf http://${{ secrets.API_URL }}/health; then
+              echo "Application is healthy"
+              exit 0
+            fi
+            
+            attempt=$((attempt+1))
+            if [ $attempt -le $max_attempts ]; then
+              echo "Waiting before next attempt..."
+              sleep 15
+            fi
+          done
+
+          echo "::error::Health check failed after $max_attempts attempts"
+          exit 1
+
+      - name: Notify on Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Nightly Restart Failed',
+              body: `The nightly application restart failed at ${new Date().toISOString()}\nWorkflow: ${context.workflow}\nSee: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}\n\nPlease check the server status manually.`
+            })
