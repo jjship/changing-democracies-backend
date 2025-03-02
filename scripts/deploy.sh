@@ -1,14 +1,22 @@
 #!/bin/bash
 set -e
 
+# Store the original directory
+ORIGINAL_DIR=$(pwd)
+
 # Free up memory before starting
 echo "Freeing up system caches..."
 sync
-echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
+# Use sudo if available, otherwise skip with a message
+if command -v sudo >/dev/null 2>&1; then
+  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
+else
+  echo "Warning: sudo not available, skipping cache clearing"
+fi
 
 # Remove unused Docker resources to free up memory
 echo "Cleaning up unused Docker resources..."
-docker system prune -f --volumes 2>/dev/null || true
+docker system prune -f 2>/dev/null || true
 
 # Set memory limits based on 2GB total VM memory
 export BACKEND_MEMORY_LIMIT=1024m  # 1GB for backend
@@ -90,8 +98,9 @@ else
         BACKUP_SUCCEEDED=true
         
         # Cleanup old backups - keep only the 10 most recent
-        cd $BACKUP_DIR
+        pushd $BACKUP_DIR > /dev/null
         ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm --
+        popd > /dev/null
       fi
     fi
   fi
@@ -136,8 +145,9 @@ if [ "$BACKUP_SUCCEEDED" = false ] && docker volume ls | grep -q $DB_VOLUME; the
         echo "Backup from volume created successfully: db_backup_$TIMESTAMP.tar.gz (Size: $BACKUP_SIZE)"
         
         # Cleanup old backups - keep only the 10 most recent
-        cd $BACKUP_DIR
+        pushd $BACKUP_DIR > /dev/null
         ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm --
+        popd > /dev/null
       fi
     fi
   fi
@@ -148,7 +158,24 @@ echo "==================== BACKUP PROCESS COMPLETE ===================="
 # Free up memory before intensive docker operations
 echo "Clearing caches before container operations..."
 sync
-echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
+# Use sudo if available, otherwise skip with a message
+if command -v sudo >/dev/null 2>&1; then
+  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
+else
+  echo "Warning: sudo not available, skipping cache clearing"
+fi
+
+# Make sure we're in the right directory
+cd "$ORIGINAL_DIR"
+
+# Ensure docker-compose.prod.yml exists before trying to use it
+if [ ! -f "docker-compose.prod.yml" ]; then
+  echo "Error: docker-compose.prod.yml not found in current directory"
+  echo "Current directory: $(pwd)"
+  echo "Directory contents:"
+  ls -la
+  exit 1
+fi
 
 # Now shutdown existing containers for the new deployment
 echo "Shutting down existing containers..."
@@ -160,29 +187,33 @@ sleep 5
 # Free memory again after stopping containers
 echo "Clearing caches before build..."
 sync
-echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
+# Use sudo if available, otherwise skip with a message
+if command -v sudo >/dev/null 2>&1; then
+  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
+else
+  echo "Warning: sudo not available, skipping cache clearing"
+fi
 
 # Continue with the deployment
-source scripts/load-env.sh
+if [ -f "scripts/load-env.sh" ]; then
+  source scripts/load-env.sh
+else
+  echo "Warning: scripts/load-env.sh not found, continuing anyway"
+fi
 
 # Create a memory-optimized override file for docker-compose
+# Using version 3.7 for better compatibility
 cat > docker-compose.memory.yml << EOF
-version: '3.8'
+version: '3.7'
 
 services:
   cd_backend:
-    deploy:
-      resources:
-        limits:
-          memory: ${BACKEND_MEMORY_LIMIT}
+    mem_limit: ${BACKEND_MEMORY_LIMIT}
     environment:
       NODE_OPTIONS: "--max-old-space-size=800"  # Limit Node.js heap size
       
   cd_cms:
-    deploy:
-      resources:
-        limits:
-          memory: ${CMS_MEMORY_LIMIT}
+    mem_limit: ${CMS_MEMORY_LIMIT}
 EOF
 
 # Use memory-limited build
@@ -197,13 +228,23 @@ for service in cd_backend cd_cms; do
   
   # Free memory between builds
   sync
-  echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
+  # Use sudo if available, otherwise skip with a message
+  if command -v sudo >/dev/null 2>&1; then
+    sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
+  else
+    echo "Warning: sudo not available, skipping cache clearing"
+  fi
 done
 
 # Free memory one last time before starting containers
 echo "Final memory cleanup before starting containers..."
 sync
-echo 1 > /proc/sys/vm/drop_caches 2>/dev/null || true
+# Use sudo if available, otherwise skip with a message
+if command -v sudo >/dev/null 2>&1; then
+  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
+else
+  echo "Warning: sudo not available, skipping cache clearing"
+fi
 
 # Start containers with memory limits
 echo "Starting containers with memory limits..."
