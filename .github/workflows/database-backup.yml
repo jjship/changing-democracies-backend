@@ -2,7 +2,7 @@ name: Database Backup
 
 on:
   schedule:
-    - cron: '0 1 * * *' # Runs at 1 AM every night
+    - cron: '0 0 * * *' # Runs at 1 AM every night
   workflow_dispatch: # Allows manual triggering
   workflow_run:
     workflows: ['Deploy']
