@@ -210,7 +210,7 @@ services:
   cd_backend:
     mem_limit: ${BACKEND_MEMORY_LIMIT}
     environment:
-      NODE_OPTIONS: "--max-old-space-size=800"  # Limit Node.js heap size
+      NODE_OPTIONS: "--max-old-space-size=1200"  # Increased Node.js heap size to match container limit
       
   cd_cms:
     mem_limit: ${CMS_MEMORY_LIMIT}
