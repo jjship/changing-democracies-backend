@@ -19,7 +19,7 @@ echo "Cleaning up unused Docker resources..."
 docker system prune -f 2>/dev/null || true
 
 # Set memory limits based on 2GB total VM memory
-export BACKEND_MEMORY_LIMIT=1024m  # 1GB for backend
+export BACKEND_MEMORY_LIMIT=1536m  # 1.5GB for backend
 export CMS_MEMORY_LIMIT=512m       # 512MB for CMS
 
 # Inform about memory configuration
