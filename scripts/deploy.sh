@@ -1,140 +1,22 @@
-name: Deploy
+#!/bin/bash
+set -e
 
-on:
-  push:
-    branches: [main]
-  workflow_dispatch:
+DB_VOLUME="cd_admin-db_data"
 
-concurrency:
-  group: production_environment
-  cancel-in-progress: true
+if ! docker volume ls | grep -q $DB_VOLUME; then
+  docker volume create --name $DB_VOLUME
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment: production
-    timeout-minutes: 15
+	docker run --rm \
+  -v $DB_VOLUME:/data \
+  alpine sh -c 'chown -R 1000:1000 /data'
+fi
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          cat >> ~/.ssh/config << EOF
-          Host deployment_target
-            HostName ${{ secrets.VM_HOST }}
-            User ${{ secrets.VM_USER }}
-            Port ${{ secrets.VM_SSH_PORT }}
-            IdentityFile ~/.ssh/deploy_key
-            StrictHostKeyChecking no
-            UserKnownHostsFile /dev/null
-          EOF
-          chmod 600 ~/.ssh/config
 
-      - name: Perform Docker cleanup
-        run: |
-          ssh deployment_target 'bash -s' < scripts/docker-cleanup.sh
+docker compose -f docker-compose.prod.yml down --volumes=false
 
-      - name: Save current state for rollback
-        id: save_state
-        run: |
-          PREVIOUS_COMMIT=$(ssh deployment_target '
-            cd /opt/cd_admin
-            if [ -d ".git" ]; then
-              git rev-parse HEAD
-            fi
-          ')
+source scripts/load-env.sh
 
-          CONTAINERS=$(ssh deployment_target '
-            cd /opt/cd_admin
-            docker compose ps --format "{{.Name}}" | tr "\n" " "
-          ')
+docker compose -f docker-compose.prod.yml build --no-cache
 
-          if [ ! -z "$PREVIOUS_COMMIT" ]; then
-            echo "PREVIOUS_COMMIT=$PREVIOUS_COMMIT" >> $GITHUB_ENV
-          fi
-
-      - name: Deploy to VM
-        id: deploy
-        env:
-          GITHUB_SHA: ${{ github.sha }}
-        run: |
-          ssh deployment_target '
-            set -eo pipefail
-            
-            echo "Starting deployment of commit $GITHUB_SHA..."
-            cd /opt/cd_admin
-            
-            if [ -d ".git" ]; then
-              git fetch origin main
-              git reset --hard origin/main
-            else
-              git clone ${{ github.server_url }}/${{ github.repository }} /tmp/cd_admin_temp
-              cp -r /tmp/cd_admin_temp/. .
-              rm -rf /tmp/cd_admin_temp
-            fi
-            
-            ./scripts/deploy.sh;
-          '
-
-      - name: Verify Deployment
-        id: verify
-        run: |
-          sleep 10
-          if ! curl -sSf http://${{ secrets.API_URL }}/health; then
-            echo "::error::Health check failed"
-            exit 1
-          fi
-
-      - name: Rollback on Failure
-        if: failure()
-        run: |
-          echo "Deployment failed, initiating rollback..."
-          ssh deployment_target '
-            set -eo pipefail
-            cd /opt/cd_admin
-
-            echo "Rolling back to commit ${{ env.PREVIOUS_COMMIT }}"
-            
-            git reset --hard ${{ env.PREVIOUS_COMMIT }}
-            
-            # Run the deploy script to set up the environment and start services
-            ./scripts/deploy.sh
-            
-            echo "Rollback completed"
-          '
-
-      - name: Verify Rollback
-        if: failure()
-        run: |
-          sleep 10
-          if ! curl -sSf http://${{ secrets.VM_HOST }}/health; then
-            echo "::error::Rollback verification failed"
-            exit 1
-          fi
-          echo "Rollback verified successfully"
-
-      - name: Notify on Status
-        if: always()
-        run: |
-          if [ "${{ job.status }}" == "success" ]; then
-            echo "Deployment successful"
-          elif [ "${{ job.status }}" == "failure" ]; then
-            echo "Deployment failed and rolled back"
-          fi
-
-      - name: Notify on Status
-        if: failure()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: '🚨 Deployment Failed',
-              body: `Deployment failed for commit ${context.sha}\nWorkflow: ${context.workflow}\nSee: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
-            })
+docker compose -f docker-compose.prod.yml up -d
