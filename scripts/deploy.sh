@@ -1,256 +1,140 @@
-#!/bin/bash
-set -e
+name: Deploy
 
-# Store the original directory
-ORIGINAL_DIR=$(pwd)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
-# Free up memory before starting
-echo "Freeing up system caches..."
-sync
-# Use sudo if available, otherwise skip with a message
-if command -v sudo >/dev/null 2>&1; then
-  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
-else
-  echo "Warning: sudo not available, skipping cache clearing"
-fi
+concurrency:
+  group: production_environment
+  cancel-in-progress: true
 
-# Remove unused Docker resources to free up memory
-echo "Cleaning up unused Docker resources..."
-docker system prune -f 2>/dev/null || true
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
 
-# Set memory limits based on 4GB total VM memory
-export BACKEND_MEMORY_LIMIT=3072m  # 3GB for backend
-export CMS_MEMORY_LIMIT=512m       # 512MB for CMS is plenty for static content
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-# Inform about memory configuration
-echo "Memory limits: Backend=${BACKEND_MEMORY_LIMIT}, CMS=${CMS_MEMORY_LIMIT}"
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config << EOF
+          Host deployment_target
+            HostName ${{ secrets.VM_HOST }}
+            User ${{ secrets.VM_USER }}
+            Port ${{ secrets.VM_SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
 
-DB_VOLUME="cd_admin-db_data"
+      - name: Perform Docker cleanup
+        run: |
+          ssh deployment_target 'bash -s' < scripts/docker-cleanup.sh
 
-if ! docker volume ls | grep -q $DB_VOLUME; then
-  docker volume create --name $DB_VOLUME
+      - name: Save current state for rollback
+        id: save_state
+        run: |
+          PREVIOUS_COMMIT=$(ssh deployment_target '
+            cd /opt/cd_admin
+            if [ -d ".git" ]; then
+              git rev-parse HEAD
+            fi
+          ')
 
-  docker run --rm \
-  --memory=128m \
-  -v $DB_VOLUME:/data \
-  alpine sh -c 'chown -R 1000:1000 /data'
-fi
+          CONTAINERS=$(ssh deployment_target '
+            cd /opt/cd_admin
+            docker compose ps --format "{{.Name}}" | tr "\n" " "
+          ')
 
-# Perform backup if possible
-echo "==================== BACKUP PROCESS STARTING ===================="
-BACKUP_DIR="/opt/cd_admin/backups"
-mkdir -p $BACKUP_DIR
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-BACKUP_SUCCEEDED=false
+          if [ ! -z "$PREVIOUS_COMMIT" ]; then
+            echo "PREVIOUS_COMMIT=$PREVIOUS_COMMIT" >> $GITHUB_ENV
+          fi
 
-# First check if there are any containers (running or stopped)
-CONTAINER_NAME=$(docker ps -a --format "{{.Names}}" | grep cd_backend)
+      - name: Deploy to VM
+        id: deploy
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          ssh deployment_target '
+            set -eo pipefail
+            
+            echo "Starting deployment of commit $GITHUB_SHA..."
+            cd /opt/cd_admin
+            
+            if [ -d ".git" ]; then
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone ${{ github.server_url }}/${{ github.repository }} /tmp/cd_admin_temp
+              cp -r /tmp/cd_admin_temp/. .
+              rm -rf /tmp/cd_admin_temp
+            fi
+            
+            ./scripts/deploy.sh;
+          '
 
-if [ -z "$CONTAINER_NAME" ]; then
-  echo "No cd_backend container found (running or stopped) - likely after VM reboot or first deployment"
-  echo "Will attempt to backup directly from volumes instead"
-else
-  echo "Found container: $CONTAINER_NAME"
-  
-  # Check if the container is running
-  CONTAINER_RUNNING=$(docker ps --format "{{.Names}}" | grep cd_backend)
-  
-  # If the container is running, stop it first
-  if [ ! -z "$CONTAINER_RUNNING" ]; then
-    echo "Container is running. Stopping container to ensure database consistency"
-    if ! docker stop $CONTAINER_NAME; then
-      echo "Failed to stop container, will attempt alternative backup method"
-    fi
-  else
-    echo "Container is not running. Will attempt to copy data anyway."
-  fi
+      - name: Verify Deployment
+        id: verify
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.API_URL }}/health; then
+            echo "::error::Health check failed"
+            exit 1
+          fi
 
-  # Try to copy from the container (running or not)
-  # Create temp directory
-  TEMP_DIR=$(mktemp -d)
-  
-  # Copy the database files and check for errors
-  if ! docker cp $CONTAINER_NAME:/cd_backend/data/. "$TEMP_DIR/" 2>/dev/null; then
-    echo "Failed to copy database from container - will try volume backup"
-    rm -rf "$TEMP_DIR"
-  else
-    # Verify files were copied and not empty
-    if [ ! -f "$TEMP_DIR/database.sqlite" ]; then
-      echo "Database file not found in copied files - will try volume backup"
-      ls -la "$TEMP_DIR"
-      rm -rf "$TEMP_DIR"
-    else
-      # Create the backup with reduced compression level for lower memory usage
-      echo "Creating compressed backup (optimized for low memory)..."
-      tar -cf - -C "$TEMP_DIR" . | gzip -1 > "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz"
-      
-      # Clean up temp directory
-      echo "Cleaning up temporary files..."
-      rm -rf "$TEMP_DIR"
-      
-      # Verify backup size and report
-      if [ ! -s "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
-        echo "Error: Backup file is empty"
-        rm -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz"
-      else
-        BACKUP_SIZE=$(ls -lh "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" | awk "{ print \$5 }")
-        echo "Backup created successfully: db_backup_$TIMESTAMP.tar.gz (Size: $BACKUP_SIZE)"
-        BACKUP_SUCCEEDED=true
-        
-        # Cleanup old backups - keep only the 10 most recent
-        pushd $BACKUP_DIR > /dev/null
-        ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm --
-        popd > /dev/null
-      fi
-    fi
-  fi
-  
-  # No need to restart container since we're going to destroy it anyway
-fi
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          ssh deployment_target '
+            set -eo pipefail
+            cd /opt/cd_admin
 
-# If backup from container failed, try direct volume access as a fallback
-if [ "$BACKUP_SUCCEEDED" = false ] && docker volume ls | grep -q $DB_VOLUME; then
-  echo "Attempting backup directly from Docker volume: $DB_VOLUME"
-  
-  # Create a temporary container to access the volume
-  TEMP_DIR=$(mktemp -d)
-  
-  # Mount the volume and copy data with memory limits
-  if ! docker run --rm --memory=256m -v $DB_VOLUME:/dbdata -v $TEMP_DIR:/backup alpine sh -c "cp -r /dbdata/. /backup/ 2>/dev/null"; then
-    echo "Failed to copy data from volume"
-    rm -rf "$TEMP_DIR"
-  else
-    # Check if we got the database file
-    if [ ! -f "$TEMP_DIR/database.sqlite" ]; then
-      echo "Database file not found in volume data"
-      ls -la "$TEMP_DIR"
-      rm -rf "$TEMP_DIR"
-    else
-      echo "Successfully extracted database from volume"
-      
-      # Create the backup with lower compression for reduced memory usage
-      echo "Creating compressed backup from volume data (optimized for low memory)..."
-      tar -cf - -C "$TEMP_DIR" . | gzip -1 > "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz"
-      
-      # Clean up temp directory
-      echo "Cleaning up temporary files..."
-      rm -rf "$TEMP_DIR"
-      
-      # Verify backup size and report
-      if [ ! -s "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" ]; then
-        echo "Error: Backup file is empty"
-        rm -f "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz"
-      else
-        BACKUP_SIZE=$(ls -lh "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" | awk "{ print \$5 }")
-        echo "Backup from volume created successfully: db_backup_$TIMESTAMP.tar.gz (Size: $BACKUP_SIZE)"
-        
-        # Cleanup old backups - keep only the 10 most recent
-        pushd $BACKUP_DIR > /dev/null
-        ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +11 | xargs -r rm --
-        popd > /dev/null
-      fi
-    fi
-  fi
-fi
+            echo "Rolling back to commit ${{ env.PREVIOUS_COMMIT }}"
+            
+            git reset --hard ${{ env.PREVIOUS_COMMIT }}
+            
+            # Run the deploy script to set up the environment and start services
+            ./scripts/deploy.sh
+            
+            echo "Rollback completed"
+          '
 
-echo "==================== BACKUP PROCESS COMPLETE ===================="
+      - name: Verify Rollback
+        if: failure()
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.VM_HOST }}/health; then
+            echo "::error::Rollback verification failed"
+            exit 1
+          fi
+          echo "Rollback verified successfully"
 
-# Free up memory before intensive docker operations
-echo "Clearing caches before container operations..."
-sync
-# Use sudo if available, otherwise skip with a message
-if command -v sudo >/dev/null 2>&1; then
-  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
-else
-  echo "Warning: sudo not available, skipping cache clearing"
-fi
+      - name: Notify on Status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Deployment successful"
+          elif [ "${{ job.status }}" == "failure" ]; then
+            echo "Deployment failed and rolled back"
+          fi
 
-# Make sure we're in the right directory
-cd "$ORIGINAL_DIR"
-
-# Ensure docker-compose.prod.yml exists before trying to use it
-if [ ! -f "docker-compose.prod.yml" ]; then
-  echo "Error: docker-compose.prod.yml not found in current directory"
-  echo "Current directory: $(pwd)"
-  echo "Directory contents:"
-  ls -la
-  exit 1
-fi
-
-# Now shutdown existing containers for the new deployment
-echo "Shutting down existing containers..."
-docker compose -f docker-compose.prod.yml down --volumes=false
-
-# Wait a moment for memory to stabilize
-sleep 5
-
-# Free memory again after stopping containers
-echo "Clearing caches before build..."
-sync
-# Use sudo if available, otherwise skip with a message
-if command -v sudo >/dev/null 2>&1; then
-  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
-else
-  echo "Warning: sudo not available, skipping cache clearing"
-fi
-
-# Continue with the deployment
-if [ -f "scripts/load-env.sh" ]; then
-  source scripts/load-env.sh
-else
-  echo "Warning: scripts/load-env.sh not found, continuing anyway"
-fi
-
-# Create a memory-optimized override file for docker-compose
-# Using version 3.7 for better compatibility
-cat > docker-compose.memory.yml << EOF
-version: '3.7'
-
-services:
-  cd_backend:
-    mem_limit: ${BACKEND_MEMORY_LIMIT}
-    environment:
-      NODE_OPTIONS: "--max-old-space-size=2400"  # 2.4GB Node.js heap for 3GB container
-      
-  cd_cms:
-    mem_limit: ${CMS_MEMORY_LIMIT}
-EOF
-
-# Use memory-limited build
-echo "Building with memory limits for 4GB VM..."
-export DOCKER_BUILDKIT=1
-export COMPOSE_DOCKER_CLI_BUILD=1
-
-# Build one service at a time to reduce memory pressure
-for service in cd_backend cd_cms; do
-  echo "Building service: $service"
-  docker compose -f docker-compose.prod.yml build --no-cache $service
-  
-  # Free memory between builds
-  sync
-  # Use sudo if available, otherwise skip with a message
-  if command -v sudo >/dev/null 2>&1; then
-    sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
-  else
-    echo "Warning: sudo not available, skipping cache clearing"
-  fi
-done
-
-# Free memory one last time before starting containers
-echo "Final memory cleanup before starting containers..."
-sync
-# Use sudo if available, otherwise skip with a message
-if command -v sudo >/dev/null 2>&1; then
-  sudo sh -c "echo 1 > /proc/sys/vm/drop_caches" 2>/dev/null || echo "Warning: Could not clear caches (requires root)"
-else
-  echo "Warning: sudo not available, skipping cache clearing"
-fi
-
-# Start containers with memory limits
-echo "Starting containers with memory limits..."
-# Start one container at a time with memory limits
-docker compose -f docker-compose.prod.yml -f docker-compose.memory.yml up -d cd_backend
-sleep 5
-docker compose -f docker-compose.prod.yml -f docker-compose.memory.yml up -d cd_cms
-
-echo "Deployment complete with memory-optimized settings"
+      - name: Notify on Status
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Deployment Failed',
+              body: `Deployment failed for commit ${context.sha}\nWorkflow: ${context.workflow}\nSee: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            })
