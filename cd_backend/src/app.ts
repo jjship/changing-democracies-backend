@@ -26,6 +26,7 @@ import { registerDeletePersonController } from './http/persons/deletePerson.ctrl
 import { registerFindPersonController } from './http/persons/findPerson.ctrl';
 import { registerGetLanguagesController } from './http/languages/getLanguages.ctrl';
 import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicateCaptions.ctrl';
+import createGetCachedClientNarratives from './domain/narratives/getCachedClientNarratives';
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -35,6 +36,8 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   const app = fastify({
     loggerInstance: logger as FastifyBaseLogger,
   });
+
+  const getCachedClientNarratives = createGetCachedClientNarratives({ dbConnection });
 
   await app.register(cors, {
     origin: [ENV.CMS_URL, ENV.CLIENT_URL],
@@ -76,7 +79,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   await app.register(async (app) => {
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
-    registerGetClientNarrativesController(app)({ dbConnection });
+    registerGetClientNarrativesController(app)({ getCachedClientNarratives });
 
     registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
     registerDeleteDuplicateCaptionsController(app)({ bunnyStream });
