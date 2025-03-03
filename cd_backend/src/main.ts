@@ -27,8 +27,6 @@ async function main() {
       await syncCountriesAndLanguages({ dbConnection, countriesApiClient, logger });
     }
 
-    await syncFragments({ dbConnection, bunnyStream, logger });
-
     const app = await setupApp({ dbConnection, bunnyStream });
 
     await app.listen({ port: ENV.BACKEND_PORT, host: ENV.BACKEND_HOST });
