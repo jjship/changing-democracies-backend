@@ -2,11 +2,12 @@ name: Database Backup
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs at midnight UTC every day
+    - cron: '0 1 * * *' # Runs at 1 AM every night
   workflow_dispatch: # Allows manual triggering
 
 jobs:
   backup:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name != 'workflow_run' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -26,22 +27,6 @@ jobs:
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
           EOF
-
-      # Check system resources before backup
-      - name: Check System Resources
-        run: |
-          ssh deployment_target '
-            echo "==================== SYSTEM STATUS PRE-BACKUP ===================="
-            echo "Memory status:"
-            free -h
-            echo ""
-            echo "Docker container status:"
-            docker ps
-            echo ""
-            echo "Disk space:"
-            df -h
-            echo "=============================================================="
-          '
 
       - name: Create Database Backup
         run: |
@@ -63,30 +48,15 @@ jobs:
             
             echo "Found container: $CONTAINER_NAME"
             
-            echo "==================== BACKUP PROCESS STARTING ===================="
-            echo "Stopping container to ensure database consistency"
-            
-            # Stop the container to ensure database consistency
-            if ! docker stop $CONTAINER_NAME; then
-              echo "Failed to stop container"
-              exit 1
-            fi
-            
             # Create temp directory
             TEMP_DIR=$(mktemp -d)
             
             # Copy the database files and check for errors
             if ! docker cp $CONTAINER_NAME:/cd_backend/data/. "$TEMP_DIR/"; then
               echo "Failed to copy database from container"
-              # Resume container before exiting
-              docker start $CONTAINER_NAME
               rm -rf "$TEMP_DIR"
               exit 1
             fi
-            
-            echo "Restarting container"
-            # Start the container back up immediately after copying
-            docker start $CONTAINER_NAME
             
             # Verify files were copied and not empty
             if [ ! -f "$TEMP_DIR/database.sqlite" ]; then
@@ -97,11 +67,7 @@ jobs:
             fi
             
             # Create the backup
-            echo "Creating compressed backup..."
             tar czf "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" -C "$TEMP_DIR" .
-            
-            # Clean up temp directory
-            echo "Cleaning up temporary files..."
             rm -rf "$TEMP_DIR"
             
             # Verify backup size
@@ -113,57 +79,6 @@ jobs:
             
             BACKUP_SIZE=$(ls -lh "$BACKUP_DIR/db_backup_$TIMESTAMP.tar.gz" | awk "{ print \$5 }")
             echo "Backup created successfully: db_backup_$TIMESTAMP.tar.gz (Size: $BACKUP_SIZE)"
-            
-            # Verify application is running
-            sleep 5
-            if ! docker ps | grep -q $CONTAINER_NAME; then
-              echo "WARNING: Container failed to restart properly!"
-              docker start $CONTAINER_NAME
-            else
-              echo "Container successfully restarted"
-            fi
-            
-            echo "==================== BACKUP PROCESS COMPLETE ===================="
-          '
-
-      - name: Verify Application Health
-        run: |
-          # Wait for application to fully start
-          sleep 30
-
-          attempt=1
-          max_attempts=3
-
-          while [ $attempt -le $max_attempts ]; do
-            echo "Health check attempt $attempt of $max_attempts"
-            if curl -sSf http://${{ secrets.API_URL }}/health; then
-              echo "Application is healthy after backup"
-              break
-            fi
-            
-            if [ $attempt -eq $max_attempts ]; then
-              echo "::warning::Application health check failed after backup, but continuing workflow"
-            else
-              echo "Waiting before next attempt..."
-              sleep 15
-              attempt=$((attempt+1))
-            fi
-          done
-
-      # Check system resources after backup
-      - name: Check System Resources After Backup
-        run: |
-          ssh deployment_target '
-            echo "==================== SYSTEM STATUS POST-BACKUP ===================="
-            echo "Memory status:"
-            free -h
-            echo ""
-            echo "Docker container status:"
-            docker ps
-            echo ""
-            echo "Disk space:"
-            df -h
-            echo "=============================================================="
           '
 
       - name: Cleanup Old Backups
@@ -179,10 +94,8 @@ jobs:
               exit 1
             fi
             
-            # Remove backups older than 30 days
             find $BACKUP_DIR -type f -name "db_backup_*.tar.gz" -mtime +30 -delete
             
-            # Keep only the 5 most recent backups
             cd $BACKUP_DIR
             ls -t db_backup_*.tar.gz 2>/dev/null | tail -n +6 | xargs -r rm --
             
