@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
 import { PersonEntity } from './Person';
 import { BioEntity } from './Bio';
 import { DescriptionEntity } from './Description';
@@ -12,6 +12,7 @@ export class LanguageEntity {
   name: string;
 
   @Column({ type: 'varchar', length: 2, unique: true })
+  @Index('idx_language_code')
   code: string;
 
   @OneToMany(() => BioEntity, (bio) => bio.language)

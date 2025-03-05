@@ -8,6 +8,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { PersonEntity } from './Person';
 import { TagEntity } from './Tag';
@@ -38,6 +39,7 @@ export class FragmentEntity {
   thumbnailUrl: string;
 
   @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT', nullable: true })
+  @Index('idx_fragment_person')
   person?: PersonEntity | null;
 
   @ManyToMany(() => TagEntity, (tag) => tag.fragments)
