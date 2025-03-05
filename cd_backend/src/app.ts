@@ -3,6 +3,7 @@ import { logger } from './services/logger/logger';
 import jwtAuthPlugin from './auth/jwtAuth';
 import apiKeyAuthPlugin from './auth/apiKeyAuth';
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import { registerGetFragmentsController } from './http/fragments/getFragments.ctrl';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
 import { BunnyStreamApiClient } from './services/bunnyStream/bunnyStreamApiClient';
@@ -27,6 +28,7 @@ import { registerFindPersonController } from './http/persons/findPerson.ctrl';
 import { registerGetLanguagesController } from './http/languages/getLanguages.ctrl';
 import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicateCaptions.ctrl';
 import createGetCachedClientNarratives from './domain/narratives/getCachedClientNarratives';
+import rateLimit from '@fastify/rate-limit';
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -39,6 +41,31 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   const getCachedClientNarratives = createGetCachedClientNarratives({ dbConnection });
 
+  // Add security headers using helmet
+  await app.register(helmet, {
+    // Configure helmet options based on your requirements
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:', 'validator.swagger.io'],
+        connectSrc: ["'self'"],
+      },
+    },
+  });
+
+  // Add rate limiter to protect against brute force attacks
+  await app.register(rateLimit, {
+    max: 100, // Maximum 100 requests per windowMs
+    timeWindow: '1 minute', // Per minute
+    // Whitelist legitimate origins if needed
+    allowList: (req: { headers: { origin?: string } }) => {
+      const origin = req.headers.origin;
+      return !!(origin && [ENV.CMS_URL, ENV.CLIENT_URL].includes(origin));
+    },
+  });
+
   await app.register(cors, {
     origin: [ENV.CMS_URL, ENV.CLIENT_URL],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -48,7 +75,9 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   app.setErrorHandler((error, request, reply) => {
     app.log.error(error);
     const statusCode = error instanceof HttpError ? error.statusCode : 500;
-    reply.status(statusCode).send({ ok: false, error: error.message });
+    // Don't reveal detailed error messages to clients
+    const message = statusCode === 500 ? 'Internal Server Error' : error.message;
+    reply.status(statusCode).send({ ok: false, error: message });
   });
 
   app.get('/health', async () => ({ status: 'ok' }));
@@ -90,6 +119,26 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
     registerGetLanguagesController(app)({ dbConnection });
+  });
+
+  // Add a catch-all 404 handler for non-existent routes
+  app.setNotFoundHandler((request, reply) => {
+    // Log the not found route with minimal information to avoid log bloat
+    app.log.info(
+      {
+        method: request.method,
+        url: request.url,
+        host: request.headers.host,
+        remoteAddress: request.ip,
+      },
+      `Route ${request.method}:${request.url} not found`
+    );
+
+    // Return a generic 404 without exposing route details
+    reply.status(404).send({
+      ok: false,
+      error: 'Not Found',
+    });
   });
 
   return app;

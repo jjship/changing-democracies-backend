@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, Index } from 'typeorm';
 import { CountryEntity } from './Country';
 import { BioEntity } from './Bio';
 import { FragmentEntity } from './Fragment';
@@ -15,6 +15,7 @@ export class PersonEntity {
   normalizedName: string;
 
   @ManyToOne(() => CountryEntity, (country) => country.persons, { onDelete: 'RESTRICT' })
+  @Index('idx_person_country')
   country?: CountryEntity;
 
   @OneToMany(() => BioEntity, (bio) => bio.person)
