@@ -9,7 +9,7 @@ import { PersonEntity } from '../../db/entities/Person';
 
 // Describe the test suite for the getClientNarratives endpoint
 
-describe.only('GET /client-narratives', async () => {
+describe('GET /client-narratives', async () => {
   let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let apiKey: string;
