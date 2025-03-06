@@ -10,21 +10,50 @@ const getClientNarratives =
     const fragmentRepo = dbConnection.getRepository(NarrativeFragmentEntity);
 
     // Get narratives with all language-specific data
+    // Improved query with optimized joins and explicit selections
     const narratives = await narrativeRepo
       .createQueryBuilder('narrative')
-      .leftJoinAndSelect('narrative.names', 'names')
-      .leftJoinAndSelect('names.language', 'namesLanguage')
-      .leftJoinAndSelect('narrative.descriptions', 'descriptions')
-      .leftJoinAndSelect('descriptions.language', 'descriptionsLanguage')
-      .leftJoinAndSelect('narrative.narrativeFragments', 'narrativeFragments')
-      .leftJoinAndSelect('narrativeFragments.fragment', 'fragment')
-      .leftJoinAndSelect('fragment.person', 'person')
-      .leftJoinAndSelect('person.country', 'country')
-      .leftJoinAndSelect('country.names', 'countryNames')
-      .leftJoinAndSelect('countryNames.language', 'countryNamesLanguage')
-      .leftJoinAndSelect('person.bios', 'bios')
-      .leftJoinAndSelect('bios.language', 'biosLanguage')
+      .select([
+        'narrative.id',
+        'narrative.totalDurationSec',
+        'names.id',
+        'names.name',
+        'namesLanguage.code',
+        'descriptions.id',
+        'descriptions.description',
+        'descriptionsLanguage.code',
+        'narrativeFragments.sequence',
+        'fragment.id',
+        'fragment.title',
+        'fragment.durationSec',
+        'fragment.playerUrl',
+        'fragment.thumbnailUrl',
+        'person.id',
+        'person.name',
+        'country.id',
+        'country.code',
+        'countryNames.id',
+        'countryNames.name',
+        'countryNamesLanguage.code',
+        'bios.id',
+        'bios.bio',
+        'biosLanguage.code',
+      ])
+      .leftJoin('narrative.names', 'names')
+      .leftJoin('names.language', 'namesLanguage')
+      .leftJoin('narrative.descriptions', 'descriptions')
+      .leftJoin('descriptions.language', 'descriptionsLanguage')
+      .leftJoin('narrative.narrativeFragments', 'narrativeFragments')
+      .leftJoin('narrativeFragments.fragment', 'fragment')
+      .leftJoin('fragment.person', 'person')
+      .leftJoin('person.country', 'country')
+      .leftJoin('country.names', 'countryNames')
+      .leftJoin('countryNames.language', 'countryNamesLanguage')
+      .leftJoin('person.bios', 'bios')
+      .leftJoin('bios.language', 'biosLanguage')
       .orderBy('narrativeFragments.sequence', 'ASC')
+      // Enable query caching for 10 minutes
+      .cache(600000)
       .getMany();
 
     // Check if we have any narratives before proceeding
@@ -44,13 +73,17 @@ const getClientNarratives =
     }
 
     // Use a batch query to get all otherNarratives for all fragments at once
+    // Optimized query with more efficient joining and explicit selections
     const allOtherNarratives = await fragmentRepo
       .createQueryBuilder('narrativeFragment')
-      .leftJoinAndSelect('narrativeFragment.fragment', 'fragment')
-      .leftJoinAndSelect('narrativeFragment.narrative', 'narrative')
-      .leftJoinAndSelect('narrative.names', 'names')
-      .leftJoinAndSelect('names.language', 'language')
+      .select(['narrativeFragment.id', 'fragment.id', 'narrative.id', 'names.id', 'names.name', 'language.code'])
+      .leftJoin('narrativeFragment.fragment', 'fragment')
+      .leftJoin('narrativeFragment.narrative', 'narrative')
+      .leftJoin('narrative.names', 'names')
+      .leftJoin('names.language', 'language')
       .where('fragment.id IN (:...fragmentIds)', { fragmentIds })
+      // Enable query caching for 10 minutes
+      .cache(600000)
       .getMany();
 
     // Create a lookup map for fast access
@@ -66,7 +99,17 @@ const getClientNarratives =
       }
     });
 
-    return narratives.map((narrative) => formatNarrativeResponse(narrative, otherNarrativesMap));
+    // Process narratives in batches to reduce memory pressure
+    const BATCH_SIZE = 10;
+    let result = [];
+
+    for (let i = 0; i < narratives.length; i += BATCH_SIZE) {
+      const batch = narratives.slice(i, i + BATCH_SIZE);
+      const processedBatch = batch.map((narrative) => formatNarrativeResponse(narrative, otherNarrativesMap));
+      result.push(...processedBatch);
+    }
+
+    return result;
   };
 
 // Helper function to format narrative response
@@ -85,7 +128,9 @@ function formatNarrativeResponse(
       languageCode: desc.language.code,
       description: desc.description,
     })) || [];
-  console.log({ descriptions });
+
+  // Removed console.log for performance
+
   const fragments = (narrative.narrativeFragments || []).map((narrativeFragment) => {
     // Safety check for fragment
     if (!narrativeFragment.fragment) {
@@ -159,10 +204,13 @@ function formatNarrativeResponse(
 export type GetCachedClientNarratives = ReturnType<typeof createGetCachedClientNarratives>;
 
 const createGetCachedClientNarratives = ({ dbConnection }: { dbConnection: DataSource }) => {
+  // Improved caching with shorter TTL but longer stale time to reduce database pressure
   const cache = createCache({
-    ttl: 1 * 60 * 60,
-    stale: 3 * 60 * 60,
-    storage: { type: 'memory' },
+    ttl: 30 * 60, // 30 minutes fresh cache
+    stale: 3 * 60 * 60, // 3 hours stale cache
+    storage: {
+      type: 'memory',
+    },
   }).define('getClientNarratives', getClientNarratives({ dbConnection }));
 
   return async () => {
