@@ -5,11 +5,11 @@ import { createCache } from 'async-cache-dedupe';
 
 const getClientNarratives =
   ({ dbConnection }: { dbConnection: DataSource }) =>
-  async ({ languageCode }: { languageCode: string }) => {
+  async () => {
     const narrativeRepo = dbConnection.getRepository(NarrativeEntity);
     const fragmentRepo = dbConnection.getRepository(NarrativeFragmentEntity);
 
-    // Get narratives with filtered language-specific data at the database level
+    // Get narratives with all language-specific data
     const narratives = await narrativeRepo
       .createQueryBuilder('narrative')
       .leftJoinAndSelect('narrative.names', 'names')
@@ -24,7 +24,6 @@ const getClientNarratives =
       .leftJoinAndSelect('countryNames.language', 'countryNamesLanguage')
       .leftJoinAndSelect('person.bios', 'bios')
       .leftJoinAndSelect('bios.language', 'biosLanguage')
-      .where('namesLanguage.code = :languageCode', { languageCode })
       .orderBy('narrativeFragments.sequence', 'ASC')
       .getMany();
 
@@ -41,7 +40,7 @@ const getClientNarratives =
 
     // If there are no fragment IDs, skip the other narratives query
     if (fragmentIds.length === 0) {
-      return narratives.map((narrative) => formatNarrativeResponse(narrative, languageCode, new Map()));
+      return narratives.map((narrative) => formatNarrativeResponse(narrative, new Map()));
     }
 
     // Use a batch query to get all otherNarratives for all fragments at once
@@ -52,7 +51,6 @@ const getClientNarratives =
       .leftJoinAndSelect('narrative.names', 'names')
       .leftJoinAndSelect('names.language', 'language')
       .where('fragment.id IN (:...fragmentIds)', { fragmentIds })
-      .andWhere('language.code = :languageCode', { languageCode })
       .getMany();
 
     // Create a lookup map for fast access
@@ -68,25 +66,26 @@ const getClientNarratives =
       }
     });
 
-    return narratives.map((narrative) => formatNarrativeResponse(narrative, languageCode, otherNarrativesMap));
+    return narratives.map((narrative) => formatNarrativeResponse(narrative, otherNarrativesMap));
   };
 
 // Helper function to format narrative response
 function formatNarrativeResponse(
   narrative: NarrativeEntity,
-  languageCode: string,
   otherNarrativesMap: Map<string, NarrativeFragmentEntity[]>
 ) {
-  const title = narrative.names?.find((name) => name.language.code === languageCode)?.name || 'Untitled';
+  const titles =
+    narrative.names?.map((name) => ({
+      languageCode: name.language.code,
+      title: name.name,
+    })) || [];
 
   const descriptions =
-    narrative.descriptions
-      ?.filter((desc) => desc.language.code === languageCode)
-      .map((desc) => ({
-        languageCode: desc.language.code,
-        description: desc.description,
-      })) || [];
-
+    narrative.descriptions?.map((desc) => ({
+      languageCode: desc.language.code,
+      description: desc.description,
+    })) || [];
+  console.log({ descriptions });
   const fragments = (narrative.narrativeFragments || []).map((narrativeFragment) => {
     // Safety check for fragment
     if (!narrativeFragment.fragment) {
@@ -97,7 +96,7 @@ function formatNarrativeResponse(
         sequence: narrativeFragment.sequence,
         person: undefined,
         bios: [],
-        country: undefined,
+        country: { code: '', names: [] },
         playerUrl: '',
         thumbnailUrl: '',
         otherPaths: [],
@@ -110,9 +109,25 @@ function formatNarrativeResponse(
     const otherPaths = otherNarrativesForFragment
       .filter((nf) => nf.narrative?.id !== narrative.id)
       .map((nf) => {
-        const otherTitle = nf.narrative?.names?.find((name) => name.language.code === languageCode)?.name || 'Untitled';
-        return { id: nf.narrative?.id || '', title: otherTitle };
+        const titles =
+          nf.narrative?.names?.map((name) => ({
+            languageCode: name.language.code,
+            title: name.name,
+          })) || [];
+        return { id: nf.narrative?.id || '', titles };
       });
+
+    // Format country with all its language names
+    const country = narrativeFragment.fragment.person?.country
+      ? {
+          code: narrativeFragment.fragment.person.country.code,
+          names:
+            narrativeFragment.fragment.person.country.names?.map((name) => ({
+              languageCode: name.language.code,
+              name: name.name,
+            })) || [],
+        }
+      : { code: '', names: [] };
 
     return {
       guid: narrativeFragment.fragment.id,
@@ -125,8 +140,7 @@ function formatNarrativeResponse(
           languageCode: bio.language.code,
           bio: bio.bio,
         })) || [],
-      country: narrativeFragment.fragment.person?.country?.names?.find((name) => name.language.code === languageCode)
-        ?.name,
+      country,
       playerUrl: narrativeFragment.fragment.playerUrl,
       thumbnailUrl: narrativeFragment.fragment.thumbnailUrl,
       otherPaths,
@@ -135,7 +149,7 @@ function formatNarrativeResponse(
 
   return {
     id: narrative.id,
-    title,
+    titles,
     descriptions,
     total_length: narrative.totalDurationSec,
     fragments,
@@ -151,8 +165,8 @@ const createGetCachedClientNarratives = ({ dbConnection }: { dbConnection: DataS
     storage: { type: 'memory' },
   }).define('getClientNarratives', getClientNarratives({ dbConnection }));
 
-  return async ({ languageCode }: { languageCode: string }) => {
-    return await cache.getClientNarratives({ languageCode });
+  return async () => {
+    return await cache.getClientNarratives();
   };
 };
 
