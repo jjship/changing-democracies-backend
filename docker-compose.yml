@@ -17,14 +17,6 @@ services:
       - '8083:8083'
     env_file:
       - .env
-    environment:
-      - USE_NEON_DB=true
-      - NEON_DB_HOST=postgres
-      - NEON_DB_PORT=5432
-      - NEON_DB_USERNAME=postgres
-      - NEON_DB_PASSWORD=postgres
-      - NEON_DB_DATABASE=cd_backend
-      - NEON_DB_SSL=false
 
   postgres:
     image: postgres:17

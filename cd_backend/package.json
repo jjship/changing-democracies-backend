@@ -14,7 +14,7 @@
     "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
     "typecheck": "tsc --noEmit",
     "migrate-to-neon": "ts-node ./scripts/migrate-to-neon.ts",
-    "compare-query-performance": "ts-node ../scripts/optimize-client-narratives.ts",
+    "migrate-to-neon:prod": "node ./dist/scripts/migrate-to-neon.js",
     "install-migration-deps": "npm install --no-save dotenv ts-node @types/pg"
   },
   "dependencies": {

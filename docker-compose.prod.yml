@@ -1,26 +1,17 @@
-version: '3.8'
-
 services:
   cd_backend:
-    image: ${BACKEND_IMAGE:-cd_backend}:${TAG:-latest}
     build:
       context: ./cd_backend
       dockerfile: Dockerfile
       target: production
     restart: unless-stopped
     ports:
-      - '8083:8083'
+      - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
+    volumes:
+      - db_data:/cd_backend/data
+    env_file: .env
     environment:
       - NODE_ENV=production
-      - USE_NEON_DB=true
-      - NEON_DB_HOST=${NEON_DB_HOST}
-      - NEON_DB_PORT=${NEON_DB_PORT}
-      - NEON_DB_USERNAME=${NEON_DB_USERNAME}
-      - NEON_DB_PASSWORD=${NEON_DB_PASSWORD}
-      - NEON_DB_DATABASE=${NEON_DB_DATABASE}
-      - NEON_DB_SSL=true
-    volumes:
-      - ./data/uploads:/app/data/uploads
     networks:
       - app_network
     logging:
@@ -30,18 +21,22 @@ services:
         max-file: '3'
 
   cd_cms:
-    image: ${CMS_IMAGE:-cd_cms}:${TAG:-latest}
     build:
       context: ./cd_cms
       dockerfile: Dockerfile
       target: production
-    restart: unless-stopped
-    ports:
-      - '5173:80'
+      args:
+        VITE_BACKEND_URL: ${BACKEND_URL}
+        VITE_SUPABASE_URL: ${SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+    env_file: .env
     environment:
-      - NODE_ENV=production
+      NODE_ENV: production
+    ports:
+      - 127.0.0.1:${CMS_PORT}:80
     depends_on:
       - cd_backend
+    restart: unless-stopped
     networks:
       - app_network
     logging:
@@ -53,4 +48,8 @@ services:
 networks:
   app_network:
     driver: bridge
-# No need for volume for database storage since we're using Neon DB
+
+volumes:
+  db_data:
+    external: true
+    name: cd_admin-db_data

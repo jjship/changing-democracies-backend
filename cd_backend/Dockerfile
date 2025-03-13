@@ -24,6 +24,7 @@ RUN mkdir -p /cd_backend/data && chown node:node /cd_backend/data
 COPY --from=builder /cd_backend/dist/. ./
 COPY --from=builder /cd_backend/package.json ./ 
 COPY --from=builder /cd_backend/node_modules ./node_modules
+COPY --from=builder /cd_backend/scripts ./scripts
 
 RUN chown -R node:node /cd_backend
 USER node
