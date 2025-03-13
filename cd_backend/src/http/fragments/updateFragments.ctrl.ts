@@ -114,8 +114,6 @@ function updateFragmentsSchema() {
               durationSec: Type.Number(),
               playerUrl: Type.String(),
               thumbnailUrl: Type.String(),
-              createdAt: Type.String(),
-              updatedAt: Type.String(),
               person: Type.Optional(
                 Type.Object({
                   id: Type.String(),

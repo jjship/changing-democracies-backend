@@ -12,7 +12,10 @@
     "build": "tsc",
     "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json",
     "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate-to-neon": "ts-node ./scripts/migrate-to-neon.ts",
+    "compare-query-performance": "ts-node ../scripts/optimize-client-narratives.ts",
+    "install-migration-deps": "npm install --no-save dotenv ts-node @types/pg"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",
@@ -28,6 +31,7 @@
     "fastify": "^5.2.0",
     "fastify-plugin": "^4.5.1",
     "jsonwebtoken": "^9.0.2",
+    "pg": "^8.14.0",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "reflect-metadata": "^0.2.2",
@@ -40,6 +44,7 @@
     "@types/jsonwebtoken": "^9.0.6",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.4.0",
+    "@types/pg": "^8.10.5",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^4.0.0",
     "@types/sqlite3": "^3.1.11",

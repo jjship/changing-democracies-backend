@@ -19,8 +19,6 @@ function parseFragmentEntity(fragment: FragmentEntity): FragmentPayload {
     type: 'fragment' as const,
     id: fragment.id,
     attributes: {
-      createdAt: fragment.createdAt.toISOString(),
-      updatedAt: fragment.updatedAt.toISOString(),
       title: fragment.title,
       durationSec: fragment.durationSec,
       playerUrl: fragment.playerUrl,

@@ -1,26 +1,34 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, Index } from 'typeorm';
-import { CountryEntity } from './Country';
-import { BioEntity } from './Bio';
+import { Entity, PrimaryColumn, Column, OneToMany, ManyToOne, JoinColumn, BeforeInsert } from 'typeorm';
 import { FragmentEntity } from './Fragment';
+import { BioEntity } from './Bio';
+import { CountryEntity } from './Country';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('person')
 export class PersonEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
-  @Column({ unique: true })
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
+
+  @Column({ type: 'text', unique: true })
   name: string;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', nullable: true, unique: true, name: 'normalized_name' })
   normalizedName: string;
 
-  @ManyToOne(() => CountryEntity, (country) => country.persons, { onDelete: 'RESTRICT' })
-  @Index('idx_person_country')
+  @ManyToOne(() => CountryEntity, (country) => country.persons, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'country_id' })
   country?: CountryEntity;
-
-  @OneToMany(() => BioEntity, (bio) => bio.person)
-  bios?: BioEntity[];
 
   @OneToMany(() => FragmentEntity, (fragment) => fragment.person)
   fragments?: FragmentEntity[];
+
+  @OneToMany(() => BioEntity, (bio) => bio.person, { cascade: true })
+  bios?: BioEntity[];
 }

@@ -4,8 +4,6 @@ export { fragmentSchema };
 
 const fragmentSchema = Type.Object(
   {
-    createdAt: Type.String(),
-    updatedAt: Type.String(),
     title: Type.String(),
     durationSec: Type.Number(),
     playerUrl: Type.String(),

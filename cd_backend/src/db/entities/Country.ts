@@ -1,11 +1,19 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany, BeforeInsert } from 'typeorm';
 import { PersonEntity } from './Person';
 import { NameEntity } from './Name';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('country')
 export class CountryEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @OneToMany(() => NameEntity, (name) => name.country, { cascade: true })
   names?: NameEntity[];

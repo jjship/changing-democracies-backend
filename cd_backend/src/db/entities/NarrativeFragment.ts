@@ -1,21 +1,31 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, Column, Index, Unique } from 'typeorm';
+import { Entity, PrimaryColumn, ManyToOne, Column, Index, Unique, JoinColumn, BeforeInsert } from 'typeorm';
 import { NarrativeEntity } from './Narrative';
 import { FragmentEntity } from './Fragment';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('narrative_fragment')
 @Index('idx_fragment_narrative', ['fragment', 'narrative'])
 @Unique('UQ_narrative_sequence', ['narrative', 'sequence'])
 export class NarrativeFragmentEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
+
   @ManyToOne(() => NarrativeEntity, (narrative) => narrative.narrativeFragments, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'narrative_id' })
   narrative!: NarrativeEntity;
 
   @ManyToOne(() => FragmentEntity, (fragment) => fragment.narrativeFragments, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'fragment_id' })
   fragment!: FragmentEntity;
 
-  @Column()
+  @Column({ name: 'sequence' })
   sequence!: number;
 }
 

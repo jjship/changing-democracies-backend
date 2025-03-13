@@ -6,39 +6,42 @@ import {
   ManyToMany,
   JoinTable,
   OneToMany,
-  CreateDateColumn,
-  UpdateDateColumn,
   Index,
+  JoinColumn,
+  BeforeInsert,
 } from 'typeorm';
 import { PersonEntity } from './Person';
 import { TagEntity } from './Tag';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
 import { NameEntity } from './Name';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('fragment')
 export class FragmentEntity {
   @PrimaryColumn('uuid')
   id: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @Column({ type: 'text' })
   title: string;
 
-  @Column({ default: 0 })
+  @Column({ default: 0, name: 'duration_sec' })
   durationSec: number = 0;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', name: 'player_url' })
   playerUrl: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', name: 'thumbnail_url' })
   thumbnailUrl: string;
 
   @ManyToOne(() => PersonEntity, (person) => person.fragments, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'person_id' })
   @Index('idx_fragment_person')
   person?: PersonEntity | null;
 

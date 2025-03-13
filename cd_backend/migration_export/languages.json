@@ -1,0 +1,67 @@
+[
+  {
+    "id": "b3d76a89-38ee-48fa-9c5c-554db81a83ab",
+    "name": "Catalan",
+    "code": "CA"
+  },
+  {
+    "id": "346eae31-4158-477f-aaf8-64a23db1a8de",
+    "name": "Croatian",
+    "code": "HR"
+  },
+  {
+    "id": "4f31cdcf-38ed-40cf-8a6b-0bd96173d4a7",
+    "name": "Czech",
+    "code": "CS"
+  },
+  {
+    "id": "6a38a1d5-2a65-4a8e-931a-c9cd2e108578",
+    "name": "Dutch",
+    "code": "NL"
+  },
+  {
+    "id": "2cbd0513-4545-4e18-854d-6be8bc0ef99d",
+    "name": "English",
+    "code": "EN"
+  },
+  {
+    "id": "e1ea8685-7efe-49db-9f29-a34c69c19061",
+    "name": "French",
+    "code": "FR"
+  },
+  {
+    "id": "8f81eee8-9063-4f71-8dc5-d27655b08319",
+    "name": "German",
+    "code": "DE"
+  },
+  {
+    "id": "887b483e-25f7-4a99-933d-fd8cfbcf3f08",
+    "name": "Greek",
+    "code": "EL"
+  },
+  {
+    "id": "2d5f9bfc-0d7e-439a-9489-ecf3cf02574d",
+    "name": "Lithuanian",
+    "code": "LT"
+  },
+  {
+    "id": "842d3cc8-be4d-4b12-be8c-8e5c77dbb732",
+    "name": "Polish",
+    "code": "PL"
+  },
+  {
+    "id": "3a46942a-cc58-4716-8b36-91e5dfe0a449",
+    "name": "Portuguese",
+    "code": "PT"
+  },
+  {
+    "id": "236e41c2-32d9-4176-b64b-3e226ed32d72",
+    "name": "Romanian",
+    "code": "RO"
+  },
+  {
+    "id": "d2a1f528-d79c-469c-9ab2-3e4a5f5b62cb",
+    "name": "Spanish",
+    "code": "ES"
+  }
+]

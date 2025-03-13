@@ -14,8 +14,6 @@ function parseNarrativeEntity(narrative: NarrativeEntity): NarrativePayload {
     type: 'narrative',
     id: narrative.id,
     attributes: {
-      createdAt: narrative.createdAt.toISOString(),
-      updatedAt: narrative.updatedAt.toISOString(),
       names:
         narrative.names?.map((name) => ({
           languageCode: name.language.code,
