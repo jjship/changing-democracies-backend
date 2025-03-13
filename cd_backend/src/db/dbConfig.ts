@@ -23,11 +23,15 @@ export function getDataSourceOptions(): DataSourceOptions {
       entities: [`${__dirname}/entities/*.{js,ts}`],
       migrations: [`${__dirname}/migrations/*.{js,ts}`],
       migrationsRun: true,
-      // Connection pool settings
-      poolSize: 10,
+      // Connection pool settings optimized for Neon
+      poolSize: isProduction ? 20 : 10, // More connections in production
       extra: {
-        max: isProduction ? 20 : 10, // More connections in production
-        idleTimeoutMillis: 30000,
+        max: isProduction ? 40 : 20, // Maximum number of connections in the pool
+        idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
+        connectionTimeoutMillis: 2000, // Connection timeout after 2 seconds
+        ssl: {
+          rejectUnauthorized: true, // Required for Neon
+        },
       },
     } as DataSourceOptions;
   }
