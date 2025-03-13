@@ -1,8 +1,8 @@
 {
   "scripts": {
     "setup": "./scripts/setup-dev.sh",
-    "start": "docker compose up --rm",
-    "build": "docker compose build --rm",
+    "start": "docker compose up",
+    "build": "docker compose build",
     "down": "docker compose down --volumes=false",
     "cleanup": "./scripts/cleanup-dev.sh"
   }

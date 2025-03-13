@@ -29,7 +29,7 @@ export function PersonsPage() {
 
   const handleSave = () => {
     setRefresh(!refresh);
-    setEditingPerson(null);
+    setEditingPerson(undefined);
   };
 
   const handleEdit = (person: Person) => {
