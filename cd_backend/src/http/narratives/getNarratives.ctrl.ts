@@ -36,6 +36,9 @@ export const registerGetNarrativesController =
             'narrativeFragments',
             'narrativeFragments.fragment',
           ],
+          order: {
+            id: 'ASC',
+          },
         });
 
         return res.status(200).send(narratives.map(parseNarrativeEntity));
