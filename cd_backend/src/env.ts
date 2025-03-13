@@ -12,6 +12,21 @@ const envSchema = z.object({
   DB_DATABASE: z.string(),
   TEST_DATABASE: z.string(),
 
+  // Neon DB configuration - all optional with defaults
+  USE_NEON_DB: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
+  NEON_DB_HOST: z.string().optional().default(''),
+  NEON_DB_PORT: z.string().optional().default('5432'),
+  NEON_DB_USERNAME: z.string().optional().default(''),
+  NEON_DB_PASSWORD: z.string().optional().default(''),
+  NEON_DB_DATABASE: z.string().optional().default(''),
+  NEON_DB_SSL: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('true'),
+
   BUNNY_STREAM_BASE_URL: z.string(),
   BUNNY_STREAM_API_KEY: z.string(),
   BUNNY_STREAM_LIBRARY_ID: z.string(),

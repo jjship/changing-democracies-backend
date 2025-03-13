@@ -1,12 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany, Index } from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToMany, Index, BeforeInsert } from 'typeorm';
 import { PersonEntity } from './Person';
 import { BioEntity } from './Bio';
 import { DescriptionEntity } from './Description';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('language')
 export class LanguageEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @Column({ type: 'text', unique: true })
   name: string;

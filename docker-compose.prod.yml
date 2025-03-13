@@ -4,15 +4,14 @@ services:
       context: ./cd_backend
       dockerfile: Dockerfile
       target: production
+    restart: unless-stopped
     ports:
       - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
     volumes:
       - db_data:/cd_backend/data
     env_file: .env
     environment:
-      NODE_ENV: production
-    command: node main.js
-    restart: unless-stopped
+      - NODE_ENV=production
     networks:
       - app_network
     logging:

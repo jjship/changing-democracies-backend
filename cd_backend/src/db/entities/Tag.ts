@@ -1,11 +1,19 @@
-import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany, PrimaryColumn, BeforeInsert } from 'typeorm';
 import { FragmentEntity } from './Fragment';
 import { NameEntity } from './Name';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('tag')
 export class TagEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
+
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @OneToMany(() => NameEntity, (name) => name.tag, { cascade: true })
   names?: NameEntity[];

@@ -50,22 +50,20 @@ export function NarrativesPage() {
   };
 
   return (
-    fragments.length && (
-      <Box>
-        {editingNarrative === undefined && (
-          <NarrativeList narratives={narratives} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} />
-        )}
+    <Box>
+      {editingNarrative === undefined && (
+        <NarrativeList narratives={narratives} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} />
+      )}
 
-        {editingNarrative !== undefined && (
-          <NarrativeEditor
-            narrative={editingNarrative}
-            onSave={handleSave}
-            onCancel={handleCancel}
-            fragments={fragments}
-            persons={persons}
-          />
-        )}
-      </Box>
-    )
+      {editingNarrative !== undefined && (
+        <NarrativeEditor
+          narrative={editingNarrative}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          fragments={fragments}
+          persons={persons}
+        />
+      )}
+    </Box>
   );
 }

@@ -1,0 +1,214 @@
+[
+  {
+    "id": "07eb4091-9de7-431e-975f-b05896a6e1c1",
+    "code": "AX"
+  },
+  {
+    "id": "614546c1-492c-494e-88f0-ea7551352291",
+    "code": "AL"
+  },
+  {
+    "id": "074ddb55-e313-43c0-9ff2-983171aea31a",
+    "code": "AD"
+  },
+  {
+    "id": "f27785fe-6ce7-469a-a951-a35fb363e760",
+    "code": "AT"
+  },
+  {
+    "id": "7c4cb051-19e7-41a2-9099-1dcffa057bca",
+    "code": "BY"
+  },
+  {
+    "id": "2df9df7c-a5a7-4bd2-888f-a00c7c372cc7",
+    "code": "BE"
+  },
+  {
+    "id": "7016c428-d6c3-46bc-84f4-4077a0198013",
+    "code": "BA"
+  },
+  {
+    "id": "494d4995-98db-40d1-80e3-fdae08a3335f",
+    "code": "BG"
+  },
+  {
+    "id": "008bb9db-3dbe-4020-989d-e34170fe2a9a",
+    "code": "HR"
+  },
+  {
+    "id": "9e5e6cf2-438e-4445-81b9-10dc91fb0a24",
+    "code": "CY"
+  },
+  {
+    "id": "15182507-0b75-4447-8a00-c32a94c4f46c",
+    "code": "CZ"
+  },
+  {
+    "id": "3d5d72fa-a912-4587-97c6-da82b653e850",
+    "code": "DK"
+  },
+  {
+    "id": "1ca2ad65-f372-4a2d-bda2-96b3ca46fbbf",
+    "code": "EE"
+  },
+  {
+    "id": "0d75ee1a-e96d-4139-a04b-9f02a4cea4fb",
+    "code": "FO"
+  },
+  {
+    "id": "d7effd0b-aa57-45ae-9e1d-1ba9d7137237",
+    "code": "FI"
+  },
+  {
+    "id": "6d9e14a5-2183-4846-8ada-7255a4ef6db7",
+    "code": "FR"
+  },
+  {
+    "id": "af60fce8-4fcb-43ed-8b00-3287fb0701e6",
+    "code": "DE"
+  },
+  {
+    "id": "50c94cc7-1241-46fb-8ef1-a22aa8efe5c3",
+    "code": "GI"
+  },
+  {
+    "id": "312a871e-09ef-471b-972d-52b0113b7fbe",
+    "code": "GR"
+  },
+  {
+    "id": "7c771ffb-ecd2-4f2a-8e33-270b917c80af",
+    "code": "GG"
+  },
+  {
+    "id": "fbfc0562-0618-4c14-aeff-369f1e757389",
+    "code": "VA"
+  },
+  {
+    "id": "990eb03d-cb2e-474e-9f20-03ffe92ac7cf",
+    "code": "HU"
+  },
+  {
+    "id": "0c61c5f7-9cc4-43d7-99b6-db6ce81e4222",
+    "code": "IS"
+  },
+  {
+    "id": "672f9178-4680-49a6-9486-32db9acbab48",
+    "code": "IE"
+  },
+  {
+    "id": "3aba51ec-c68c-4a95-9104-1f44a8fa54f3",
+    "code": "IM"
+  },
+  {
+    "id": "6a5be03b-0a62-4cd8-bb3a-bda3e39888d6",
+    "code": "IT"
+  },
+  {
+    "id": "cd6c6e60-31a9-4162-b5eb-d759ba40065e",
+    "code": "JE"
+  },
+  {
+    "id": "26074fb4-a2f4-4458-b032-a14608599187",
+    "code": "LV"
+  },
+  {
+    "id": "ebe89da4-dda0-4530-b392-df5858ab07b3",
+    "code": "LI"
+  },
+  {
+    "id": "0415bc3f-fc23-4eca-957e-063efc3e6e1b",
+    "code": "LT"
+  },
+  {
+    "id": "9abadad8-42f2-4d47-827a-172dfe234dfb",
+    "code": "LU"
+  },
+  {
+    "id": "ccd16f18-f417-40ef-b3a4-303cc14d8ae5",
+    "code": "MK"
+  },
+  {
+    "id": "61a5f562-889a-4414-8a66-5b7556a2d5ba",
+    "code": "MT"
+  },
+  {
+    "id": "bec37e3b-ba68-4009-9bcd-a29a2a9e602b",
+    "code": "MD"
+  },
+  {
+    "id": "d24d5dc4-36dc-406c-b671-51d8ff7e8a80",
+    "code": "MC"
+  },
+  {
+    "id": "361ffda9-26f0-4d5c-bb0c-6d8ebb1aa7bf",
+    "code": "ME"
+  },
+  {
+    "id": "b401748c-3f01-4b72-b3a9-fd948bfe98da",
+    "code": "NL"
+  },
+  {
+    "id": "6cd73052-bdc7-4f05-a3cb-aae1fca87fa4",
+    "code": "NO"
+  },
+  {
+    "id": "3ca64c37-df5b-42e5-89b6-87dc6f6a4966",
+    "code": "PL"
+  },
+  {
+    "id": "0e9ce8ca-2114-47a1-82b1-579fab560e31",
+    "code": "PT"
+  },
+  {
+    "id": "0f9491e7-d2ab-4f9b-a2fb-1cdb5eb8cd8f",
+    "code": "XK"
+  },
+  {
+    "id": "204e65bb-044f-4c08-9d04-6f33964727a9",
+    "code": "RO"
+  },
+  {
+    "id": "ca549e77-e0f0-4f71-80b6-7d0e91b06dc3",
+    "code": "RU"
+  },
+  {
+    "id": "3b8ceac3-eb15-4b59-ad0d-205456681834",
+    "code": "SM"
+  },
+  {
+    "id": "c06bb887-287a-4159-a89e-45ccb6254acd",
+    "code": "RS"
+  },
+  {
+    "id": "819a3da3-f78c-4a7c-98da-214b693bb2e0",
+    "code": "SK"
+  },
+  {
+    "id": "301799bc-67f0-4e24-8487-f3d9c80b343f",
+    "code": "SI"
+  },
+  {
+    "id": "691ff341-e275-4034-9332-13b4121a1c56",
+    "code": "ES"
+  },
+  {
+    "id": "91c62706-3297-48be-88b3-ecaaad329429",
+    "code": "SJ"
+  },
+  {
+    "id": "c397410f-4546-405e-8cc5-cbfdd349922e",
+    "code": "SE"
+  },
+  {
+    "id": "3cb82790-4209-476d-9cf9-6bae54de7a59",
+    "code": "CH"
+  },
+  {
+    "id": "a0b1be69-95e4-4c48-81be-f4c5fbbccba0",
+    "code": "UA"
+  },
+  {
+    "id": "37577f08-3321-497e-acc5-1e96c228a0ba",
+    "code": "GB"
+  }
+]

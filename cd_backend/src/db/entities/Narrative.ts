@@ -1,23 +1,25 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, OneToMany, BeforeInsert } from 'typeorm';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
 import { DescriptionEntity } from './Description';
 import { NameEntity } from './Name';
+import { v4 as uuidv4 } from 'uuid';
 
-@Entity()
+@Entity('narrative')
 export class NarrativeEntity {
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryColumn('uuid')
   id: string;
 
-  @CreateDateColumn({ type: 'datetime' })
-  createdAt: Date;
-
-  @UpdateDateColumn({ type: 'datetime' })
-  updatedAt: Date;
+  @BeforeInsert()
+  generateId() {
+    if (!this.id) {
+      this.id = uuidv4();
+    }
+  }
 
   @OneToMany(() => NameEntity, (name) => name.narrative, { cascade: true })
   names?: NameEntity[];
 
-  @Column({ default: 0 })
+  @Column({ default: 0, name: 'total_duration_sec' })
   totalDurationSec: number;
 
   @OneToMany(() => NarrativeFragmentEntity, (narrativeFragment) => narrativeFragment.narrative)

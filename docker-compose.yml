@@ -1,46 +1,61 @@
+version: '3.8'
+
 services:
   cd_backend:
     build:
       context: ./cd_backend
       dockerfile: Dockerfile
       target: development
-    env_file: .env
-    environment:
-      NODE_ENV: development
-      NODE_OPTIONS: --disable-warning=ExperimentalWarning
-    ports:
-      - 127.0.0.1:${BACKEND_PORT}:${BACKEND_PORT}
-    user: node
+    restart: unless-stopped
+    depends_on:
+      - postgres
     volumes:
       - ./cd_backend:/cd_backend
       - ./cd_backend/node_modules:/cd_backend/node_modules
       - ./cd_backend/data:/cd_backend/data
-    command: npm run start
-    networks:
-      - app_network
+    ports:
+      - '8083:8083'
+    env_file:
+      - .env
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+      - PGDATA=/var/lib/postgresql/data/pgdata
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cd_backend
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    user: postgres:postgres
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   cd_cms:
     build:
       context: ./cd_cms
       dockerfile: Dockerfile
-      target: development
-    env_file: .env
+    volumes:
+      - ./cd_cms:/cd_cms
+      - ./cd_cms/node_modules:/cd_cms/node_modules
+    ports:
+      - 127.0.0.1:${CMS_PORT}:${CMS_PORT}
+    env_file:
+      - .env
+    command: npm run dev
     environment:
       NODE_ENV: development
       VITE_BACKEND_URL: ${BACKEND_URL}
       VITE_SUPABASE_URL: ${SUPABASE_URL}
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
-    ports:
-      - 127.0.0.1:${CMS_PORT}:${CMS_PORT}
-    volumes:
-      - ./cd_cms:/cd_cms
-      - ./cd_cms/node_modules:/cd_cms/node_modules
-    command: npm run dev
-    depends_on:
-      - cd_backend
-    networks:
-      - app_network
 
-networks:
-  app_network:
-    driver: bridge
+volumes:
+  postgres_data:
+    driver: local
