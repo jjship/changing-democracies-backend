@@ -37,7 +37,7 @@ export const registerGetNarrativesController =
             'narrativeFragments.fragment',
           ],
           order: {
-            id: 'ASC',
+            createdAt: 'ASC',
           },
         });
 
