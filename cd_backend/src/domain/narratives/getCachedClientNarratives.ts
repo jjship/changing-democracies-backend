@@ -16,6 +16,7 @@ const getClientNarratives =
       .select([
         'narrative.id',
         'narrative.totalDurationSec',
+        'narrative.createdAt',
         'names.id',
         'names.name',
         'namesLanguage.code',
@@ -51,7 +52,8 @@ const getClientNarratives =
       .leftJoin('countryNames.language', 'countryNamesLanguage')
       .leftJoin('person.bios', 'bios')
       .leftJoin('bios.language', 'biosLanguage')
-      .orderBy('narrativeFragments.sequence', 'ASC')
+      .orderBy('narrative.createdAt', 'ASC')
+      .addOrderBy('narrativeFragments.sequence', 'ASC')
       // Enable query caching for 10 minutes
       .cache(600000)
       .getMany();
@@ -197,6 +199,7 @@ function formatNarrativeResponse(
     titles,
     descriptions,
     total_length: narrative.totalDurationSec,
+    created_at: narrative.createdAt,
     fragments,
   };
 }
