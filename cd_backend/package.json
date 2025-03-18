@@ -15,6 +15,8 @@
     "typecheck": "tsc --noEmit",
     "migrate-to-neon": "ts-node ./scripts/migrate-to-neon.ts",
     "migrate-to-neon:prod": "node ./dist/scripts/migrate-to-neon.js",
+    "migrate-narrative-translations": "ts-node ./scripts/migrate-narrative-translations.ts",
+    "migrate-narrative-translations:prod": "node ./dist/scripts/migrate-narrative-translations.js",
     "install-migration-deps": "npm install --no-save dotenv ts-node @types/pg"
   },
   "dependencies": {
@@ -35,6 +37,7 @@
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "reflect-metadata": "^0.2.2",
+    "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20",
     "zod": "^3.24.1"

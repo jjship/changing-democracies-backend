@@ -75,6 +75,7 @@ const entities = [
     columnMappings: {
       id: 'id',
       totalDurationSec: 'total_duration_sec',
+      createdAt: 'created_at',
     },
     dependencies: [],
   },
@@ -109,16 +110,23 @@ const entities = [
   {
     entity: NameEntity,
     name: 'names',
+    // Try multiple possible table names
     sqliteTable: 'name_entity',
+    // Alternative names to try: name, names
+    alternativeTableNames: ['name', 'names', 'name_entities'],
     postgresTable: 'name',
     columnMappings: {
       id: 'id',
       name: 'name',
       type: 'type',
       languageId: 'language_id',
+      language_id: 'language_id', // Add snake_case variant
       countryId: 'country_id',
+      country_id: 'country_id', // Add snake_case variant
       narrativeId: 'narrative_id',
+      narrative_id: 'narrative_id', // Add snake_case variant
       tagId: 'tag_id',
+      tag_id: 'tag_id', // Add snake_case variant
     },
     dependencies: ['languages', 'countries', 'tags', 'narratives'],
   },
@@ -126,12 +134,16 @@ const entities = [
     entity: DescriptionEntity,
     name: 'descriptions',
     sqliteTable: 'description_entity',
+    // Alternative names to try: description, descriptions
+    alternativeTableNames: ['description', 'descriptions', 'description_entities'],
     postgresTable: 'description',
     columnMappings: {
       id: 'id',
       description: 'description',
       narrativeId: 'narrative_id',
+      narrative_id: 'narrative_id', // Add snake_case variant
       languageId: 'language_id',
+      language_id: 'language_id', // Add snake_case variant
     },
     dependencies: ['narratives', 'languages'],
   },
@@ -144,7 +156,9 @@ const entities = [
       id: 'id',
       sequence: 'sequence',
       narrativeId: 'narrative_id',
+      narrative_id: 'narrative_id', // Add snake_case variant
       fragmentId: 'fragment_id',
+      fragment_id: 'fragment_id', // Add snake_case variant
     },
     dependencies: ['narratives', 'fragments'],
   },
@@ -166,6 +180,7 @@ interface EntityDefinition {
   entity: any;
   name: string;
   sqliteTable: string;
+  alternativeTableNames?: string[]; // Add optional alternative table names
   postgresTable: string;
   columnMappings: ColumnMapping; // Use ColumnMapping with updated definition
   dependencies: string[];
@@ -302,7 +317,11 @@ async function enhanceColumnMappingsFromSchema(): Promise<void> {
   for (const entityDef of entities) {
     try {
       // Get actual table name in SQLite
-      const actualTableName = await findTableNameInSQLite(entityDef.entity.name, entityDef.sqliteTable);
+      const actualTableName = await findTableNameInSQLite(
+        entityDef.entity.name,
+        entityDef.sqliteTable,
+        entityDef.alternativeTableNames
+      );
 
       if (!actualTableName) {
         console.warn(`⚠️ Could not find table for ${entityDef.name} in SQLite database, skipping schema analysis`);
@@ -427,12 +446,18 @@ async function checkForDataTypeIssues() {
 }
 
 // Function to try alternative table names
-async function findTableNameInSQLite(entityName: string, sqliteTableName: string): Promise<string | null> {
+async function findTableNameInSQLite(
+  entityName: string,
+  sqliteTableName: string,
+  alternativeNames?: string[]
+): Promise<string | null> {
   const possibleTableNames = [
     sqliteTableName, // Standard name from entity definition
+    ...(alternativeNames || []), // Add any alternative names if provided
     entityName.toLowerCase(), // Lowercase entity name
     entityName.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase(), // snake_case derived from entity name
     entityName.toLowerCase() + '_entity', // Append _entity
+    entityName.toLowerCase() + 's', // Plural form
   ];
 
   for (const tableName of possibleTableNames) {
@@ -442,6 +467,7 @@ async function findTableNameInSQLite(entityName: string, sqliteTableName: string
         `SELECT name FROM sqlite_master WHERE type='table' AND name='${tableName}'`
       );
       if (result && result.length > 0) {
+        console.log(`Found table '${tableName}' for entity '${entityName}'`);
         return tableName;
       }
     } catch (error) {
@@ -449,6 +475,7 @@ async function findTableNameInSQLite(entityName: string, sqliteTableName: string
     }
   }
 
+  console.warn(`Could not find any matching table for entity '${entityName}'. Tried: ${possibleTableNames.join(', ')}`);
   return null;
 }
 
@@ -485,12 +512,12 @@ async function exportFromSqlite() {
 
   try {
     // Export each entity
-    for (const { entity, name, sqliteTable, columnMappings } of entities) {
+    for (const { entity, name, sqliteTable, alternativeTableNames, columnMappings } of entities) {
       console.log(`📌 Exporting ${name}...`);
       try {
-        // Find actual table name in SQLite
+        // Find actual table name in SQLite with alternative names
         const actualTableName = await withErrorHandling(
-          () => findTableNameInSQLite(entity.name, sqliteTable),
+          () => findTableNameInSQLite(entity.name, sqliteTable, alternativeTableNames),
           `Could not find table for ${name}`,
           'export',
           name
@@ -508,16 +535,29 @@ async function exportFromSqlite() {
           console.log(`📝 Found table as "${actualTableName}" instead of "${sqliteTable}"`);
         }
 
-        // Build a SQL query with the correct camelCase column names
+        // Build a SQL query with the correct column names
         if (!columnMappings) {
           throw createMigrationError(`No column mappings defined for ${name}`, 'export', name);
         }
 
-        const columns = Object.keys(columnMappings)
-          .map((col) => `"${col}"`)
-          .join(', ');
+        // Get actual column names from the table
+        const tableInfo = await sqliteConnection.query(`PRAGMA table_info("${actualTableName}")`);
+        const actualColumns = tableInfo.map((col: any) => col.name);
+        console.log(`Table ${actualTableName} has columns: ${actualColumns.join(', ')}`);
 
-        console.log(`Exporting columns: ${Object.keys(columnMappings).join(', ')}`);
+        // Filter only the columns that exist in the table
+        const existingColumns = Object.keys(columnMappings).filter((col) => actualColumns.includes(col));
+
+        if (existingColumns.length === 0) {
+          console.error(`❌ No matching columns found for ${name} in table ${actualTableName}`);
+          console.log(`Creating empty JSON file for ${name}`);
+          fs.writeFileSync(path.join(exportDir, `${name}.json`), JSON.stringify([], null, 2));
+          continue;
+        }
+
+        const columns = existingColumns.map((col) => `"${col}"`).join(', ');
+
+        console.log(`Exporting columns: ${existingColumns.join(', ')} from ${actualTableName}`);
 
         const query = `SELECT ${columns} FROM "${actualTableName}"`;
 
