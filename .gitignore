@@ -134,3 +134,5 @@ dist
 *.sqlite-journal
 
 .DS_Store
+
+migration_export_narratives/
