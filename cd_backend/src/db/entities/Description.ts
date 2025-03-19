@@ -19,10 +19,12 @@ export class DescriptionEntity {
 
   @ManyToOne(() => NarrativeEntity, (narrative) => narrative.descriptions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'narrative_id' })
+  @Index('idx_description_narrative')
   narrative: NarrativeEntity;
 
   @ManyToOne(() => LanguageEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'language_id' })
+  @Index('idx_description_language')
   language: LanguageEntity;
 
   @Column({ type: 'simple-json' })

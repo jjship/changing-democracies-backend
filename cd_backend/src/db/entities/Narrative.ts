@@ -1,4 +1,4 @@
-import { Column, Entity, PrimaryColumn, OneToMany, BeforeInsert, CreateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, OneToMany, BeforeInsert, CreateDateColumn, Index } from 'typeorm';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
 import { DescriptionEntity } from './Description';
 import { NameEntity } from './Name';
@@ -17,6 +17,7 @@ export class NarrativeEntity {
   }
 
   @CreateDateColumn({ type: 'timestamp', name: 'created_at' })
+  @Index('idx_narrative_created_at')
   createdAt: Date;
 
   @OneToMany(() => NameEntity, (name) => name.narrative, { cascade: true })
