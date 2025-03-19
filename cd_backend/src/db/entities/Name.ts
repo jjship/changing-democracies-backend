@@ -1,4 +1,4 @@
-import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, BeforeInsert, Index } from 'typeorm';
 import { NarrativeEntity } from './Narrative';
 import { LanguageEntity } from './Language';
 import { CountryEntity } from './Country';
@@ -6,6 +6,7 @@ import { TagEntity } from './Tag';
 import { v4 as uuidv4 } from 'uuid';
 
 @Entity('name')
+@Index('idx_name_narrative_language', ['narrative', 'language'])
 export class NameEntity {
   @PrimaryColumn('uuid')
   id: string;
@@ -18,6 +19,7 @@ export class NameEntity {
   }
 
   @Column({ type: 'text' })
+  @Index('idx_name_value')
   name: string;
 
   @Column({ type: 'text' })
@@ -25,6 +27,7 @@ export class NameEntity {
 
   @ManyToOne(() => LanguageEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'language_id' })
+  @Index('idx_name_language')
   language: LanguageEntity;
 
   @ManyToOne(() => CountryEntity, (country) => country.names, { onDelete: 'CASCADE', nullable: true })
@@ -33,6 +36,7 @@ export class NameEntity {
 
   @ManyToOne(() => NarrativeEntity, (narrative) => narrative.names, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'narrative_id' })
+  @Index('idx_name_narrative')
   narrative?: NarrativeEntity;
 
   @ManyToOne(() => TagEntity, (tag) => tag.names, { onDelete: 'CASCADE', nullable: true })
