@@ -28,7 +28,7 @@ export function getDataSourceOptions(): DataSourceOptions {
       extra: {
         max: isProduction ? 40 : 20, // Maximum number of connections in the pool
         idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
-        connectionTimeoutMillis: 2000, // Connection timeout after 2 seconds
+        connectionTimeoutMillis: 5000, // Connection timeout after 2 seconds
         ssl: {
           rejectUnauthorized: true, // Required for Neon
         },
