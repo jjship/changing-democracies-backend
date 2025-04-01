@@ -86,12 +86,7 @@ describe('POST /narratives', () => {
     expect(newNarrative!.narrativeFragments![1].sequence).to.equal(2);
     expect(newNarrative!.narrativeFragments![2].sequence).to.equal(3);
 
-    const { createdAt, updatedAt, ...otherAttributes } = parsedRes.attributes;
-
-    expect(createdAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(updatedAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-
-    expect(otherAttributes).to.deep.equal({
+    expect(parsedRes.attributes).to.deep.equal({
       names: [{ languageCode: 'EN', name: 'New Narrative' }],
       totalDurationSec: 6,
       fragmentsSequence: [

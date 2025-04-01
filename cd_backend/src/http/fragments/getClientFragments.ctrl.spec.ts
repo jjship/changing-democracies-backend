@@ -12,7 +12,7 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 
-describe.only('GET /client-fragments', async () => {
+describe('GET /client-fragments', async () => {
   let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let apiKey: string;

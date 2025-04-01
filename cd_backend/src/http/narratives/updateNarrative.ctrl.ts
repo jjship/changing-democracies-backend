@@ -45,12 +45,17 @@ export const registerUpdateNarrativeController =
             ...(attributes.names?.map((name) => name.languageCode) || []),
           ];
 
-          const languages = await entityManager
-            .getRepository(LanguageEntity)
-            .createQueryBuilder('language')
-            .where('language.code IN (:...codes)', { codes: languageCodes })
-            .getMany();
-          const languageMap = new Map(languages.map((lang) => [lang.code, lang]));
+          let languages = [];
+          let languageMap = new Map();
+
+          if (languageCodes.length > 0) {
+            languages = await entityManager
+              .getRepository(LanguageEntity)
+              .createQueryBuilder('language')
+              .where('language.code IN (:...codes)', { codes: languageCodes })
+              .getMany();
+            languageMap = new Map(languages.map((lang) => [lang.code, lang]));
+          }
 
           const missingLanguage =
             attributes.descriptions?.find((desc) => !languageMap.has(desc.languageCode.toUpperCase())) ||

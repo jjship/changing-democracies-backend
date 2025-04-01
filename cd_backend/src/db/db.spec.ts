@@ -14,7 +14,7 @@ describe('Database', function () {
     const connection = getDbConnection();
 
     // Create simple test entity - just a language
-    const testCode = `TST-${Date.now()}`;
+    const testCode = `TS`;
     const testName = `Test Language ${Date.now()}`;
 
     const languageRepo = connection.getRepository(LanguageEntity);
@@ -41,7 +41,7 @@ describe('Database', function () {
     const countryRepo = connection.getRepository(CountryEntity);
     const personRepo = connection.getRepository(PersonEntity);
 
-    const countryCode = `C${Date.now().toString().slice(-4)}`;
+    const countryCode = `TS`;
 
     // Create country
     const country = new CountryEntity();
