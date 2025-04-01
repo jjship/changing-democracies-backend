@@ -10,7 +10,7 @@
     "start": "ts-node-dev --respawn ./src/main.ts",
     "start:prod": "node main.js",
     "build": "tsc",
-    "test:integration": "NODE_ENV=test mocha --config ./src/spec/.mocharc.spec.json",
+    "test:integration": "NODE_ENV=test TEST_DATABASE=cd_backend_test mocha --config ./src/spec/.mocharc.spec.json",
     "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
     "typecheck": "tsc --noEmit",
     "migrate-to-neon": "ts-node ./scripts/migrate-to-neon.ts",

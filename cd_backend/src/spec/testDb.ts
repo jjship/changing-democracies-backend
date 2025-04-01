@@ -68,9 +68,20 @@ export const testDb = {
         const testName = new NameEntity();
         testName.name = name.name;
         testName.type = name.type;
-        testName.language =
-          (await entityManager.getRepository(LanguageEntity).findOne({ where: { code: name.languageCode } })) ??
-          entityManager.getRepository(LanguageEntity).create({ code: name.languageCode, name: name.languageCode });
+
+        // Find existing language or create and save a new one
+        let language = await entityManager
+          .getRepository(LanguageEntity)
+          .findOne({ where: { code: name.languageCode } });
+        if (!language) {
+          language = entityManager.getRepository(LanguageEntity).create({
+            code: name.languageCode,
+            name: name.languageCode,
+          });
+          language = await entityManager.save(LanguageEntity, language);
+        }
+
+        testName.language = language;
         await entityManager.save(NameEntity, testName);
       }
     });

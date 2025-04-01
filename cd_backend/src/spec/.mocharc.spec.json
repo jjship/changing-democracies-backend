@@ -5,5 +5,6 @@
   "spec": ["src/**/*.spec.ts"],
   "watch-files": ["src/**/*.ts"],
   "ui": "bdd",
-  "timeout": "5000"
+  "timeout": "10000",
+  "file": ["src/spec/setup.spec.ts"]
 }

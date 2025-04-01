@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddLanguageIndexes1710000001000 implements MigrationInterface {
+export class AddLanguageIndexes1742326989000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Add composite index for narrative names by language for faster lookup of titles by language
     await queryRunner.query(

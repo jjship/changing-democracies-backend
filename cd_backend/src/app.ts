@@ -20,6 +20,7 @@ import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
 import fastifySensible from '@fastify/sensible';
 import { registerGetClientNarrativesController } from './http/narratives/getClientNarratives.ctrl';
+import { registerGetClientFragmentsController } from './http/fragments/getClientFragments.ctrl';
 import { registerCreatePersonController } from './http/persons/createPerson.ctrl';
 import { registerUpdatePersonController } from './http/persons/updatePerson.ctrl';
 import { registerGetPersonsController } from './http/persons/getPersons.ctrl';
@@ -28,6 +29,7 @@ import { registerFindPersonController } from './http/persons/findPerson.ctrl';
 import { registerGetLanguagesController } from './http/languages/getLanguages.ctrl';
 import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicateCaptions.ctrl';
 import createGetCachedClientNarratives from './domain/narratives/getCachedClientNarratives';
+import createGetCachedClientFragments from './domain/fragments/getCachedClientFragments';
 import rateLimit from '@fastify/rate-limit';
 export type AppDeps = {
   dbConnection: DataSource;
@@ -40,6 +42,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
   });
 
   const getCachedClientNarratives = createGetCachedClientNarratives({ dbConnection });
+  const getCachedClientFragments = createGetCachedClientFragments({ dbConnection });
 
   // Add security headers using helmet
   await app.register(helmet, {
@@ -109,6 +112,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
     registerGetClientNarrativesController(app)({ getCachedClientNarratives });
+    registerGetClientFragmentsController(app)({ getCachedClientFragments });
 
     registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
     registerDeleteDuplicateCaptionsController(app)({ bunnyStream });
