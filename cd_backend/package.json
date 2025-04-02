@@ -17,6 +17,10 @@
     "migrate-to-neon:prod": "node ./dist/scripts/migrate-to-neon.js",
     "migrate-narrative-translations": "ts-node ./scripts/migrate-narrative-translations.ts",
     "migrate-narrative-translations:prod": "node ./dist/scripts/migrate-narrative-translations.js",
+    "import-tags": "ts-node ./scripts/import-tags.ts",
+    "import-tags:prod": "node ./dist/scripts/import-tags.js",
+    "import-fragment-tags": "ts-node ./scripts/import-fragment-tags.ts",
+    "import-fragment-tags:prod": "node ./dist/scripts/import-fragment-tags.js",
     "install-migration-deps": "npm install --no-save dotenv ts-node @types/pg"
   },
   "dependencies": {
@@ -30,6 +34,7 @@
     "async-cache-dedupe": "^2.2.0",
     "axios": "^1.7.9",
     "axios-retry": "^4.5.0",
+    "csv-parse": "^5.6.0",
     "fastify": "^5.2.0",
     "fastify-plugin": "^4.5.1",
     "jsonwebtoken": "^9.0.2",
