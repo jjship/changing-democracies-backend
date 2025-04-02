@@ -32,6 +32,8 @@ export const registerGetClientFragmentsController =
           limit: validatedLimit,
         });
 
+        console.log({ len: clientFragments.data.length });
+
         // Add cache headers to improve client-side caching
         res.header('Cache-Control', 'public, max-age=600, stale-while-revalidate=3600');
         res.header('Vary', 'Accept-Encoding, Accept-Language');
