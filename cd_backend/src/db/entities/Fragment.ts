@@ -17,6 +17,7 @@ import { NameEntity } from './Name';
 import { v4 as uuidv4 } from 'uuid';
 
 @Entity('fragment')
+@Index('idx_fragment_title', ['title'])
 export class FragmentEntity {
   @PrimaryColumn('uuid')
   id: string;

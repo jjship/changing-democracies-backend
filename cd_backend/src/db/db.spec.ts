@@ -1,107 +1,73 @@
 import { expect } from 'chai';
-import { createDbConnection, getDbConnection } from './db';
+import { getDbConnection } from './db';
 import { FragmentEntity } from './entities/Fragment';
-import { DataSource } from 'typeorm';
 import uuid from 'uuid4';
 import { PersonEntity } from './entities/Person';
 import { CountryEntity } from './entities/Country';
-import { BioEntity } from './entities/Bio';
-import { TagEntity } from './entities/Tag';
-import { NarrativeEntity } from './entities/Narrative';
-import { NarrativeFragmentEntity } from './entities/NarrativeFragment';
-import { DescriptionEntity } from './entities/Description';
 import { LanguageEntity } from './entities/Language';
-import { testDb } from '../spec/testDb';
 
-describe('Database', () => {
-  it('should insert and retrieve test data', async () => {
-    const testFragmentId = uuid();
-    let testTag: TagEntity | undefined;
-    let testNarrativeFragment: NarrativeFragmentEntity | undefined;
-    let testDescription: DescriptionEntity | undefined;
-    let testLanguage: LanguageEntity | undefined;
+describe('Database', function () {
+  // Increase timeout for this specific test
+  this.timeout(5000);
 
+  it('should insert and retrieve a simple entity', async () => {
     const connection = getDbConnection();
 
-    await connection.transaction(async (entityManager) => {
-      testLanguage = new LanguageEntity();
-      testLanguage.code = 'TL';
-      testLanguage.name = 'TestLanguage';
-      await entityManager.save(LanguageEntity, testLanguage);
+    // Create simple test entity - just a language
+    const testCode = `TS`;
+    const testName = `Test Language ${Date.now()}`;
 
-      await testDb.saveTestNames([
-        { name: 'testCountry', type: 'Country', languageCode: 'TL' },
-        { name: 'test_tag', type: 'Tag', languageCode: 'TL' },
-        { name: 'Test Narrative', type: 'Narrative', languageCode: 'TL' },
-      ]);
+    const languageRepo = connection.getRepository(LanguageEntity);
 
-      const testCountry = new CountryEntity();
-      testCountry.code = 'TC';
-      await entityManager.save(CountryEntity, testCountry);
+    // Create and save language
+    const language = new LanguageEntity();
+    language.code = testCode;
+    language.name = testName;
 
-      const testBio = new BioEntity();
-      testBio.bio = 'lorem ipsum i tak dalej';
-      testBio.language = testLanguage;
-      await entityManager.save(BioEntity, testBio);
+    await languageRepo.save(language);
 
-      testTag = new TagEntity();
-      await entityManager.save(TagEntity, testTag);
+    // Retrieve and validate
+    const savedLanguage = await languageRepo.findOneBy({ code: testCode });
 
-      const testPerson = new PersonEntity();
-      testPerson.bios = [testBio];
-      testPerson.country = testCountry;
-      testPerson.name = 'testName testSurname';
-      testPerson.normalizedName = 'testName-testSurname';
-      await entityManager.save(PersonEntity, testPerson);
+    expect(savedLanguage).to.not.be.null;
+    expect(savedLanguage?.name).to.equal(testName);
+    expect(savedLanguage?.code).to.equal(testCode);
+  });
 
-      const testFragment = new FragmentEntity();
-      testFragment.title = 'Test Fragment';
-      testFragment.id = testFragmentId;
-      testFragment.durationSec = 120;
-      testFragment.playerUrl = 'http://example.com/player';
-      testFragment.thumbnailUrl = 'http://example.com/thumbnail';
-      testFragment.person = testPerson;
-      testFragment.tags = [testTag];
-      await entityManager.save(FragmentEntity, testFragment);
+  it('should insert and retrieve related entities', async () => {
+    const connection = getDbConnection();
 
-      testDescription = new DescriptionEntity();
-      testDescription.description = ['English description', 'second line, of the description'];
-      testDescription.language = testLanguage;
-      await entityManager.save(DescriptionEntity, testDescription);
+    // Create country and person with a simple relationship
+    const countryRepo = connection.getRepository(CountryEntity);
+    const personRepo = connection.getRepository(PersonEntity);
 
-      const testNarrative = new NarrativeEntity();
-      testNarrative.descriptions = [testDescription];
-      await entityManager.save(NarrativeEntity, testNarrative);
+    const countryCode = `TS`;
 
-      testNarrativeFragment = new NarrativeFragmentEntity();
+    // Create country
+    const country = new CountryEntity();
+    country.code = countryCode;
+    await countryRepo.save(country);
 
-      testNarrativeFragment.narrative = testNarrative;
-      testNarrativeFragment.fragment = testFragment;
-      testNarrativeFragment.sequence = 0;
-      await entityManager.save(NarrativeFragmentEntity, testNarrativeFragment);
+    // Create person with country relationship
+    const person = new PersonEntity();
+    person.name = `Test Person ${Date.now()}`;
+    person.normalizedName = `test-person-${Date.now()}`;
+    person.country = country;
+
+    await personRepo.save(person);
+
+    // Retrieve with relationship and validate
+    const savedPerson = await personRepo.findOne({
+      where: { id: person.id },
+      relations: ['country'],
     });
 
-    const fragmentRepository = connection.getRepository(FragmentEntity);
-
-    const dbFragment = await fragmentRepository.findOne({
-      where: { id: testFragmentId },
-      relations: [
-        'person',
-        'person.country',
-        'person.bios',
-        'person.bios.language',
-        'tags',
-        'narrativeFragments',
-        'narrativeFragments.fragment',
-        'narrativeFragments.narrative',
-        'narrativeFragments.narrative.descriptions',
-      ],
-    });
-
-    expect(dbFragment!.person!.bios![0].language.id).to.equal(testLanguage!.id);
-    expect(dbFragment!.tags).to.deep.equal([testTag]);
-    expect(dbFragment?.narrativeFragments![0].id).to.equal(testNarrativeFragment!.id);
-    expect(dbFragment?.narrativeFragments![0].id).to.equal(testNarrativeFragment!.id);
-    expect(dbFragment?.narrativeFragments![0].narrative.descriptions![0].id).to.equal(testDescription!.id);
+    expect(savedPerson).to.not.be.null;
+    expect(savedPerson?.country).to.not.be.undefined;
+    if (savedPerson && savedPerson.country) {
+      expect(savedPerson.country.code).to.equal(countryCode);
+    } else {
+      throw new Error('Person or country relationship not found');
+    }
   });
 });

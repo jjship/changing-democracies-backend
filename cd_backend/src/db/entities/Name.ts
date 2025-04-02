@@ -7,6 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Entity('name')
 @Index('idx_name_narrative_language', ['narrative', 'language'])
+@Index('idx_name_tag_language', ['tag', 'language'])
+@Index('idx_name_country_language', ['country', 'language'])
 export class NameEntity {
   @PrimaryColumn('uuid')
   id: string;

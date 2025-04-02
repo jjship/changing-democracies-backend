@@ -51,7 +51,7 @@ describe('VideosApi Integration Tests', () => {
         });
         expect.fail('Should have thrown an error');
       } catch (err) {
-        expect(err).to.equal(error);
+        expect((err as Error).message).to.equal(`Failed to delete captions for video test-video: API Error`);
       }
     });
   });

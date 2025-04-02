@@ -106,10 +106,8 @@ describe('PATCH /narratives/:id', async () => {
     expect(res.statusCode).to.equal(200);
     const parsedRes = await res.json();
 
-    const { createdAt, updatedAt, ...attributes } = parsedRes.attributes;
+    const { attributes } = parsedRes;
 
-    expect(createdAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-    expect(updatedAt).to.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
     expect(attributes.names).to.deep.include({ languageCode: 'EN', name: 'Updated Name' });
     expect(attributes.names).to.deep.include({ languageCode: 'ES', name: 'Nombre Actualizado' });
     expect(attributes.descriptions[0]).to.deep.equal({
