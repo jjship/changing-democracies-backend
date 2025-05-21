@@ -21,6 +21,8 @@
     "import-tags:prod": "node ./dist/scripts/import-tags.js",
     "import-fragment-tags": "ts-node ./scripts/import-fragment-tags.ts",
     "import-fragment-tags:prod": "node ./dist/scripts/import-fragment-tags.js",
+    "import-tag-categories": "ts-node ./scripts/import-tag-categories.ts",
+    "import-tag-categories:prod": "node ./dist/scripts/import-tag-categories.js",
     "install-migration-deps": "npm install --no-save dotenv ts-node @types/pg"
   },
   "dependencies": {
