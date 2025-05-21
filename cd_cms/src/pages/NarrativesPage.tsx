@@ -12,20 +12,34 @@ export function NarrativesPage() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [editingNarrative, setEditingNarrative] = useState<Narrative | undefined | null>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
+
   useEffect(() => {
+    loadData();
+  }, [refresh]);
+
+  const loadData = async () => {
+    setIsLoading(true);
     try {
-      narrativesApi.getNarratives().then(setNarratives);
-      fragmentsApi.getFragments({}).then((response) => setFragments(response.data));
-      personsApi.getPersons().then(setPersons);
+      const [narrativesData, fragmentsResponse, personsData] = await Promise.all([
+        narrativesApi.getNarratives(),
+        fragmentsApi.getFragments({}),
+        personsApi.getPersons(),
+      ]);
+      setNarratives(narrativesData);
+      setFragments(fragmentsResponse.data);
+      setPersons(personsData);
     } catch (error) {
       toast({
-        title: 'Error loading persons, please try again',
+        title: 'Error loading data, please try again',
         status: 'error',
         duration: 3000,
       });
+    } finally {
+      setIsLoading(false);
     }
-  }, [refresh]);
+  };
 
   const handleSave = () => {
     setRefresh(!refresh);
@@ -52,7 +66,13 @@ export function NarrativesPage() {
   return (
     <Box>
       {editingNarrative === undefined && (
-        <NarrativeList narratives={narratives} onEdit={handleEdit} onDelete={handleDelete} onAdd={handleAdd} />
+        <NarrativeList
+          narratives={narratives}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onAdd={handleAdd}
+          isLoading={isLoading}
+        />
       )}
 
       {editingNarrative !== undefined && (

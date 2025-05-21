@@ -4,18 +4,6 @@ import { createCache } from 'async-cache-dedupe';
 import { TagEntity } from '../../db/entities/Tag';
 import { LanguageEntity } from '../../db/entities/Language';
 
-// Create a separate cache for the free browsing tag ID with 24 hour TTL
-let freeBrowsingTagCache: { id: string; timestamp: number } | null = null;
-const FREE_BROWSING_TAG_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
-
-// Create a cache for language code to ID mappings with 24 hour TTL
-interface LanguageCache {
-  languages: { [code: string]: string };
-  timestamp: number;
-}
-let languageCache: LanguageCache | null = null;
-const LANGUAGE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in ms
-
 // Create a cache specifically for fragment IDs with longer TTL
 interface FragmentIdsCache {
   [key: string]: {
@@ -27,48 +15,25 @@ interface FragmentIdsCache {
 let fragmentIdsCache: FragmentIdsCache = {};
 const FRAGMENT_IDS_CACHE_TTL = 3 * 60 * 60 * 1000; // 3 hours in ms (increased from 1 hour)
 
-// Function to get language ID by code (cached for 24 hours)
+// Function to get language ID by code
 const getLanguageId = async (dbConnection: DataSource, languageCode: string): Promise<string | null> => {
   try {
-    // Initialize cache if needed
-    if (!languageCache || Date.now() - languageCache.timestamp >= LANGUAGE_CACHE_TTL) {
-      const languageRepo = dbConnection.getRepository(LanguageEntity);
-      const languages = await languageRepo.find();
-
-      // Create a new cache object with all languages
-      const langMap: { [code: string]: string } = {};
-      languages.forEach((lang) => {
-        // Ensure language codes are stored in uppercase for consistent lookups
-        langMap[lang.code.toUpperCase()] = lang.id;
-      });
-
-      // Create the cache with languages and timestamp as separate properties
-      languageCache = {
-        languages: langMap,
-        timestamp: Date.now(),
-      };
-    }
-
-    // Convert input language code to uppercase for consistent lookup
-    const normalizedCode = languageCode.toUpperCase();
-
-    // Return the language ID if found in cache
-    return languageCache && languageCache.languages[normalizedCode] ? languageCache.languages[normalizedCode] : null;
+    const languageRepo = dbConnection.getRepository(LanguageEntity);
+    const language = await languageRepo.findOne({
+      where: { code: languageCode.toUpperCase() },
+      select: ['id'],
+    });
+    return language?.id || null;
   } catch (error) {
     console.error('Error retrieving language ID:', error);
     return null;
   }
 };
 
-// Function to get the free browsing tag ID (cached for 24 hours)
+// Function to get the free browsing tag ID
 const getFreeBrowsingTagId = async (dbConnection: DataSource): Promise<string | null> => {
   try {
-    // Check if we have a valid cached tag ID
-    if (freeBrowsingTagCache && Date.now() - freeBrowsingTagCache.timestamp < FREE_BROWSING_TAG_CACHE_TTL) {
-      return freeBrowsingTagCache.id;
-    }
-
-    // Get English language ID from cache
+    // Get English language ID
     const englishLanguageId = await getLanguageId(dbConnection, 'EN');
     if (!englishLanguageId) {
       return null;
@@ -81,20 +46,14 @@ const getFreeBrowsingTagId = async (dbConnection: DataSource): Promise<string | 
     const tag = await tagRepo
       .createQueryBuilder('tag')
       .innerJoin('tag.names', 'name')
-      .where('name.name = :tagName')
+      .where('LOWER(name.name) = LOWER(:tagName)')
       .andWhere('name.language_id = :languageId')
       .setParameter('tagName', 'free browsing')
       .setParameter('languageId', englishLanguageId)
       .select('tag.id')
       .getOne();
 
-    if (tag) {
-      // Cache the tag ID for future use
-      freeBrowsingTagCache = { id: tag.id, timestamp: Date.now() };
-      return tag.id;
-    }
-
-    return null;
+    return tag?.id || null;
   } catch (error) {
     console.error('Error retrieving free browsing tag ID:', error);
     return null;
@@ -104,7 +63,7 @@ const getFreeBrowsingTagId = async (dbConnection: DataSource): Promise<string | 
 const getClientFragments =
   ({ dbConnection }: { dbConnection: DataSource }) =>
   async ({ languageCode, page = 1, limit = 500 }: { languageCode: string; page?: number; limit?: number }) => {
-    // Get language ID from cache
+    // Get language ID
     const languageId = await getLanguageId(dbConnection, languageCode);
 
     if (!languageId) {
@@ -122,7 +81,7 @@ const getClientFragments =
     // Get English language ID for fallbacks
     const englishLanguageId = await getLanguageId(dbConnection, 'EN');
 
-    // Get the free browsing tag ID from cache or database
+    // Get the free browsing tag ID
     const freeBrowsingTagId = await getFreeBrowsingTagId(dbConnection);
 
     // If tag doesn't exist, return empty results
@@ -141,77 +100,48 @@ const getClientFragments =
     // Calculate skip for pagination
     const skip = (page - 1) * limit;
 
-    // Create a cache key based on tag ID, page, and limit
-    const cacheKey = `${freeBrowsingTagId}_page${page}_limit${limit}`;
-
-    // Try to get fragment IDs from cache first
-    let fragmentIds: string[] = [];
-    let totalCount = 0;
-
-    const cachedFragmentData = fragmentIdsCache[cacheKey];
-    if (cachedFragmentData && Date.now() - cachedFragmentData.timestamp < FRAGMENT_IDS_CACHE_TTL) {
-      fragmentIds = cachedFragmentData.ids;
-      totalCount = cachedFragmentData.totalCount;
-    } else {
-      const fragmentRepo = dbConnection.getRepository(FragmentEntity);
-
-      try {
-        // Step 1: Get total count using a lightweight query
-        totalCount = await fragmentRepo
-          .createQueryBuilder('fragment')
-          .select('COUNT(DISTINCT fragment.id)', 'count')
-          .innerJoin('fragment.tags', 'tag')
-          .where('tag.id = :tagId', { tagId: freeBrowsingTagId })
-          .cache(1800000) // 30 minutes cache (increased from 10 minutes)
-          .getRawOne()
-          .then((result) => parseInt(result?.count || '0', 10));
-
-        // Step 2: Get only the fragment IDs with minimal data needed for pagination and sorting
-        fragmentIds = await fragmentRepo
-          .createQueryBuilder('fragment')
-          .select(['fragment.id', 'fragment.title']) // Include title in selection to support ordering
-          .innerJoin('fragment.tags', 'tag')
-          .where('tag.id = :tagId', { tagId: freeBrowsingTagId })
-          .orderBy('fragment.title', 'ASC') // This query handles pagination, so we need proper sorting here
-          .skip(skip)
-          .take(limit)
-          .cache(1800000) // 30 minutes cache (increased from 10 minutes)
-          .getMany()
-          .then((fragments) => fragments.map((f) => f.id));
-
-        // Cache the fragment IDs and total count
-        fragmentIdsCache[cacheKey] = {
-          ids: fragmentIds,
-          totalCount,
-          timestamp: Date.now(),
-        };
-      } catch (error) {
-        console.error('Error executing fragment queries:', error);
-        totalCount = 0;
-        fragmentIds = [];
-      }
-    }
-    console.timeEnd('fragmentIdsQuery');
-
-    // If no fragments match criteria, return empty results
-    if (fragmentIds.length === 0) {
-      return {
-        data: [],
-        pagination: {
-          total: totalCount,
-          page,
-          limit,
-          pages: Math.ceil(totalCount / limit),
-        },
-      };
-    }
-
-    // Step 3: Get complete fragment data only for the IDs we need
     const fragmentRepo = dbConnection.getRepository(FragmentEntity);
 
-    let fragments: FragmentEntity[] = [];
-
     try {
+      // Step 1: Get total count using a lightweight query
+      const totalCount = await fragmentRepo
+        .createQueryBuilder('fragment')
+        .select('COUNT(DISTINCT fragment.id)', 'count')
+        .innerJoin('fragment.tags', 'tag')
+        .where('tag.id = :tagId', { tagId: freeBrowsingTagId })
+        .cache(1800000) // 30 minutes cache
+        .getRawOne()
+        .then((result) => parseInt(result?.count || '0', 10));
+
+      // Step 2: Get only the fragment IDs with minimal data needed for pagination and sorting
+      let fragmentIds = await fragmentRepo
+        .createQueryBuilder('fragment')
+        .select(['fragment.id', 'fragment.title'])
+        .innerJoin('fragment.tags', 'tag')
+        .where('tag.id = :tagId', { tagId: freeBrowsingTagId })
+        .orderBy('fragment.title', 'ASC')
+        .skip(skip)
+        .take(limit)
+        .cache(1800000) // 30 minutes cache
+        .getMany()
+        .then((fragments) => fragments.map((f) => f.id));
+
+      // If no fragments match criteria, return empty results
+      if (fragmentIds.length === 0) {
+        return {
+          data: [],
+          pagination: {
+            total: totalCount,
+            page,
+            limit,
+            pages: Math.ceil(totalCount / limit),
+          },
+        };
+      }
+
+      // Step 3: Get complete fragment data only for the IDs we need
+      let fragments: FragmentEntity[] = [];
+
       // Only attempt to fetch details if we have fragment IDs
       if (fragmentIds.length > 0) {
         // Safety check: if we have too many IDs, it could cause SQL generation issues
@@ -235,7 +165,7 @@ const getClientFragments =
             'fragment.thumbnailUrl',
           ])
           .where('fragment.id IN (:...fragmentIds)', { fragmentIds })
-          .orderBy('fragment.id', 'ASC') // Use ID sorting for database performance
+          .orderBy('fragment.id', 'ASC')
           .cache(cacheTimeMs)
           .getMany();
 
@@ -303,66 +233,52 @@ const getClientFragments =
           }
         }
       }
+
+      // Process fragments in batches to reduce memory pressure
+      const BATCH_SIZE = 50;
+      let result = [];
+
+      for (let i = 0; i < fragments.length; i += BATCH_SIZE) {
+        const batch = fragments.slice(i, i + BATCH_SIZE);
+        const processedBatch = batch.map((fragment) =>
+          formatFragmentResponse({
+            fragment,
+            languageCode,
+            languageId,
+            englishLanguageId,
+          })
+        );
+        result.push(...processedBatch);
+      }
+
+      // Sort the final results by title to ensure correct sorting
+      result.sort((a, b) => {
+        const titleA = a.title.toLowerCase();
+        const titleB = b.title.toLowerCase();
+        return titleA.localeCompare(titleB);
+      });
+
+      return {
+        data: result,
+        pagination: {
+          total: totalCount,
+          page,
+          limit,
+          pages: Math.ceil(totalCount / limit),
+        },
+      };
     } catch (error) {
       console.error('Error fetching fragment details:', error);
-
-      // Try one more time with a very simple query as last resort
-      try {
-        console.warn('Attempting simplified fallback query');
-        fragments = await fragmentRepo
-          .createQueryBuilder('fragment')
-          .select([
-            'fragment.id',
-            'fragment.title',
-            'fragment.durationSec',
-            'fragment.playerUrl',
-            'fragment.thumbnailUrl',
-          ])
-          .where('fragment.id IN (:...fragmentIds)', { fragmentIds })
-          .orderBy('fragment.id', 'ASC')
-          .getMany();
-
-        console.warn(`Fallback query returned ${fragments.length} fragments with limited data`);
-      } catch (fallbackError) {
-        console.error('Even fallback query failed:', fallbackError);
-        fragments = [];
-      }
+      return {
+        data: [],
+        pagination: {
+          total: 0,
+          page,
+          limit,
+          pages: 0,
+        },
+      };
     }
-
-    // Process fragments in batches to reduce memory pressure
-    const BATCH_SIZE = 50;
-    let result = [];
-
-    for (let i = 0; i < fragments.length; i += BATCH_SIZE) {
-      const batch = fragments.slice(i, i + BATCH_SIZE);
-      const processedBatch = batch.map((fragment) =>
-        formatFragmentResponse({
-          fragment,
-          languageCode,
-          languageId,
-          englishLanguageId,
-        })
-      );
-      result.push(...processedBatch);
-    }
-
-    // Sort the final results by title to ensure correct sorting
-    // This is much faster than complex SQL sorting with joins
-    result.sort((a, b) => {
-      const titleA = a.title.toLowerCase();
-      const titleB = b.title.toLowerCase();
-      return titleA.localeCompare(titleB);
-    });
-
-    return {
-      data: result,
-      pagination: {
-        total: totalCount,
-        page,
-        limit,
-        pages: Math.ceil(totalCount / limit),
-      },
-    };
   };
 
 // Helper function to format fragment response
@@ -495,12 +411,11 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
 
   // Create fragment cache with shorter TTL but longer stale time to reduce database pressure
   const cache = createCache({
-    ttl: 60 * 60, // 60 minutes fresh cache (increased from 30 minutes)
-    stale: 6 * 60 * 60, // 6 hours stale cache (increased from 3 hours)
+    ttl: 60 * 60, // 60 minutes fresh cache
+    stale: 7 * 24 * 60 * 60, // 7 days stale cache
     storage: {
       type: 'memory',
     },
-    // Remove callbacks that are causing TypeScript errors
   }).define('getClientFragments', getClientFragments({ dbConnection }));
 
   // Create a function to check for database indexes and suggest optimizations

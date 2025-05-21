@@ -13,6 +13,7 @@ export function TagsPage() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | undefined | null>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export function TagsPage() {
   }, [refresh]);
 
   const loadData = async () => {
+    setIsLoading(true);
     try {
       const tagsData = await tagsApi.getTags();
       setTags(tagsData);
@@ -35,6 +37,8 @@ export function TagsPage() {
         status: 'error',
         duration: 3000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +71,7 @@ export function TagsPage() {
       <Box>
         {editingTag === undefined && (
           <>
-            <TagsList onEdit={handleEdit} onDelete={handleDelete} tags={tags} />
+            <TagsList onEdit={handleEdit} onDelete={handleDelete} tags={tags} isLoading={isLoading} />
             <Button colorScheme="green" w={'100%'} mt={6} mb={6} onClick={handleAdd}>
               Add New Tag
             </Button>

@@ -4,10 +4,12 @@ import { PersonForm } from '../components/persons/PersonForm';
 import { Box, Heading, Container, Button, useToast } from '@chakra-ui/react';
 import { Person } from '../api/persons';
 import { personsApi } from '../api/persons';
+
 export function PersonsPage() {
   const [persons, setPersons] = useState<Person[]>([]);
   const [refresh, setRefresh] = useState(false);
   const [editingPerson, setEditingPerson] = useState<Person | undefined | null>(undefined);
+  const [isLoading, setIsLoading] = useState(true);
   const toast = useToast();
 
   useEffect(() => {
@@ -15,6 +17,7 @@ export function PersonsPage() {
   }, [refresh]);
 
   const loadPersons = async () => {
+    setIsLoading(true);
     try {
       const data = await personsApi.getPersons();
       setPersons(data);
@@ -24,6 +27,8 @@ export function PersonsPage() {
         status: 'error',
         duration: 3000,
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -51,7 +56,7 @@ export function PersonsPage() {
       <Box>
         {editingPerson === undefined && (
           <>
-            <PersonList onEdit={handleEdit} persons={persons} />
+            <PersonList onEdit={handleEdit} persons={persons} isLoading={isLoading} />
             <Button colorScheme="green" w={'100%'} mt={6} mb={6} onClick={handleAdd}>
               Add New Person
             </Button>

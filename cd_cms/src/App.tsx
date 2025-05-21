@@ -7,6 +7,7 @@ import { supabase } from './lib/supabase';
 import { TagsPage } from './pages/TagsPage';
 import { PersonsPage } from './pages/PersonPage';
 import { NarrativesPage } from './pages/NarrativesPage';
+import { TagCategoriesPage } from './pages/TagCategoriesPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NavigationPanel } from './components/NavigationPanel';
 
@@ -73,6 +74,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <TagsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/tag-categories"
+                  element={
+                    <ProtectedRoute>
+                      <TagCategoriesPage />
                     </ProtectedRoute>
                   }
                 />

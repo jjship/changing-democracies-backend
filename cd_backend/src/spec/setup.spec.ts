@@ -52,7 +52,11 @@ before(async function () {
     // Check if migrations table exists (indication schema is set up)
     const migrationTableExists = await checkIfMigrationTableExists();
 
-    if (!migrationTableExists) {
+    // Check if required tables exist
+    const requiredTables = ['tag_category', 'tag_category_tags', 'name'];
+    const missingTables = await checkMissingTables(requiredTables);
+
+    if (!migrationTableExists || missingTables.length > 0) {
       // Drop schema if it was partially created before
       await connection.query('DROP SCHEMA IF EXISTS public CASCADE');
       await connection.query('CREATE SCHEMA public');
@@ -108,6 +112,30 @@ async function checkIfMigrationTableExists() {
     return result[0].exists;
   } catch (e) {
     return false;
+  }
+}
+
+async function checkMissingTables(requiredTables: string[]): Promise<string[]> {
+  try {
+    const missingTables: string[] = [];
+    for (const table of requiredTables) {
+      const result = await connection.query(
+        `
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = $1
+        )
+      `,
+        [table]
+      );
+      if (!result[0].exists) {
+        missingTables.push(table);
+      }
+    }
+    return missingTables;
+  } catch (e) {
+    return requiredTables; // If we can't check, assume all tables are missing
   }
 }
 

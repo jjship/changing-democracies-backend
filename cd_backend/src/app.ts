@@ -31,6 +31,8 @@ import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicat
 import createGetCachedClientNarratives from './domain/narratives/getCachedClientNarratives';
 import createGetCachedClientFragments from './domain/fragments/getCachedClientFragments';
 import rateLimit from '@fastify/rate-limit';
+import { registerTagCategoryControllers } from './http/tag-categories/tag-categories.ctrl';
+
 export type AppDeps = {
   dbConnection: DataSource;
   bunnyStream: BunnyStreamApiClient;
@@ -103,6 +105,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerDeletePersonController(app)({ dbConnection });
 
     registerTagControllers(app)({ dbConnection });
+    registerTagCategoryControllers(app)({ dbConnection });
     registerCountryControllers(app)({ dbConnection });
     registerGetFragmentsController(app)({ dbConnection });
     registerLanguageControllers(app)({ dbConnection });

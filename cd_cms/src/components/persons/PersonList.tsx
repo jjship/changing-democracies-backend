@@ -1,7 +1,23 @@
 import { Person } from '../../api/persons';
-import { Box, Text, VStack, Button, Flex } from '@chakra-ui/react';
+import { Box, Text, VStack, Button, Flex, Spinner, Center } from '@chakra-ui/react';
 
-export function PersonList({ onEdit, persons }: { onEdit: (person: Person) => void; persons: Person[] }) {
+export function PersonList({
+  onEdit,
+  persons,
+  isLoading,
+}: {
+  onEdit: (person: Person) => void;
+  persons: Person[];
+  isLoading?: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <Center h="200px">
+        <Spinner size="lg" color="teal.500" />
+      </Center>
+    );
+  }
+
   return (
     <VStack spacing={4} align="stretch">
       {persons.map((person) => (
