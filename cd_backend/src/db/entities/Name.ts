@@ -3,6 +3,7 @@ import { NarrativeEntity } from './Narrative';
 import { LanguageEntity } from './Language';
 import { CountryEntity } from './Country';
 import { TagEntity } from './Tag';
+import { TagCategoryEntity } from './TagCategory';
 import { v4 as uuidv4 } from 'uuid';
 
 @Entity('name')
@@ -44,4 +45,8 @@ export class NameEntity {
   @ManyToOne(() => TagEntity, (tag) => tag.names, { onDelete: 'CASCADE', nullable: true })
   @JoinColumn({ name: 'tag_id' })
   tag?: TagEntity;
+
+  @ManyToOne(() => TagCategoryEntity, (category) => category.names, { onDelete: 'CASCADE', nullable: true })
+  @JoinColumn({ name: 'tag_category_id' })
+  tagCategory?: TagCategoryEntity;
 }

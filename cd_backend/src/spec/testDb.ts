@@ -11,6 +11,8 @@ import { DescriptionEntity } from '../db/entities/Description';
 import { LanguageEntity } from '../db/entities/Language';
 import { NameEntity } from '../db/entities/Name';
 import { NarrativeFragmentEntity } from '../db/entities/NarrativeFragment';
+import { TagCategoryEntity } from '../db/entities/TagCategory';
+import { In } from 'typeorm';
 
 export const testDb = {
   async saveTestCountries(countries: { name: string; code: string }[]) {
@@ -246,6 +248,49 @@ export const testDb = {
       }
 
       return await entityManager.save(PersonEntity, testPerson);
+    });
+  },
+
+  async saveTestTagCategories(
+    categories: Array<{ names: Array<{ languageCode: string; name: string }>; tagIds?: string[] }>
+  ) {
+    const dbConnection = getDbConnection();
+    const categoryRepo = dbConnection.getRepository(TagCategoryEntity);
+    const languageRepo = dbConnection.getRepository(LanguageEntity);
+    const tagRepo = dbConnection.getRepository(TagEntity);
+
+    return await dbConnection.transaction(async (entityManager) => {
+      const savedCategories: TagCategoryEntity[] = [];
+
+      for (const category of categories) {
+        const tagCategory = new TagCategoryEntity();
+
+        // Create names with proper language relations
+        tagCategory.names = await Promise.all(
+          category.names.map(async (n) => {
+            const language = await languageRepo.findOneByOrFail({ code: n.languageCode });
+            const name = new NameEntity();
+            name.language = language;
+            name.name = n.name;
+            name.type = 'TagCategory';
+            name.tagCategory = tagCategory;
+            return name;
+          })
+        );
+
+        // Handle tag associations if tagIds are provided
+        if (category.tagIds && category.tagIds.length > 0) {
+          const tags = await tagRepo.findBy({
+            id: In(category.tagIds),
+          });
+          tagCategory.tags = tags;
+        }
+
+        const savedCategory = await entityManager.save(TagCategoryEntity, tagCategory);
+        savedCategories.push(savedCategory);
+      }
+
+      return savedCategories;
     });
   },
 };
