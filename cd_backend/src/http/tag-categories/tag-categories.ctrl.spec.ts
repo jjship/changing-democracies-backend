@@ -10,7 +10,7 @@ import { testDb } from '../../spec/testDb';
 import { v4 as uuidv4 } from 'uuid';
 import { In } from 'typeorm';
 
-describe.only('Tag Categories Controller', () => {
+describe('Tag Categories Controller', () => {
   let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
@@ -96,6 +96,98 @@ describe.only('Tag Categories Controller', () => {
       expect(category!.tags!.map((t) => t.id)).to.have.members(tagIds);
     });
 
+    it('should update an existing category when id is provided', async () => {
+      // Create a category to update
+      const category = new TagCategoryEntity();
+      const name = new NameEntity();
+      name.language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
+      name.name = 'Original Name';
+      name.type = 'TagCategory';
+      name.tagCategory = category;
+      category.names = [name];
+
+      const savedCategory = await dbConnection.getRepository(TagCategoryEntity).save(category);
+
+      const response = await testApp
+        .request()
+        .post('/tag-categories')
+        .headers({ Authorization: `Bearer ${authToken}` })
+        .body({
+          id: savedCategory.id,
+          names: [
+            { languageCode: 'EN', name: 'Updated Name' },
+            { languageCode: 'ES', name: 'Nombre Actualizado' },
+          ],
+        })
+        .end();
+
+      expect(response.statusCode).to.equal(200);
+      const body = response.json();
+      expect(body.id).to.equal(savedCategory.id);
+      expect(body.names).to.have.lengthOf(2);
+      expect(body.names).to.deep.include({ languageCode: 'EN', name: 'Updated Name' });
+      expect(body.names).to.deep.include({ languageCode: 'ES', name: 'Nombre Actualizado' });
+
+      // Verify database state
+      const updatedCategory = await dbConnection.getRepository(TagCategoryEntity).findOne({
+        where: { id: savedCategory.id },
+        relations: ['names', 'names.language'],
+      });
+      expect(updatedCategory!.names).to.have.lengthOf(2);
+    });
+
+    it('should update a category with tag associations when tagIds are provided', async () => {
+      // Create a category to update
+      const category = new TagCategoryEntity();
+      const name = new NameEntity();
+      name.language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
+      name.name = 'Original Name';
+      name.type = 'TagCategory';
+      name.tagCategory = category;
+      category.names = [name];
+
+      const savedCategory = await dbConnection.getRepository(TagCategoryEntity).save(category);
+
+      // Create test tags
+      const tagIds: string[] = [];
+      for (let i = 0; i < 2; i++) {
+        const tag = new TagEntity();
+        const name = new NameEntity();
+        name.language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
+        name.name = `Test Tag ${i}`;
+        name.type = 'Tag';
+        name.tag = tag;
+        tag.names = [name];
+        const savedTag = await dbConnection.getRepository(TagEntity).save(tag);
+        tagIds.push(savedTag.id);
+      }
+
+      const response = await testApp
+        .request()
+        .post('/tag-categories')
+        .headers({ Authorization: `Bearer ${authToken}` })
+        .body({
+          id: savedCategory.id,
+          names: [{ languageCode: 'EN', name: 'Updated Name' }],
+          tagIds,
+        })
+        .end();
+
+      expect(response.statusCode).to.equal(200);
+      const body = response.json();
+      expect(body.id).to.equal(savedCategory.id);
+      expect(body.tags).to.have.lengthOf(2);
+      expect(body.tags.map((t: { id: string }) => t.id)).to.have.members(tagIds);
+
+      // Verify database state
+      const updatedCategory = await dbConnection.getRepository(TagCategoryEntity).findOne({
+        where: { id: savedCategory.id },
+        relations: ['tags'],
+      });
+      expect(updatedCategory!.tags).to.have.lengthOf(2);
+      expect(updatedCategory!.tags!.map((t) => t.id)).to.have.members(tagIds);
+    });
+
     it('should return 401 when not authenticated', async () => {
       const response = await testApp
         .request()
@@ -120,112 +212,14 @@ describe.only('Tag Categories Controller', () => {
 
       expect(response.statusCode).to.equal(500);
     });
-  });
 
-  describe('PUT /tag-categories/:id', () => {
-    let existingCategoryId: string;
-    let tagIds: string[] = [];
-
-    beforeEach(async () => {
-      // Create a category to update
-      const category = new TagCategoryEntity();
-      const name = new NameEntity();
-      name.language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
-      name.name = 'Original Name';
-      name.type = 'TagCategory';
-      name.tagCategory = category;
-      category.names = [name];
-
-      const savedCategory = await dbConnection.getRepository(TagCategoryEntity).save(category);
-      existingCategoryId = savedCategory.id;
-
-      // Create test tags
-      tagIds = [];
-      for (let i = 0; i < 2; i++) {
-        const tag = new TagEntity();
-        const name = new NameEntity();
-        name.language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
-        name.name = `Test Tag ${i}`;
-        name.type = 'Tag';
-        name.tag = tag;
-        tag.names = [name];
-        const savedTag = await dbConnection.getRepository(TagEntity).save(tag);
-        tagIds.push(savedTag.id);
-      }
-    });
-
-    it('should update an existing category when authenticated', async () => {
+    it('should return 404 when updating non-existent category', async () => {
       const response = await testApp
         .request()
-        .put(`/tag-categories/${existingCategoryId}`)
+        .post('/tag-categories')
         .headers({ Authorization: `Bearer ${authToken}` })
         .body({
-          names: [
-            { languageCode: 'EN', name: 'Updated Name' },
-            { languageCode: 'ES', name: 'Nombre Actualizado' },
-          ],
-        })
-        .end();
-
-      expect(response.statusCode).to.equal(200);
-      const body = response.json();
-      expect(body.id).to.equal(existingCategoryId);
-      expect(body.names).to.have.lengthOf(2);
-      expect(body.names).to.deep.include({ languageCode: 'EN', name: 'Updated Name' });
-      expect(body.names).to.deep.include({ languageCode: 'ES', name: 'Nombre Actualizado' });
-
-      // Verify database state
-      const category = await dbConnection.getRepository(TagCategoryEntity).findOne({
-        where: { id: existingCategoryId },
-        relations: ['names', 'names.language'],
-      });
-      expect(category!.names).to.have.lengthOf(2);
-    });
-
-    it('should update a category with tag associations when tagIds are provided', async () => {
-      const response = await testApp
-        .request()
-        .put(`/tag-categories/${existingCategoryId}`)
-        .headers({ Authorization: `Bearer ${authToken}` })
-        .body({
-          names: [{ languageCode: 'EN', name: 'Updated Name' }],
-          tagIds,
-        })
-        .end();
-
-      expect(response.statusCode).to.equal(200);
-      const body = response.json();
-      expect(body.id).to.equal(existingCategoryId);
-      expect(body.tags).to.have.lengthOf(2);
-      expect(body.tags.map((t: { id: string }) => t.id)).to.have.members(tagIds);
-
-      // Verify database state
-      const category = await dbConnection.getRepository(TagCategoryEntity).findOne({
-        where: { id: existingCategoryId },
-        relations: ['tags'],
-      });
-      expect(category!.tags).to.have.lengthOf(2);
-      expect(category!.tags!.map((t) => t.id)).to.have.members(tagIds);
-    });
-
-    it('should return 401 when not authenticated', async () => {
-      const response = await testApp
-        .request()
-        .put(`/tag-categories/${existingCategoryId}`)
-        .body({
-          names: [{ languageCode: 'EN', name: 'Test' }],
-        })
-        .end();
-
-      expect(response.statusCode).to.equal(401);
-    });
-
-    it('should return 404 for non-existent category', async () => {
-      const response = await testApp
-        .request()
-        .put('/tag-categories/non-existent-id')
-        .headers({ Authorization: `Bearer ${authToken}` })
-        .body({
+          id: 'non-existent-id',
           names: [{ languageCode: 'EN', name: 'Test' }],
         })
         .end();

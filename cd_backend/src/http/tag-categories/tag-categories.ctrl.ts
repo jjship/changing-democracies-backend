@@ -1,125 +1,68 @@
 import { FastifyInstance } from 'fastify';
-import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { DataSource } from 'typeorm';
+import { Type } from '@sinclair/typebox';
+import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import { DataSource, In } from 'typeorm';
 import { TagCategoryEntity } from '../../db/entities/TagCategory';
 import { NameEntity } from '../../db/entities/Name';
-import { tagCategorySchema, createTagCategorySchema, updateTagCategorySchema } from './tag-category.schema';
 import { LanguageEntity } from '../../db/entities/Language';
-import { NotFoundError } from '../../errors';
 import { TagEntity } from '../../db/entities/Tag';
-import { In } from 'typeorm';
+import { NotFoundError } from '../../errors';
+import { tagCategorySchema, createTagCategorySchema } from './tag-category.schema';
 
 export const registerTagCategoryControllers =
   (app: FastifyInstance) =>
   ({ dbConnection }: { dbConnection: DataSource }) => {
     app.withTypeProvider<TypeBoxTypeProvider>().route({
-      method: 'GET',
-      url: '/tag-categories',
-      schema: {
-        response: {
-          200: Type.Array(tagCategorySchema),
-        },
-      },
-      handler: async (request, reply) => {
-        const categoryRepo = dbConnection.getRepository(TagCategoryEntity);
-
-        const categories = await categoryRepo.find({
-          relations: ['names', 'names.language', 'tags', 'tags.names', 'tags.names.language'],
-        });
-
-        return reply.send(
-          categories
-            .map((category) => parseTagCategoryEntity(category))
-            .sort(
-              (a, b) =>
-                a.names
-                  .find((n) => n.languageCode === 'EN')
-                  ?.name.localeCompare(b.names.find((n) => n.languageCode === 'EN')?.name ?? '') ?? 0
-            )
-        );
-      },
-    });
-
-    app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'POST',
       url: '/tag-categories',
       schema: {
-        body: createTagCategorySchema,
+        body: Type.Object({
+          id: Type.Optional(Type.String()),
+          names: Type.Array(
+            Type.Object({
+              languageCode: Type.String(),
+              name: Type.String(),
+            })
+          ),
+          tagIds: Type.Optional(Type.Array(Type.String())),
+        }),
         response: {
+          200: tagCategorySchema,
           201: tagCategorySchema,
         },
       },
       handler: async (request, reply) => {
-        const category = new TagCategoryEntity();
-
-        // Create names with proper language relations
-        const names = await Promise.all(
-          request.body.names.map(async (n) => {
-            const language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({
-              code: n.languageCode,
-            });
-
-            const name = new NameEntity();
-            name.language = language;
-            name.name = n.name;
-            name.type = 'TagCategory';
-            name.tagCategory = category;
-            return name;
-          })
-        );
-
-        category.names = names;
-
-        // Handle tag associations if tagIds are provided
-        if (request.body.tagIds && request.body.tagIds.length > 0) {
-          const tagRepo = dbConnection.getRepository(TagEntity);
-          const tags = await tagRepo.findBy({
-            id: In(request.body.tagIds),
-          });
-          category.tags = tags;
-        }
-
-        await dbConnection.getRepository(TagCategoryEntity).save(category);
-
-        // Format response according to schema
-        return reply.status(201).send(parseTagCategoryEntity(category));
-      },
-    });
-
-    app.withTypeProvider<TypeBoxTypeProvider>().route({
-      method: 'PUT',
-      url: '/tag-categories/:id',
-      schema: {
-        params: Type.Object({
-          id: Type.String(),
-        }),
-        body: updateTagCategorySchema,
-        response: {
-          200: tagCategorySchema,
-        },
-      },
-      handler: async (request, reply) => {
+        const { id, names, tagIds } = request.body;
         const categoryRepo = dbConnection.getRepository(TagCategoryEntity);
         const nameRepo = dbConnection.getRepository(NameEntity);
 
-        // Find existing category
-        const category = await categoryRepo.findOne({
-          where: { id: request.params.id },
-          relations: ['names', 'names.language', 'tags', 'tags.names', 'tags.names.language'],
-        });
+        let category: TagCategoryEntity;
 
-        if (!category) {
-          throw new NotFoundError('Tag category not found');
-        }
+        if (id) {
+          // Update existing category
+          const existingCategory = await categoryRepo.findOne({
+            where: { id },
+            relations: ['names', 'names.language', 'tags', 'tags.names', 'tags.names.language'],
+          });
 
-        // Delete existing names
-        if (category.names) {
-          await nameRepo.remove(category.names);
+          if (!existingCategory) {
+            throw new NotFoundError('Tag category not found');
+          }
+
+          category = existingCategory;
+
+          // Delete existing names
+          if (category.names) {
+            await nameRepo.remove(category.names);
+          }
+        } else {
+          // Create new category
+          category = new TagCategoryEntity();
         }
 
         // Create new names
-        const names = await Promise.all(
-          request.body.names.map(async (n) => {
+        const newNames = await Promise.all(
+          names.map(async (n) => {
             const language = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({
               code: n.languageCode,
             });
@@ -133,20 +76,21 @@ export const registerTagCategoryControllers =
           })
         );
 
-        category.names = names;
+        category.names = newNames;
 
         // Handle tag associations if tagIds are provided
-        if (request.body.tagIds && request.body.tagIds.length > 0) {
+        if (tagIds && tagIds.length > 0) {
           const tagRepo = dbConnection.getRepository(TagEntity);
           const tags = await tagRepo.findBy({
-            id: In(request.body.tagIds),
+            id: In(tagIds),
           });
           category.tags = tags;
         }
 
         await categoryRepo.save(category);
 
-        return reply.send(parseTagCategoryEntity(category));
+        // Return 201 for creation, 200 for update
+        return reply.status(id ? 200 : 201).send(parseTagCategoryEntity(category));
       },
     });
 
@@ -163,24 +107,39 @@ export const registerTagCategoryControllers =
       },
       handler: async (request, reply) => {
         const categoryRepo = dbConnection.getRepository(TagCategoryEntity);
+        const nameRepo = dbConnection.getRepository(NameEntity);
 
-        // First find the category with its tag associations
         const category = await categoryRepo.findOne({
           where: { id: request.params.id },
-          relations: ['tags'],
+          relations: ['names'],
         });
 
         if (category) {
-          // Remove tag associations by setting tags to empty array
-          // This will update the join table before the category is deleted
-          category.tags = [];
-          await categoryRepo.save(category);
-
-          // Now delete the category
-          await categoryRepo.delete(request.params.id);
+          // Delete associated names
+          if (category.names) {
+            await nameRepo.remove(category.names);
+          }
+          await categoryRepo.remove(category);
         }
 
         return reply.status(204).send();
+      },
+    });
+
+    app.withTypeProvider<TypeBoxTypeProvider>().route({
+      method: 'GET',
+      url: '/tag-categories',
+      schema: {
+        response: {
+          200: Type.Array(tagCategorySchema),
+        },
+      },
+      handler: async (request, reply) => {
+        const categories = await dbConnection.getRepository(TagCategoryEntity).find({
+          relations: ['names', 'names.language', 'tags', 'tags.names', 'tags.names.language'],
+        });
+
+        return reply.send(categories.map(parseTagCategoryEntity));
       },
     });
   };

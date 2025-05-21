@@ -37,6 +37,14 @@ export function NavigationPanel() {
         <Button colorScheme="blue" variant="ghost" onClick={() => navigate('/tags')} _hover={{ bg: 'blue.100' }}>
           Tags
         </Button>
+        <Button
+          colorScheme="blue"
+          variant="ghost"
+          onClick={() => navigate('/tag-categories')}
+          _hover={{ bg: 'blue.100' }}
+        >
+          Tag Categories
+        </Button>
         <Button colorScheme="red" variant="solid" onClick={handleLogout} _hover={{ bg: 'red.600' }}>
           Logout
         </Button>

@@ -1,15 +1,15 @@
-import { Tag } from '../../api/tags';
+import { TagCategory } from '../../api/tagCategories';
 import { Box, Text, VStack, Button, Flex, HStack, Badge, Spinner, Center } from '@chakra-ui/react';
 
-export function TagsList({
+export function TagCategoryList({
   onEdit,
   onDelete,
-  tags,
+  tagCategories,
   isLoading,
 }: {
-  onEdit: (tag: Tag) => void;
+  onEdit: (tagCategory: TagCategory) => void;
   onDelete: (id: string) => void;
-  tags: Tag[];
+  tagCategories: TagCategory[];
   isLoading?: boolean;
 }) {
   if (isLoading) {
@@ -22,15 +22,15 @@ export function TagsList({
 
   return (
     <VStack spacing={4} align="stretch">
-      {tags.map((tag) => {
+      {tagCategories.map((tagCategory) => {
         // First try to find English name
-        const englishName = tag.names.find((name) => name.languageCode.toLowerCase() === 'en');
+        const englishName = tagCategory.names.find((name) => name.languageCode.toLowerCase() === 'en');
         // Fall back to first name or empty string
-        const displayName = englishName?.name || tag.names[0]?.name || '';
+        const displayName = englishName?.name || tagCategory.names[0]?.name || '';
 
         return (
           <Flex
-            key={tag.id}
+            key={tagCategory.id}
             gap={4}
             p={4}
             borderWidth={1}
@@ -44,29 +44,37 @@ export function TagsList({
               <Text fontSize="lg" fontWeight="bold" mb={2}>
                 {displayName}
               </Text>
-              {tag.names.length > 0 && (
+              {tagCategory.names.length > 0 && (
                 <HStack spacing={1} mb={2} flexWrap="wrap">
                   <Text fontSize="sm" color="gray.600">
                     Languages:
                   </Text>
-                  {tag.names.map((name) => (
+                  {tagCategory.names.map((name) => (
                     <Badge key={name.languageCode} colorScheme="blue" fontSize="xs">
                       {name.languageCode}
                     </Badge>
                   ))}
                 </HStack>
               )}
-              {tag.fragments && tag.fragments.length > 0 && (
-                <Text fontSize="sm" color="gray.600">
-                  Fragments: {tag.fragments.length}
-                </Text>
+              {tagCategory.tags && tagCategory.tags.length > 0 && (
+                <Flex gap={2} flexWrap="wrap">
+                  {tagCategory.tags.map((tag) => {
+                    const tagEnglishName = tag.names.find((n) => n.languageCode.toLowerCase() === 'en');
+                    const tagDisplayName = tagEnglishName?.name || tag.names[0]?.name || '';
+                    return (
+                      <Badge key={tag.id} colorScheme="teal">
+                        {tagDisplayName}
+                      </Badge>
+                    );
+                  })}
+                </Flex>
               )}
             </Box>
             <Flex gap={4}>
-              <Button colorScheme="teal" onClick={() => onEdit(tag)}>
+              <Button colorScheme="teal" onClick={() => onEdit(tagCategory)}>
                 Edit
               </Button>
-              <Button colorScheme="orange" onClick={() => onDelete(tag.id)}>
+              <Button colorScheme="orange" onClick={() => onDelete(tagCategory.id)}>
                 Delete
               </Button>
             </Flex>

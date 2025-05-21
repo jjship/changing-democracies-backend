@@ -1,4 +1,4 @@
-import { Text, Button, Flex } from '@chakra-ui/react';
+import { Text, Button, Flex, Spinner, Center } from '@chakra-ui/react';
 import { Narrative } from '../../api/narratives';
 
 function pickName(narrative: Narrative) {
@@ -16,12 +16,22 @@ export function NarrativeList({
   onEdit,
   onDelete,
   onAdd,
+  isLoading,
 }: {
   narratives: Narrative[];
   onEdit: (narrative: Narrative) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  isLoading?: boolean;
 }) {
+  if (isLoading) {
+    return (
+      <Center h="200px">
+        <Spinner size="lg" color="teal.500" />
+      </Center>
+    );
+  }
+
   return (
     <Flex m={'auto'} gap={4} p={4} direction="column">
       {narratives.map((narrative) => (
