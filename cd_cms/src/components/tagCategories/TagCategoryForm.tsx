@@ -36,7 +36,6 @@ export function TagCategoryForm({
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(tagCategory?.tags?.map((t) => t.id) || []);
   const { saveColor, markUnsaved, markSaved } = useSaveColor();
   const toast = useToast();
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   useEffect(() => {
     loadLanguages();
@@ -173,14 +172,6 @@ export function TagCategoryForm({
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value);
-  };
-
-  const handleTagToggle = (tagId: string) => {
-    const newSelectedTagIds = selectedTagIds.includes(tagId)
-      ? selectedTagIds.filter((id) => id !== tagId)
-      : [...selectedTagIds, tagId];
-    setSelectedTagIds(newSelectedTagIds);
-    markUnsaved();
   };
 
   return (
