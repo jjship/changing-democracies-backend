@@ -93,7 +93,17 @@ export const testDb = {
     await getDbConnection().transaction(async (entityManager) => {
       for (const tag of tags) {
         const testTag = new TagEntity();
-        testTag.names = [entityManager.getRepository(NameEntity).create({ name: tag.name, type: 'Tag' })];
+        const language = await entityManager.findOne(LanguageEntity, { where: { code: 'EN' } });
+        if (!language) {
+          throw new Error(`Language with code 'EN' not found`);
+        }
+        testTag.names = [
+          entityManager.getRepository(NameEntity).create({
+            name: tag.name,
+            type: 'Tag',
+            language,
+          }),
+        ];
         await entityManager.save(TagEntity, testTag);
       }
     });

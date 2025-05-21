@@ -46,7 +46,7 @@ const getFreeBrowsingTagId = async (dbConnection: DataSource): Promise<string | 
     const tag = await tagRepo
       .createQueryBuilder('tag')
       .innerJoin('tag.names', 'name')
-      .where('name.name = :tagName')
+      .where('LOWER(name.name) = LOWER(:tagName)')
       .andWhere('name.language_id = :languageId')
       .setParameter('tagName', 'free browsing')
       .setParameter('languageId', englishLanguageId)

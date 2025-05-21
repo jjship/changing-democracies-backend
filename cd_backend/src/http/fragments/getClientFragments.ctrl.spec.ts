@@ -12,11 +12,12 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 
-describe('GET /client-fragments', async () => {
+describe.only('GET /client-fragments', async () => {
   let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let apiKey: string;
   let authToken: string;
+  let freeBrowsingTag: TagEntity;
 
   beforeEach(async () => {
     testApp = await setupTestApp();
@@ -28,6 +29,30 @@ describe('GET /client-fragments', async () => {
       { code: 'EN', name: 'English' },
       { code: 'ES', name: 'Spanish' },
     ]);
+
+    // Create free browsing tag with English name
+    const tagRepo = dbConnection.getRepository(TagEntity);
+    const nameRepo = dbConnection.getRepository(NameEntity);
+    const english = await dbConnection.getRepository(LanguageEntity).findOneByOrFail({ code: 'EN' });
+
+    // Create the tag
+    const tag = tagRepo.create();
+    await tagRepo.save(tag);
+
+    // Add English name
+    const name = nameRepo.create({
+      name: 'free browsing',
+      type: 'Tag',
+      language: english,
+      tag,
+    });
+    await nameRepo.save(name);
+
+    // Get the tag with its name
+    freeBrowsingTag = await tagRepo.findOneOrFail({
+      where: { id: tag.id },
+      relations: ['names', 'names.language'],
+    });
   });
 
   it('should return client fragments with valid API key', async () => {
@@ -57,7 +82,7 @@ describe('GET /client-fragments', async () => {
     // Get the created tag to add Spanish name
     const testTag = await dbConnection
       .getRepository(TagEntity)
-      .findOneOrFail({ where: {}, relations: ['names', 'names.language'] });
+      .findOneOrFail({ where: { names: { name: 'Democracy' } }, relations: ['names', 'names.language'] });
 
     // Add Spanish name to tag via testDb.saveTestNames
     const nameRepo = dbConnection.getRepository(NameEntity);
@@ -83,10 +108,10 @@ describe('GET /client-fragments', async () => {
       },
     ]);
 
-    // Associate tag with fragment
+    // Associate tags with fragment
     const fragmentRepo = dbConnection.getRepository(FragmentEntity);
     const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
-    fragment.tags = [testTag];
+    fragment.tags = [testTag, freeBrowsingTag];
     await fragmentRepo.save(fragment);
 
     // Request fragments with English language code
@@ -119,7 +144,7 @@ describe('GET /client-fragments', async () => {
     expect(fragmentResult.person.country.name).to.equal('United States');
 
     // Check tag with English name
-    expect(fragmentResult.tags).to.have.lengthOf(1);
+    expect(fragmentResult.tags).to.have.lengthOf(2);
     expect(fragmentResult.tags[0].id).to.equal(testTag.id);
     expect(fragmentResult.tags[0].name).to.equal('Democracy');
 
@@ -175,7 +200,7 @@ describe('GET /client-fragments', async () => {
     // Get the created tag to add Spanish name
     const testTag = await dbConnection
       .getRepository(TagEntity)
-      .findOneOrFail({ where: {}, relations: ['names', 'names.language'] });
+      .findOneOrFail({ where: { names: { name: 'Democracy' } }, relations: ['names', 'names.language'] });
 
     // Add Spanish name to tag
     const tagSpanishName = nameRepo.create({
@@ -197,10 +222,10 @@ describe('GET /client-fragments', async () => {
       },
     ]);
 
-    // Associate tag with fragment
+    // Associate tags with fragment
     const fragmentRepo = dbConnection.getRepository(FragmentEntity);
     const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
-    fragment.tags = [testTag];
+    fragment.tags = [testTag, freeBrowsingTag];
     await fragmentRepo.save(fragment);
 
     // Request fragments with Spanish language code
@@ -227,6 +252,14 @@ describe('GET /client-fragments', async () => {
     }));
 
     await testDb.saveTestFragments(fragmentsToCreate);
+
+    // Associate free browsing tag with all fragments
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    for (const fragmentId of fragmentIds) {
+      const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
+      fragment.tags = [freeBrowsingTag];
+      await fragmentRepo.save(fragment);
+    }
 
     // Request first page with 10 items per page
     const res1 = await testApp
