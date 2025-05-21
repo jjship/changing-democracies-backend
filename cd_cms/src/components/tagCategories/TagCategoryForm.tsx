@@ -194,7 +194,7 @@ export function TagCategoryForm({
 
       <FormLabel>Tags</FormLabel>
       <Box
-        maxH="200px"
+        maxH="600px"
         overflowY="auto"
         sx={{
           '&::-webkit-scrollbar': {
