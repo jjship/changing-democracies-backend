@@ -191,7 +191,6 @@ const getClientFragments =
         fragmentIds = [];
       }
     }
-    console.timeEnd('fragmentIdsQuery');
 
     // If no fragments match criteria, return empty results
     if (fragmentIds.length === 0) {
