@@ -19,8 +19,8 @@ import { registerGetNarrativesController } from './http/narratives/getNarratives
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
 import fastifySensible from '@fastify/sensible';
-import { registerGetClientNarrativesController } from './http/narratives/getClientNarratives.ctrl';
-import { registerGetClientFragmentsController } from './http/fragments/getClientFragments.ctrl';
+import { registerGetClientNarrativesController } from './http/client/getClientNarratives.ctrl';
+import { registerGetClientFragmentsController } from './http/client/getClientFragments.ctrl';
 import { registerCreatePersonController } from './http/persons/createPerson.ctrl';
 import { registerUpdatePersonController } from './http/persons/updatePerson.ctrl';
 import { registerGetPersonsController } from './http/persons/getPersons.ctrl';
@@ -32,6 +32,8 @@ import createGetCachedClientNarratives from './domain/narratives/getCachedClient
 import createGetCachedClientFragments from './domain/fragments/getCachedClientFragments';
 import rateLimit from '@fastify/rate-limit';
 import { registerTagCategoryControllers } from './http/tag-categories/tag-categories.ctrl';
+import { registerGetClientTagCategoriesController } from './http/client/getClientTagCategories.ctrl';
+import { getCachedClientTagCategories } from './domain/tagCategories/getCachedClientTagCategories';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -116,6 +118,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     app.addHook('onRequest', app.authenticateApiKey);
     registerGetClientNarrativesController(app)({ getCachedClientNarratives });
     registerGetClientFragmentsController(app)({ getCachedClientFragments });
+    registerGetClientTagCategoriesController(app)({ getCachedClientTagCategories });
 
     registerSyncFragmentsController(app)({ dbConnection, bunnyStream });
     registerDeleteDuplicateCaptionsController(app)({ bunnyStream });
