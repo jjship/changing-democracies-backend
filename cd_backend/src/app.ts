@@ -14,11 +14,10 @@ import { registerDeleteNarrativeController } from './http/narratives/deleteNarra
 import { registerTagControllers } from './http/tags/tags.ctrl';
 import { ENV } from './env';
 import { registerCountryControllers } from './http/countries/countries.ctrl';
-import { HttpError } from './errors';
+import { NotFoundError, HttpError } from './errors';
 import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
-import fastifySensible from '@fastify/sensible';
 import { registerGetClientNarrativesController } from './http/client/getClientNarratives.ctrl';
 import { registerGetClientFragmentsController } from './http/client/getClientFragments.ctrl';
 import { registerCreatePersonController } from './http/persons/createPerson.ctrl';
@@ -33,7 +32,7 @@ import createGetCachedClientFragments from './domain/fragments/getCachedClientFr
 import rateLimit from '@fastify/rate-limit';
 import { registerTagCategoryControllers } from './http/tag-categories/tag-categories.ctrl';
 import { registerGetClientTagCategoriesController } from './http/client/getClientTagCategories.ctrl';
-import { getCachedClientTagCategories } from './domain/tagCategories/getCachedClientTagCategories';
+import createGetCachedClientTagCategories from './domain/tagCategories/getCachedClientTagCategories';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -47,6 +46,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   const getCachedClientNarratives = createGetCachedClientNarratives({ dbConnection });
   const getCachedClientFragments = createGetCachedClientFragments({ dbConnection });
+  const getCachedClientTagCategories = createGetCachedClientTagCategories({ dbConnection });
 
   // Add security headers using helmet
   await app.register(helmet, {
@@ -81,15 +81,29 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
 
   app.setErrorHandler((error, request, reply) => {
     app.log.error(error);
-    const statusCode = error instanceof HttpError ? error.statusCode : 500;
-    // Don't reveal detailed error messages to clients
-    const message = statusCode === 500 ? 'Internal Server Error' : error.message;
-    reply.status(statusCode).send({ ok: false, error: message });
+
+    // Handle known HTTP errors
+    if (error instanceof HttpError) {
+      return reply.status(error.statusCode).send({ ok: false, error: error.message });
+    }
+
+    // Handle database errors
+    if (error.name === 'QueryFailedError') {
+      // For duplicate key violations, return 409
+      if (error.message.includes('duplicate key')) {
+        return reply.status(409).send({ ok: false, error: 'Resource already exists' });
+      }
+      // For invalid UUIDs, return 404
+      if (error.message.includes('invalid input syntax for type uuid')) {
+        return reply.status(404).send({ ok: false, error: 'Resource not found' });
+      }
+    }
+
+    // Handle unknown errors
+    reply.status(500).send({ ok: false, error: 'Internal Server Error' });
   });
 
   app.get('/health', async () => ({ status: 'ok' }));
-
-  await app.register(fastifySensible);
 
   await app.register(async (app) => {
     await app.register(jwtAuthPlugin);
@@ -144,10 +158,10 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
       `Route ${request.method}:${request.url} not found`
     );
 
-    // Return a generic 404 without exposing route details
-    reply.status(404).send({
+    // Return 500 for non-existent routes to avoid revealing route existence
+    reply.status(500).send({
       ok: false,
-      error: 'Not Found',
+      error: 'Internal Server Error',
     });
   });
 

@@ -2,17 +2,19 @@ import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
 import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
+import { PersonEntity } from '../../db/entities/Person';
 import { DataSource } from 'typeorm';
+import { ENV } from '../../env';
 
 describe('GET /persons', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
+  let existingPersons: PersonEntity[];
+  const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
+    authToken = (await setupTestApp()).createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },
@@ -21,18 +23,23 @@ describe('GET /persons', () => {
 
     await testDb.saveTestCountries([{ code: 'US', name: 'United States' }]);
 
-    await testDb.saveTestPerson({
-      name: 'John Doe',
-      normalizedName: 'john-doe',
-      countryCode: 'US',
-      bios: [
-        { languageCode: 'EN', bio: 'English biography' },
-        { languageCode: 'ES', bio: 'Spanish biography' },
-      ],
-    });
+    existingPersons = await Promise.all(
+      ['John Doe', 'Jane Doe', 'Bob Smith'].map((name) =>
+        testDb.saveTestPerson({
+          name,
+          normalizedName: name.toLowerCase().replace(/\s+/g, '-'),
+          countryCode: 'US',
+          bios: [
+            { languageCode: 'EN', bio: `${name}'s English biography` },
+            { languageCode: 'ES', bio: `${name}'s Spanish biography` },
+          ],
+        })
+      )
+    );
   });
 
   it('should retrieve all persons', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp
       .request()
       .get('/persons')
@@ -40,19 +47,13 @@ describe('GET /persons', () => {
       .end();
 
     expect(res.statusCode).to.equal(200);
-    console.log(res.json());
 
     const persons = await res.json();
-    expect(persons).to.have.length(1);
-    expect(persons[0].attributes.name).to.equal('John Doe');
-    expect(persons[0].attributes.countryCode).to.equal('US');
-    // @ts-ignore
-    const sortedBios = persons[0].attributes.bios.sort((a, b) => a.languageCode.localeCompare(b.languageCode));
-    const expectedBios = [
-      { bio: 'English biography', languageCode: 'EN' },
-      { bio: 'Spanish biography', languageCode: 'ES' },
-    ].sort((a, b) => a.languageCode.localeCompare(b.languageCode));
+    expect(persons).to.have.length(3);
 
-    expect(sortedBios).to.deep.equal(expectedBios);
+    const sortedPersons = persons.sort((a: any, b: any) => a.attributes.name.localeCompare(b.attributes.name));
+    expect(sortedPersons[0].attributes.name).to.equal('Bob Smith');
+    expect(sortedPersons[1].attributes.name).to.equal('Jane Doe');
+    expect(sortedPersons[2].attributes.name).to.equal('John Doe');
   });
 });

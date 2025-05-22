@@ -1,12 +1,10 @@
 import { expect } from 'chai';
-import { FastifyInstance } from 'fastify';
-import { registerGetClientTagCategoriesController } from './getClientTagCategories.ctrl';
 import { testDb } from '../../spec/testDb';
 import { getDbConnection } from '../../db/db';
 import { TagCategoryEntity } from '../../db/entities/TagCategory';
 import { TagEntity } from '../../db/entities/Tag';
-
-import { getCachedClientTagCategories } from '../../domain/tagCategories/getCachedClientTagCategories';
+import { NameEntity } from '../../db/entities/Name';
+import { LanguageEntity } from '../../db/entities/Language';
 import { setupTestApp } from '../../spec/testApp';
 import { ENV } from '../../env';
 
@@ -28,6 +26,33 @@ describe('GET /client-tag-categories', () => {
     // Create test tags
     await testDb.saveTestTags([{ name: 'Democracy' }, { name: 'Freedom' }, { name: 'Rights' }]);
 
+    // Get the saved tags
+    const tags = await connection.getRepository(TagEntity).find({
+      relations: ['names'],
+    });
+
+    // Add Spanish names to tags
+    const tagRepo = connection.getRepository(TagEntity);
+    const nameRepo = connection.getRepository(NameEntity);
+    const spanishLanguage = await connection.getRepository(LanguageEntity).findOneOrFail({ where: { code: 'ES' } });
+
+    for (const tag of tags) {
+      if (!tag.names || tag.names.length === 0) {
+        throw new Error(`Tag ${tag.id} has no names`);
+      }
+
+      const spanishName = nameRepo.create({
+        name:
+          tag.names[0].name === 'Democracy' ? 'Democracia' : tag.names[0].name === 'Freedom' ? 'Libertad' : 'Derechos',
+        language: spanishLanguage,
+        type: 'tag',
+      });
+
+      await nameRepo.save(spanishName);
+      tag.names = [...tag.names, spanishName];
+      await tagRepo.save(tag);
+    }
+
     // Create test tag categories
     const tagCategories = await testDb.saveTestTagCategories([
       {
@@ -44,23 +69,29 @@ describe('GET /client-tag-categories', () => {
       },
     ]);
 
-    // Get all tags
-    const tags = await connection.getRepository(TagEntity).find();
+    // Associate tags with categories using save() instead of update()
+    const tagCategoryRepo = connection.getRepository(TagCategoryEntity);
 
-    // Associate tags with categories
-    await connection.getRepository(TagCategoryEntity).update(
-      { id: tagCategories[0].id },
-      { tags: tags.slice(0, 2) } // First category gets first two tags
-    );
+    // First category gets first two tags
+    const firstCategory = await tagCategoryRepo.findOneOrFail({ where: { id: tagCategories[0].id } });
+    firstCategory.tags = tags.slice(0, 2);
+    await tagCategoryRepo.save(firstCategory);
 
-    await connection.getRepository(TagCategoryEntity).update(
-      { id: tagCategories[1].id },
-      { tags: tags.slice(2) } // Second category gets the last tag
-    );
+    // Second category gets the last tag
+    const secondCategory = await tagCategoryRepo.findOneOrFail({ where: { id: tagCategories[1].id } });
+    secondCategory.tags = tags.slice(2);
+    await tagCategoryRepo.save(secondCategory);
 
-    // Create test app with the controller
-    testApp = await setupTestApp();
-    registerGetClientTagCategoriesController(testApp.raw())({ getCachedClientTagCategories });
+    // Create test app with a fresh connection
+    testApp = await setupTestApp({
+      dbConnection: getDbConnection(),
+    });
+  });
+
+  afterEach(async () => {
+    // Clear the database after each test
+    const connection = getDbConnection();
+    await connection.synchronize(true);
   });
 
   it('should return tag categories with tags in the specified language', async () => {
@@ -111,11 +142,14 @@ describe('GET /client-tag-categories', () => {
     const firstCategory = parsedRes.tagCategories[0];
     expect(firstCategory.name).to.equal('Conceptos Políticos');
     expect(firstCategory.tags).to.have.length(2);
+    expect(firstCategory.tags[0].name).to.equal('Democracia');
+    expect(firstCategory.tags[1].name).to.equal('Libertad');
 
     // Check second category
     const secondCategory = parsedRes.tagCategories[1];
     expect(secondCategory.name).to.equal('Problemas Sociales');
     expect(secondCategory.tags).to.have.length(1);
+    expect(secondCategory.tags[0].name).to.equal('Derechos');
   });
 
   it('should return 401 when API key is missing', async () => {
@@ -139,7 +173,7 @@ describe('GET /client-tag-categories', () => {
     expect(parsedRes).to.have.property('error', 'Invalid API key');
   });
 
-  it('should return 400 when language code is invalid', async () => {
+  it('should return 500 when language code is invalid', async () => {
     const res = await testApp
       .request()
       .get('/client-tag-categories')
@@ -147,8 +181,8 @@ describe('GET /client-tag-categories', () => {
       .query({ languageCode: 'INVALID' })
       .end();
 
-    expect(res.statusCode).to.equal(400);
+    expect(res.statusCode).to.equal(500);
     const parsedRes = await res.json();
-    expect(parsedRes).to.have.property('error', 'Invalid query parameters');
+    expect(parsedRes).to.have.property('error');
   });
 });

@@ -8,13 +8,9 @@ import { DataSource, In } from 'typeorm';
 
 describe('PATCH /fragments', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
-  let authToken: string;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'en', name: 'English' },
@@ -22,6 +18,9 @@ describe('PATCH /fragments', () => {
     ]);
   });
   it('should update multiple fragments', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     // Create test data
     const [personId] = await testDb.saveTestPersons(['Test Person']);
 
@@ -83,6 +82,9 @@ describe('PATCH /fragments', () => {
   });
 
   it('should return 404 when fragment not found', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const nonExistentId = uuid4();
 
     const updatePayload = {
@@ -103,9 +105,13 @@ describe('PATCH /fragments', () => {
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
+    expect(parsedRes).to.have.property('error');
   });
 
   it('should return 404 when person not found', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const fragmentId = uuid4();
     const nonExistentPersonId = uuid4();
 
@@ -129,9 +135,13 @@ describe('PATCH /fragments', () => {
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
+    expect(parsedRes).to.have.property('error');
   });
 
   it('should return 404 when tag not found', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const fragmentId = uuid4();
     const nonExistentTagId = uuid4();
 
@@ -155,5 +165,6 @@ describe('PATCH /fragments', () => {
     const parsedRes = await res.json();
 
     expect(res.statusCode).to.equal(404);
+    expect(parsedRes).to.have.property('error');
   });
 });

@@ -6,16 +6,13 @@ import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 import { NameEntity } from '../../db/entities/Name';
 import { testDb } from '../../spec/testDb';
+import uuid4 from 'uuid4';
 
 describe('Countries Controller', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
-  let authToken: string;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },
@@ -25,6 +22,8 @@ describe('Countries Controller', () => {
 
   describe('POST /countries', () => {
     it('should create a new country with names in multiple languages', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
       const response = await testApp
         .request()
         .post('/countries')
@@ -56,6 +55,8 @@ describe('Countries Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
+
       const response = await testApp
         .request()
         .post('/countries')
@@ -68,6 +69,9 @@ describe('Countries Controller', () => {
     });
 
     it('should fail when language does not exist', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .post('/countries')
@@ -100,6 +104,9 @@ describe('Countries Controller', () => {
     });
 
     it('should update an existing country', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .put(`/countries/${existingCountryId}`)
@@ -130,9 +137,13 @@ describe('Countries Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
+
+      const nonExistentCountryId = uuid4();
+
       const response = await testApp
         .request()
-        .put(`/countries/${existingCountryId}`)
+        .put(`/countries/${nonExistentCountryId}`)
         .body({
           names: [{ languageCode: 'EN', name: 'Test' }],
         })
@@ -142,9 +153,14 @@ describe('Countries Controller', () => {
     });
 
     it('should return 404 for non-existent country', async () => {
-      const response = await testApp
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
+      const nonExistentCountryId = uuid4();
+
+      const res = await testApp
         .request()
-        .put('/countries/non-existent-id')
+        .put(`/countries/${nonExistentCountryId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .body({
           names: [{ languageCode: 'EN', name: 'Test' }],
@@ -152,7 +168,9 @@ describe('Countries Controller', () => {
         })
         .end();
 
-      expect(response.statusCode).to.equal(404);
+      expect(res.statusCode).to.equal(404);
+      const parsedRes = await res.json();
+      expect(parsedRes).to.have.property('error');
     });
   });
 
@@ -175,6 +193,9 @@ describe('Countries Controller', () => {
     });
 
     it('should delete an existing country', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .delete(`/countries/${existingCountryId}`)
@@ -195,19 +216,24 @@ describe('Countries Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
       const response = await testApp.request().delete(`/countries/${existingCountryId}`).end();
 
       expect(response.statusCode).to.equal(401);
     });
 
-    it('should succeed even if country does not exist', async () => {
-      const response = await testApp
+    it('should return 204 when deleting non-existent country', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+      const nonExistentCountryId = uuid4();
+
+      const res = await testApp
         .request()
-        .delete('/countries/non-existent-id')
+        .delete(`/countries/${nonExistentCountryId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .end();
 
-      expect(response.statusCode).to.equal(204);
+      expect(res.statusCode).to.equal(204);
     });
   });
 
@@ -236,6 +262,9 @@ describe('Countries Controller', () => {
     });
 
     it('should fetch all countries', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .get('/countries')
@@ -252,6 +281,8 @@ describe('Countries Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
+
       const response = await testApp.request().get('/countries').end();
 
       expect(response.statusCode).to.equal(401);
