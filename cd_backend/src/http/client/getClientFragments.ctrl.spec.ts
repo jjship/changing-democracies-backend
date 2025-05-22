@@ -12,17 +12,13 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 
-describe.only('GET /client-fragments', async () => {
+describe('GET /client-fragments', async () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let apiKey: string;
-  let authToken: string;
   let freeBrowsingTag: TagEntity;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
     apiKey = ENV.CLIENT_API_KEY;
 
     await testDb.saveTestLanguages([
@@ -56,6 +52,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should return client fragments with valid API key', async () => {
+    const testApp = await setupTestApp();
     const fragmentId = uuid4();
 
     // Create test country
@@ -156,6 +153,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should filter by language code correctly', async () => {
+    const testApp = await setupTestApp();
     const fragmentId = uuid4();
 
     // Create test country
@@ -242,6 +240,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should paginate results correctly', async () => {
+    const testApp = await setupTestApp();
     // Create 25 test fragments
     const fragmentIds = Array.from({ length: 25 }, () => uuid4());
 
@@ -318,6 +317,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should return an empty array when there are no fragments', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/client-fragments').headers({ 'x-api-key': apiKey }).end();
 
     expect(res.statusCode).to.equal(200);
@@ -330,6 +330,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should return unauthorized for invalid API key', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/client-fragments').headers({ 'x-api-key': 'invalid-key' }).end();
 
     expect(res.statusCode).to.equal(401);
@@ -339,6 +340,7 @@ describe.only('GET /client-fragments', async () => {
   });
 
   it('should return unauthorized when no API key is provided', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/client-fragments').end();
 
     expect(res.statusCode).to.equal(401);

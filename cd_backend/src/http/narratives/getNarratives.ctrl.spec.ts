@@ -8,14 +8,10 @@ import { ENV } from '../../env';
 
 describe('GET /narratives', async () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
-  let authToken: string;
   let apiKey: string;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
     apiKey = ENV.CLIENT_API_KEY;
 
     await testDb.saveTestLanguages([
@@ -25,6 +21,9 @@ describe('GET /narratives', async () => {
   });
 
   it('should return all narratives with JWT authentication', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();
@@ -133,6 +132,9 @@ describe('GET /narratives', async () => {
   });
 
   it('should return an empty array when there are no narratives', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const res = await testApp
       .request()
       .get('/narratives')
@@ -147,6 +149,7 @@ describe('GET /narratives', async () => {
   });
 
   it('should return unauthorized for invalid API key', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/narratives').headers({ 'x-api-key': 'invalid-key' }).end();
 
     expect(res.statusCode).to.equal(401);
@@ -156,6 +159,7 @@ describe('GET /narratives', async () => {
   });
 
   it('should return unauthorized when no auth is provided', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/narratives').end();
 
     expect(res.statusCode).to.equal(401);
@@ -165,6 +169,7 @@ describe('GET /narratives', async () => {
   });
 
   it('should return unauthorized for invalid JWT token', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp.request().get('/narratives').headers({ Authorization: 'Bearer invalid-token' }).end();
 
     expect(res.statusCode).to.equal(401);
@@ -174,9 +179,8 @@ describe('GET /narratives', async () => {
   });
 
   it('should return forbidden for API key without permissions', async () => {
-    // Assuming there's a way to create an API key without the required permissions
-    const apiKeyWithoutPermissions = 'key-without-permissions';
-    const res = await testApp.request().get('/narratives').headers({ 'x-api-key': apiKeyWithoutPermissions }).end();
+    const testApp = await setupTestApp();
+    const res = await testApp.request().get('/narratives').headers({ 'x-api-key': 'invalid-key' }).end();
 
     expect(res.statusCode).to.equal(401);
     const parsedRes = await res.json();

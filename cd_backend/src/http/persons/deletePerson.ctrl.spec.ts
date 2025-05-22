@@ -6,18 +6,19 @@ import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
 import { DataSource } from 'typeorm';
 import { FragmentEntity } from '../../db/entities/Fragment';
+import { v4 as uuidv4 } from 'uuid';
+import { ENV } from '../../env';
+import uuid4 from 'uuid4';
 
 describe('DELETE /persons/:id', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
   let existingPerson: PersonEntity;
-  let existingFragments: any[];
+  const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
+    authToken = (await setupTestApp()).createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },
@@ -36,17 +37,34 @@ describe('DELETE /persons/:id', () => {
       ],
     });
 
+    // Create test fragments with valid UUIDs
     await testDb.saveTestFragments([
-      { guid: '123', title: 'Fragment 1', length: 100, personId: existingPerson.id },
-      { guid: '456', title: 'Fragment 2', length: 200, personId: existingPerson.id },
+      {
+        guid: uuidv4(),
+        title: 'Test Fragment 1',
+        length: 100,
+        personId: existingPerson.id,
+      },
+      {
+        guid: uuidv4(),
+        title: 'Test Fragment 2',
+        length: 200,
+        personId: existingPerson.id,
+      },
     ]);
 
-    existingFragments = await dbConnection.getRepository(FragmentEntity).find({
+    // Fetch the saved fragments
+    const fragments = await dbConnection.getRepository(FragmentEntity).find({
       where: { person: { id: existingPerson.id } },
     });
+
+    // Associate fragments with person
+    existingPerson.fragments = fragments;
+    await dbConnection.getRepository(PersonEntity).save(existingPerson);
   });
 
-  it('should delete a person and their fragments by id', async () => {
+  it('should delete a person and their fragments', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp
       .request()
       .delete(`/persons/${existingPerson.id}`)
@@ -55,21 +73,37 @@ describe('DELETE /persons/:id', () => {
 
     expect(res.statusCode).to.equal(204);
 
+    // Verify person is deleted
     const deletedPerson = await dbConnection.getRepository(PersonEntity).findOne({
       where: { id: existingPerson.id },
     });
+    expect(deletedPerson).to.be.null;
 
     const deletedBio = await dbConnection.getRepository(BioEntity).findOne({
       where: { id: existingPerson.bios![0].id },
     });
-    const currentFragments = await Promise.all(
-      existingFragments.map((fragment) =>
-        dbConnection.getRepository('FragmentEntity').findOne({ where: { id: fragment.id } })
-      )
-    );
-
-    expect(deletedPerson).to.be.null;
     expect(deletedBio).to.be.null;
-    currentFragments.forEach((fragment) => expect(fragment).not.to.be.null);
+
+    if (existingPerson.fragments) {
+      const currentFragments = await Promise.all(
+        existingPerson.fragments.map((fragment) =>
+          dbConnection.getRepository(FragmentEntity).findOne({ where: { id: fragment.id } })
+        )
+      );
+      currentFragments.forEach((fragment) => expect(fragment).not.to.be.null);
+    }
+  });
+
+  it('should return 204 when person does not exist', async () => {
+    const testApp = await setupTestApp();
+    const nonExistentPersonId = uuid4();
+
+    const res = await testApp
+      .request()
+      .delete(`/persons/${nonExistentPersonId}`)
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .end();
+
+    expect(res.statusCode).to.equal(204);
   });
 });

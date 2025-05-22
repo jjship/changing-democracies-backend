@@ -9,16 +9,13 @@ import { testDb } from '../../spec/testDb';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { v4 as uuidv4 } from 'uuid';
 import { In } from 'typeorm';
+import uuid4 from 'uuid4';
 
 describe('Tags Controller', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
-  let authToken: string;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },
@@ -28,6 +25,9 @@ describe('Tags Controller', () => {
 
   describe('POST /tags', () => {
     it('should create a new tag with names in multiple languages when authenticated', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .post('/tags')
@@ -58,6 +58,8 @@ describe('Tags Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
+
       const response = await testApp
         .request()
         .post('/tags')
@@ -70,6 +72,9 @@ describe('Tags Controller', () => {
     });
 
     it('should fail when language does not exist', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .post('/tags')
@@ -114,6 +119,9 @@ describe('Tags Controller', () => {
     });
 
     it('should update an existing tag when authenticated', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .put(`/tags/${existingTagId}`)
@@ -142,6 +150,8 @@ describe('Tags Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
+
       const response = await testApp
         .request()
         .put(`/tags/${existingTagId}`)
@@ -154,19 +164,28 @@ describe('Tags Controller', () => {
     });
 
     it('should return 404 for non-existent tag', async () => {
-      const response = await testApp
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+      const nonExistentTagId = uuid4();
+
+      const res = await testApp
         .request()
-        .put('/tags/non-existent-id')
+        .put(`/tags/${nonExistentTagId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .body({
-          names: [{ languageCode: 'EN', name: 'Test' }],
+          names: [{ languageCode: 'EN', name: 'Updated Tag' }],
         })
         .end();
 
-      expect(response.statusCode).to.equal(404);
+      expect(res.statusCode).to.equal(404);
+      const parsedRes = await res.json();
+      expect(parsedRes).to.have.property('error');
     });
 
     it('should update a tag with fragment associations when authenticated', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .put(`/tags/${existingTagId}`)
@@ -215,6 +234,9 @@ describe('Tags Controller', () => {
     });
 
     it('should delete an existing tag when authenticated', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .delete(`/tags/${existingTagId}`)
@@ -235,6 +257,9 @@ describe('Tags Controller', () => {
     });
 
     it('should delete tag names but preserve fragments when deleting a tag', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       // Create fragments
       const fragmentIds: string[] = [];
       for (let i = 0; i < 2; i++) {
@@ -309,19 +334,23 @@ describe('Tags Controller', () => {
     });
 
     it('should return 401 when not authenticated', async () => {
+      const testApp = await setupTestApp();
       const response = await testApp.request().delete(`/tags/${existingTagId}`).end();
 
       expect(response.statusCode).to.equal(401);
     });
 
-    it('should succeed even if tag does not exist', async () => {
-      const response = await testApp
+    it('should return 204 when deleting non-existent tag', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+      const nonExistentTagId = uuid4();
+      const res = await testApp
         .request()
-        .delete('/tags/non-existent-id')
+        .delete(`/tags/${nonExistentTagId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .end();
 
-      expect(response.statusCode).to.equal(204);
+      expect(res.statusCode).to.equal(204);
     });
   });
 
@@ -377,6 +406,9 @@ describe('Tags Controller', () => {
     });
 
     it('should return all tags with their fragments', async () => {
+      const testApp = await setupTestApp();
+      const authToken = testApp.createAuthToken();
+
       const response = await testApp
         .request()
         .get('/tags')

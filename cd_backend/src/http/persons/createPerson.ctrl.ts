@@ -6,7 +6,7 @@ import { personSchema } from './person.schema';
 import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
 import { CountryEntity } from '../../db/entities/Country';
-import { HttpError } from '../../errors';
+import { NotFoundError, HttpError } from '../../errors';
 import { normalizeName } from '../../utils/normalizeName';
 
 export const registerCreatePersonController =
@@ -34,7 +34,7 @@ export const registerCreatePersonController =
           const country = await countryRepository.findOneBy({ code: countryCode });
 
           if (!country) {
-            throw new HttpError('Country not found', 404);
+            throw new NotFoundError('Country not found');
           }
 
           const languages = await languageRepository.findBy({
@@ -46,7 +46,7 @@ export const registerCreatePersonController =
           const missingLanguage = bios.find((bio) => !languagesMap.has(bio.languageCode.toUpperCase()));
 
           if (missingLanguage) {
-            throw new HttpError(`Language with code '${missingLanguage.languageCode}' not found`, 404);
+            throw new NotFoundError(`Language with code '${missingLanguage.languageCode}' not found`);
           }
 
           const newPerson = personRepository.create();
@@ -69,7 +69,7 @@ export const registerCreatePersonController =
           return newPerson;
         });
 
-        return res.status(200).send({
+        return res.status(201).send({
           type: 'person',
           id: newPerson.id,
           attributes: {
@@ -97,7 +97,7 @@ function createPersonSchema() {
       }),
     }),
     response: {
-      200: Type.Object({
+      201: Type.Object({
         type: Type.Literal('person'),
         id: Type.String(),
         attributes: personSchema,

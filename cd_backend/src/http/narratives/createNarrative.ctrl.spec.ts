@@ -8,13 +8,9 @@ import { DataSource } from 'typeorm';
 
 describe('POST /narratives', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
-  let authToken: string;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'en', name: 'English' },
@@ -22,6 +18,9 @@ describe('POST /narratives', () => {
     ]);
   });
   it('should save the new narrative in db', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
     const guid1 = uuid4();
     const guid2 = uuid4();
     const guid3 = uuid4();

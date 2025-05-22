@@ -4,6 +4,7 @@ import { setupTestApp } from '../../spec/testApp';
 import { getDbConnection } from '../../db/db';
 import { LanguageEntity } from '../../db/entities/Language';
 import { testDb } from '../../spec/testDb';
+import uuid4 from 'uuid4';
 
 describe('Languages Controller', () => {
   let dbConnection: DataSource;
@@ -69,7 +70,7 @@ describe('Languages Controller', () => {
         })
         .end();
 
-      expect(response.statusCode).to.equal(500);
+      expect(response.statusCode).to.equal(409);
     });
   });
 
@@ -124,17 +125,19 @@ describe('Languages Controller', () => {
     });
 
     it('should return 404 for non-existent language', async () => {
-      const response = await testApp
+      const nonExistentLanguageId = uuid4();
+
+      const res = await testApp
         .request()
-        .put('/languages/non-existent-id')
+        .put(`/languages/${nonExistentLanguageId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .body({
-          name: 'Test',
+          name: 'Updated Language',
           code: 'TS',
         })
         .end();
 
-      expect(response.statusCode).to.equal(404);
+      expect(res.statusCode).to.equal(404);
     });
   });
 
@@ -171,14 +174,16 @@ describe('Languages Controller', () => {
       expect(response.statusCode).to.equal(401);
     });
 
-    it('should succeed even if language does not exist', async () => {
-      const response = await testApp
+    it('should return 204 when deleting non-existent language', async () => {
+      const nonExistentLanguageId = uuid4();
+
+      const res = await testApp
         .request()
-        .delete('/languages/non-existent-id')
+        .delete(`/languages/${nonExistentLanguageId}`)
         .headers({ Authorization: `Bearer ${authToken}` })
         .end();
 
-      expect(response.statusCode).to.equal(204);
+      expect(res.statusCode).to.equal(204);
     });
   });
 

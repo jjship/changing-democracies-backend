@@ -4,17 +4,18 @@ import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { PersonEntity } from '../../db/entities/Person';
 import { DataSource } from 'typeorm';
+import { ENV } from '../../env';
+import uuid4 from 'uuid4';
 
 describe('GET /person', () => {
   let dbConnection: DataSource;
-  let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
   let existingPerson: PersonEntity;
+  const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
-    testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
+    authToken = (await setupTestApp()).createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },
@@ -35,6 +36,7 @@ describe('GET /person', () => {
   });
 
   it('should retrieve a person by id', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp
       .request()
       .get(`/person?id=${existingPerson.id}`)
@@ -57,6 +59,7 @@ describe('GET /person', () => {
   });
 
   it('should retrieve a person by name', async () => {
+    const testApp = await setupTestApp();
     const res = await testApp
       .request()
       .get(`/person?name=${existingPerson.name}`)
@@ -79,12 +82,18 @@ describe('GET /person', () => {
   });
 
   it('should return 404 when person does not exist', async () => {
+    const testApp = await setupTestApp();
+    const nonExistentPersonId = uuid4();
+
     const res = await testApp
       .request()
-      .get('/person?id=non-existent-id')
+      .get('/person')
       .headers({ Authorization: `Bearer ${authToken}` })
+      .query({ id: nonExistentPersonId })
       .end();
 
     expect(res.statusCode).to.equal(404);
+    const parsedRes = await res.json();
+    expect(parsedRes).to.have.property('error');
   });
 });
