@@ -348,4 +348,210 @@ describe('GET /client-fragments', async () => {
 
     expect(parsedRes).to.have.property('error', 'Invalid API key');
   });
+
+  it('should fall back to English when requested language content is missing', async () => {
+    const testApp = await setupTestApp();
+    const fragmentId = uuid4();
+
+    // Create country with only English name
+    await testDb.saveTestCountries([{ code: 'PL', name: 'Poland' }]);
+
+    // Create person with only English bio
+    await testDb.saveTestPerson({
+      name: 'Fallback Person',
+      normalizedName: 'fallback-person',
+      countryCode: 'PL',
+      bios: [{ languageCode: 'EN', bio: 'English only bio' }],
+    });
+
+    const testPerson = await dbConnection
+      .getRepository(PersonEntity)
+      .findOneOrFail({ where: { name: 'Fallback Person' }, relations: ['bios', 'bios.language'] });
+
+    // Create tag with only English name
+    await testDb.saveTestTags([{ name: 'Heritage' }]);
+    const testTag = await dbConnection
+      .getRepository(TagEntity)
+      .findOneOrFail({ where: { names: { name: 'Heritage' } }, relations: ['names', 'names.language'] });
+
+    // Create fragment and associate tags
+    await testDb.saveTestFragments([{ guid: fragmentId, title: 'Fallback Fragment', length: 60, personId: testPerson.id }]);
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
+    fragment.tags = [testTag, freeBrowsingTag];
+    await fragmentRepo.save(fragment);
+
+    // Request with Spanish — should fall back to English
+    const res = await testApp.request().get('/client-fragments?languageCode=ES').headers({ 'x-api-key': apiKey }).end();
+
+    expect(res.statusCode).to.equal(200);
+    const parsedRes = await res.json();
+    expect(parsedRes.data).to.have.lengthOf(1);
+
+    const fragmentResult = parsedRes.data[0];
+    expect(fragmentResult.person.bio).to.equal('English only bio');
+    expect(fragmentResult.person.country.name).to.equal('Poland');
+    expect(fragmentResult.tags.find((t: { name: string }) => t.name === 'Heritage')).to.not.be.undefined;
+  });
+
+  it('should return null person for fragment without a person', async () => {
+    const testApp = await setupTestApp();
+    const fragmentId = uuid4();
+
+    // Create fragment without a person
+    await testDb.saveTestFragments([{ guid: fragmentId, title: 'No Person Fragment', length: 90 }]);
+
+    // Associate free browsing tag
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
+    fragment.tags = [freeBrowsingTag];
+    await fragmentRepo.save(fragment);
+
+    const res = await testApp.request().get('/client-fragments?languageCode=EN').headers({ 'x-api-key': apiKey }).end();
+
+    expect(res.statusCode).to.equal(200);
+    const parsedRes = await res.json();
+    expect(parsedRes.data).to.have.lengthOf(1);
+    expect(parsedRes.data[0].person).to.be.null;
+  });
+
+  it('should sort fragments alphabetically by title', async () => {
+    const testApp = await setupTestApp();
+    const titles = ['Zebra', 'Apple', 'Mango', 'Banana', 'Cherry'];
+    const fragmentIds: string[] = [];
+
+    // Create fragments with specific titles
+    for (const title of titles) {
+      const id = uuid4();
+      fragmentIds.push(id);
+      await testDb.saveTestFragments([{ guid: id, title, length: 100 }]);
+    }
+
+    // Associate free browsing tag with all fragments
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    for (const id of fragmentIds) {
+      const fragment = await fragmentRepo.findOneOrFail({ where: { id } });
+      fragment.tags = [freeBrowsingTag];
+      await fragmentRepo.save(fragment);
+    }
+
+    const res = await testApp.request().get('/client-fragments?languageCode=EN').headers({ 'x-api-key': apiKey }).end();
+
+    expect(res.statusCode).to.equal(200);
+    const parsedRes = await res.json();
+    expect(parsedRes.data).to.have.lengthOf(5);
+
+    const returnedTitles = parsedRes.data.map((f: { title: string }) => f.title);
+    expect(returnedTitles).to.deep.equal(['Apple', 'Banana', 'Cherry', 'Mango', 'Zebra']);
+  });
+
+  it('should correctly merge relations without cross-contamination across fragments', async () => {
+    const testApp = await setupTestApp();
+
+    // Create two countries
+    await testDb.saveTestCountries([
+      { code: 'FR', name: 'France' },
+      { code: 'IT', name: 'Italy' },
+    ]);
+
+    // Create two persons in different countries with different bios
+    await testDb.saveTestPerson({
+      name: 'Person France',
+      normalizedName: 'person-france',
+      countryCode: 'FR',
+      bios: [{ languageCode: 'EN', bio: 'French person bio' }],
+    });
+
+    await testDb.saveTestPerson({
+      name: 'Person Italy',
+      normalizedName: 'person-italy',
+      countryCode: 'IT',
+      bios: [{ languageCode: 'EN', bio: 'Italian person bio' }],
+    });
+
+    const personFrance = await dbConnection
+      .getRepository(PersonEntity)
+      .findOneOrFail({ where: { name: 'Person France' } });
+    const personItaly = await dbConnection
+      .getRepository(PersonEntity)
+      .findOneOrFail({ where: { name: 'Person Italy' } });
+
+    // Create two different tags
+    await testDb.saveTestTags([{ name: 'Revolution' }]);
+    await testDb.saveTestTags([{ name: 'Renaissance' }]);
+
+    const tagRevolution = await dbConnection
+      .getRepository(TagEntity)
+      .findOneOrFail({ where: { names: { name: 'Revolution' } }, relations: ['names', 'names.language'] });
+    const tagRenaissance = await dbConnection
+      .getRepository(TagEntity)
+      .findOneOrFail({ where: { names: { name: 'Renaissance' } }, relations: ['names', 'names.language'] });
+
+    // Create two fragments, one per person
+    const fragmentId1 = uuid4();
+    const fragmentId2 = uuid4();
+    await testDb.saveTestFragments([
+      { guid: fragmentId1, title: 'Alpha Fragment', length: 100, personId: personFrance.id },
+      { guid: fragmentId2, title: 'Beta Fragment', length: 200, personId: personItaly.id },
+    ]);
+
+    // Assign different tags to each fragment
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    const fragment1 = await fragmentRepo.findOneOrFail({ where: { id: fragmentId1 } });
+    fragment1.tags = [tagRevolution, freeBrowsingTag];
+    await fragmentRepo.save(fragment1);
+
+    const fragment2 = await fragmentRepo.findOneOrFail({ where: { id: fragmentId2 } });
+    fragment2.tags = [tagRenaissance, freeBrowsingTag];
+    await fragmentRepo.save(fragment2);
+
+    const res = await testApp.request().get('/client-fragments?languageCode=EN').headers({ 'x-api-key': apiKey }).end();
+
+    expect(res.statusCode).to.equal(200);
+    const parsedRes = await res.json();
+    expect(parsedRes.data).to.have.lengthOf(2);
+
+    // Results are sorted alphabetically: Alpha Fragment, Beta Fragment
+    const alphaFragment = parsedRes.data[0];
+    const betaFragment = parsedRes.data[1];
+
+    expect(alphaFragment.title).to.equal('Alpha Fragment');
+    expect(alphaFragment.person.name).to.equal('Person France');
+    expect(alphaFragment.person.bio).to.equal('French person bio');
+    expect(alphaFragment.person.country.code).to.equal('FR');
+    expect(alphaFragment.person.country.name).to.equal('France');
+    expect(alphaFragment.tags.some((t: { name: string }) => t.name === 'Revolution')).to.be.true;
+    expect(alphaFragment.tags.some((t: { name: string }) => t.name === 'Renaissance')).to.be.false;
+
+    expect(betaFragment.title).to.equal('Beta Fragment');
+    expect(betaFragment.person.name).to.equal('Person Italy');
+    expect(betaFragment.person.bio).to.equal('Italian person bio');
+    expect(betaFragment.person.country.code).to.equal('IT');
+    expect(betaFragment.person.country.name).to.equal('Italy');
+    expect(betaFragment.tags.some((t: { name: string }) => t.name === 'Renaissance')).to.be.true;
+    expect(betaFragment.tags.some((t: { name: string }) => t.name === 'Revolution')).to.be.false;
+  });
+
+  it('should return fragment with only the free browsing tag', async () => {
+    const testApp = await setupTestApp();
+    const fragmentId = uuid4();
+
+    // Create fragment with only the free browsing tag
+    await testDb.saveTestFragments([{ guid: fragmentId, title: 'Minimal Fragment', length: 45 }]);
+
+    const fragmentRepo = dbConnection.getRepository(FragmentEntity);
+    const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
+    fragment.tags = [freeBrowsingTag];
+    await fragmentRepo.save(fragment);
+
+    const res = await testApp.request().get('/client-fragments?languageCode=EN').headers({ 'x-api-key': apiKey }).end();
+
+    expect(res.statusCode).to.equal(200);
+    const parsedRes = await res.json();
+    expect(parsedRes.data).to.have.lengthOf(1);
+
+    const fragmentResult = parsedRes.data[0];
+    expect(fragmentResult.tags).to.have.lengthOf(1);
+    expect(fragmentResult.tags[0].name).to.equal('free browsing');
+  });
 });
