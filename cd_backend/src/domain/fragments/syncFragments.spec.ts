@@ -3,6 +3,7 @@ import sinon from 'sinon';
 import uuid4 from 'uuid4';
 import { getDbConnection } from '../../db/db';
 import { FragmentEntity } from '../../db/entities/Fragment';
+import { ENV } from '../../env';
 import { logger } from '../../services/logger/logger';
 import { syncFragments } from './syncFragments';
 import { parseVideoToFragment } from './fragments.api';
@@ -35,8 +36,8 @@ describe('syncFragments', () => {
         id: mockVids[index].guid,
         title: mockVids[index].title,
         durationSec: mockVids[index].length,
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${mockVids[index].guid}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${mockVids[index].guid}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${mockVids[index].guid}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${mockVids[index].guid}/thumbnail.jpg`,
         person: undefined,
         tags: undefined,
         narrativeFragments: undefined,
@@ -80,8 +81,8 @@ describe('syncFragments', () => {
         id: currVids[index].guid,
         title: currVids[index].title,
         durationSec: currVids[index].length,
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${currVids[index].guid}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${currVids[index].guid}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${currVids[index].guid}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${currVids[index].guid}/thumbnail.jpg`,
         person: undefined,
         tags: undefined,
         narrativeFragments: undefined,

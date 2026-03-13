@@ -130,8 +130,8 @@ describe('GET /client-narratives', async () => {
           names: [{ languageCode: 'EN', name: 'United States' }],
         },
         otherPaths: [],
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid1}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid1}/thumbnail.jpg`,
       },
       {
         guid: guid2,
@@ -144,8 +144,8 @@ describe('GET /client-narratives', async () => {
           names: [{ languageCode: 'EN', name: 'United States' }],
         },
         otherPaths: [],
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid2}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid2}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid2}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid2}/thumbnail.jpg`,
       },
     ];
 

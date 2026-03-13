@@ -2,6 +2,7 @@ import uuid4 from 'uuid4';
 import { expect } from 'chai';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
+import { ENV } from '../../env';
 
 describe('GET /fragments', () => {
   it('should return all fragments from db', async () => {
@@ -40,8 +41,8 @@ describe('GET /fragments', () => {
         attributes: {
           title: 'First Title',
           durationSec: 1,
-          playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
-          thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid1}`,
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid1}/thumbnail.jpg`,
           person: null,
           tags: [],
           country: null,
@@ -54,8 +55,8 @@ describe('GET /fragments', () => {
         attributes: {
           title: 'Second Title',
           durationSec: 2,
-          playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid2}`,
-          thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid2}/thumbnail.jpg`,
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid2}`,
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid2}/thumbnail.jpg`,
           person: null,
           tags: [],
           country: null,
@@ -68,8 +69,8 @@ describe('GET /fragments', () => {
         attributes: {
           title: 'Third Title',
           durationSec: 3,
-          playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid3}`,
-          thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid3}/thumbnail.jpg`,
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid3}`,
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid3}/thumbnail.jpg`,
           person: null,
           tags: [],
           country: null,
@@ -117,8 +118,8 @@ describe('GET /fragments', () => {
         attributes: {
           title: 'First Title',
           durationSec: 1,
-          playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
-          thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid1}`,
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid1}/thumbnail.jpg`,
           person: { name: 'Person A', id: personIds[0] },
           tags: [],
           country: null,
@@ -131,8 +132,8 @@ describe('GET /fragments', () => {
         attributes: {
           title: 'Third Title',
           durationSec: 3,
-          playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid3}`,
-          thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid3}/thumbnail.jpg`,
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid3}`,
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid3}/thumbnail.jpg`,
           person: { name: 'Person A', id: personIds[0] },
           tags: [],
           country: null,

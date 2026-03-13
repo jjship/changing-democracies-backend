@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import { BunnyVideo } from '../../services/bunnyStream/api/videos';
+import { ENV } from '../../env';
 import { serializeFilmsCollection } from './parseLegacyFragments';
 
 suite('serializeFilmsCollection', () => {
@@ -54,9 +55,9 @@ suite('serializeFilmsCollection', () => {
           guid: '123',
           length: 120,
           person: 'Lisbeth Ruiz Sanchez',
-          playerUrl: 'https://iframe.mediadelivery.net/embed/239326/123?autoplay=false',
+          playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/123?autoplay=false`,
           tags: ['tag1', 'tag2'],
-          thumbnailUrl: 'https://vz-cac74041-8b3.b-cdn.net/123/thumbnail.jpg',
+          thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/123/thumbnail.jpg`,
           title: 'CD_BELGIUM_Lisbeth Ruiz Sanchez_Quote 1.mp4',
         },
       ],
