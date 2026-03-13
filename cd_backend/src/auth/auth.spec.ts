@@ -8,7 +8,11 @@ describe('Auth: JWT authentication', () => {
     const testApp = await setupTestApp();
     const token = testApp.createAuthToken();
 
-    const res = await testApp.request().get('/narratives').headers({ Authorization: `Bearer ${token}` }).end();
+    const res = await testApp
+      .request()
+      .get('/narratives')
+      .headers({ Authorization: `Bearer ${token}` })
+      .end();
 
     expect(res.statusCode).to.equal(200);
   });
@@ -38,11 +42,7 @@ describe('Auth: JWT authentication', () => {
   it('should return 401 for a malformed JWT', async () => {
     const testApp = await setupTestApp();
 
-    const res = await testApp
-      .request()
-      .get('/narratives')
-      .headers({ Authorization: 'Bearer not-a-valid-jwt' })
-      .end();
+    const res = await testApp.request().get('/narratives').headers({ Authorization: 'Bearer not-a-valid-jwt' }).end();
 
     expect(res.statusCode).to.equal(401);
   });
@@ -63,7 +63,11 @@ describe('Auth: JWT authentication', () => {
       role: 'authenticated',
     });
 
-    const res = await testApp.request().get('/narratives').headers({ Authorization: `Bearer ${token}` }).end();
+    const res = await testApp
+      .request()
+      .get('/narratives')
+      .headers({ Authorization: `Bearer ${token}` })
+      .end();
 
     // If claims are mapped correctly, the request succeeds
     expect(res.statusCode).to.equal(200);
@@ -74,11 +78,7 @@ describe('Auth: API key authentication', () => {
   it('should grant access with a valid CLIENT_API_KEY', async () => {
     const testApp = await setupTestApp();
 
-    const res = await testApp
-      .request()
-      .get('/client-narratives')
-      .headers({ 'x-api-key': ENV.CLIENT_API_KEY })
-      .end();
+    const res = await testApp.request().get('/client-narratives').headers({ 'x-api-key': ENV.CLIENT_API_KEY }).end();
 
     expect(res.statusCode).to.equal(200);
   });
@@ -86,11 +86,7 @@ describe('Auth: API key authentication', () => {
   it('should grant access to POST /sync-fragments with GITHUB_API_KEY', async () => {
     const testApp = await setupTestApp();
 
-    const res = await testApp
-      .request()
-      .post('/sync-fragments')
-      .headers({ 'x-api-key': ENV.GITHUB_API_KEY })
-      .end();
+    const res = await testApp.request().post('/sync-fragments').headers({ 'x-api-key': ENV.GITHUB_API_KEY }).end();
 
     // 200 means permission granted (handler runs, may succeed or fail on domain logic)
     expect(res.statusCode).to.equal(200);
@@ -99,11 +95,7 @@ describe('Auth: API key authentication', () => {
   it('should return 401 for an invalid API key', async () => {
     const testApp = await setupTestApp();
 
-    const res = await testApp
-      .request()
-      .get('/client-narratives')
-      .headers({ 'x-api-key': 'invalid-key' })
-      .end();
+    const res = await testApp.request().get('/client-narratives').headers({ 'x-api-key': 'invalid-key' }).end();
 
     expect(res.statusCode).to.equal(401);
   });
@@ -119,11 +111,7 @@ describe('Auth: API key authentication', () => {
   it('should return 403 when CLIENT_API_KEY tries to access POST /sync-fragments', async () => {
     const testApp = await setupTestApp();
 
-    const res = await testApp
-      .request()
-      .post('/sync-fragments')
-      .headers({ 'x-api-key': ENV.CLIENT_API_KEY })
-      .end();
+    const res = await testApp.request().post('/sync-fragments').headers({ 'x-api-key': ENV.CLIENT_API_KEY }).end();
 
     expect(res.statusCode).to.equal(403);
   });
