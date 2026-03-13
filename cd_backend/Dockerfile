@@ -1,5 +1,5 @@
-FROM node:22.12-alpine AS base
-RUN apk add --no-cache bash python3 make g++ sqlite sqlite-dev
+FROM node:22.14-alpine AS base
+RUN apk add --no-cache bash python3 py3-setuptools make g++ sqlite sqlite-dev
 WORKDIR /cd_backend
 COPY package*.json ./
 
@@ -15,7 +15,7 @@ COPY . .
 RUN npm run build
 RUN npm prune --production
 
-FROM node:22.12-alpine AS production
+FROM node:22.14-alpine AS production
 WORKDIR /cd_backend
 ENV NODE_ENV=production
 RUN apk add --no-cache bash dumb-init sqlite

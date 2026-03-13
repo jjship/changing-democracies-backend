@@ -55,7 +55,7 @@
     "@types/chai": "^5.0.1",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^20.4.0",
+    "@types/node": "^22.19.15",
     "@types/pg": "^8.10.5",
     "@types/sinon": "^17.0.3",
     "@types/sinon-chai": "^4.0.0",
