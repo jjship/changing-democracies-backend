@@ -56,7 +56,7 @@ function parseTags(
   metaTags: {
     property: string;
     value: string;
-  }[]
+  }[],
 ): string[] {
   if (!metaTags) return [];
   const tags: string[] | undefined = metaTags

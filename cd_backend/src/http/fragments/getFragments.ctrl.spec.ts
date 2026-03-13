@@ -1,7 +1,7 @@
 import uuid4 from 'uuid4';
+import { expect } from 'chai';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 
 describe('GET /fragments', () => {
   it('should return all fragments from db', async () => {
@@ -32,7 +32,7 @@ describe('GET /fragments', () => {
         delete item.attributes.createdAt;
         delete item.attributes.updatedAt;
         return item;
-      })
+      }),
     ).to.deep.equal([
       {
         type: 'fragment',
@@ -109,7 +109,7 @@ describe('GET /fragments', () => {
         delete item.attributes.createdAt;
         delete item.attributes.updatedAt;
         return item;
-      })
+      }),
     ).to.deep.equal([
       {
         type: 'fragment',

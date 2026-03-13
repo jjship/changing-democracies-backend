@@ -1,8 +1,8 @@
 import { FastifyInstance, FastifyRequest, RouteGenericInterface } from 'fastify';
 import { DataSource, Repository } from 'typeorm';
+import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { PersonEntity } from '../../db/entities/Person';
 import { NotFoundError } from '../../errors';
-import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { personSchema } from './person.schema';
 
 interface FindPersonParams extends RouteGenericInterface {
@@ -33,7 +33,7 @@ export const registerFindPersonController =
           attributes: {
             name: person.name,
             countryCode: person.country?.code || '',
-            bios: person.bios?.map((bio: any) => ({
+            bios: person.bios?.map((bio: { bio: string; language: { code: string } }) => ({
               bio: bio.bio,
               languageCode: bio.language.code,
             })),
@@ -62,7 +62,7 @@ function findPersonSchema() {
 async function findPerson(
   personRepository: Repository<PersonEntity>,
   id?: string,
-  name?: string
+  name?: string,
 ): Promise<PersonEntity | null> {
   if (id) {
     return await personRepository.findOne({

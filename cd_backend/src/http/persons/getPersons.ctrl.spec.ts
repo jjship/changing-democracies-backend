@@ -1,15 +1,18 @@
+import { expect } from 'chai';
+import { DataSource } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { PersonEntity } from '../../db/entities/Person';
-import { DataSource } from 'typeorm';
 import { ENV } from '../../env';
 
 describe('GET /persons', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
   let authToken: string;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let existingPersons: PersonEntity[];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
@@ -33,8 +36,8 @@ describe('GET /persons', () => {
             { languageCode: 'EN', bio: `${name}'s English biography` },
             { languageCode: 'ES', bio: `${name}'s Spanish biography` },
           ],
-        })
-      )
+        }),
+      ),
     );
   });
 

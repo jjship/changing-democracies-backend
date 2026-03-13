@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
-import { FragmentEntity } from '../../db/entities/Fragment';
 import { createCache } from 'async-cache-dedupe';
+import { FragmentEntity } from '../../db/entities/Fragment';
 import { TagEntity } from '../../db/entities/Tag';
 import { LanguageEntity } from '../../db/entities/Language';
 
@@ -13,8 +13,9 @@ const getLanguageId = async (dbConnection: DataSource, languageCode: string): Pr
       select: ['id'],
     });
     return language?.id || null;
-  } catch (error) {
-    console.error('Error retrieving language ID:', error);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error retrieving language ID:', err);
     return null;
   }
 };
@@ -22,7 +23,7 @@ const getLanguageId = async (dbConnection: DataSource, languageCode: string): Pr
 // Function to get the free browsing tag ID (accepts pre-fetched English language ID)
 const getFreeBrowsingTagId = async (
   dbConnection: DataSource,
-  englishLanguageId: string | null
+  englishLanguageId: string | null,
 ): Promise<string | null> => {
   try {
     if (!englishLanguageId) {
@@ -42,8 +43,9 @@ const getFreeBrowsingTagId = async (
       .getOne();
 
     return tag?.id || null;
-  } catch (error) {
-    console.error('Error retrieving free browsing tag ID:', error);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error retrieving free browsing tag ID:', err);
     return null;
   }
 };
@@ -187,8 +189,9 @@ const getClientFragments =
           pages: Math.ceil(totalCount / limit),
         },
       };
-    } catch (error) {
-      console.error('Error fetching fragment details:', error);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Error fetching fragment details:', err);
       return {
         data: [],
         pagination: { total: 0, page, limit, pages: 0 },
@@ -212,6 +215,7 @@ function formatFragmentResponse({
     items,
     contentKey,
   }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     items: { language?: { id?: string; code?: string }; [key: string]: any }[] | undefined;
     contentKey: string;
   }): string => {
@@ -271,11 +275,13 @@ export type GetCachedClientFragments = ReturnType<typeof createGetCachedClientFr
 const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSource }) => {
   // Initialize caches on startup
   getLanguageId(dbConnection, 'EN').catch((err) => {
+    // eslint-disable-next-line no-console
     console.error('Failed to initialize language cache:', err);
   });
 
   const logSlowQueries = (queryTime: number, message: string, threshold = 100) => {
     if (queryTime > threshold) {
+      // eslint-disable-next-line no-console
       console.warn(`SLOW QUERY (${queryTime}ms): ${message}`);
     }
   };
@@ -294,7 +300,7 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
       .query(
         `SELECT tablename, indexname, indexdef FROM pg_indexes
        WHERE tablename IN ('fragment', 'fragment_tags', 'tag', 'name')
-       ORDER BY tablename, indexname;`
+       ORDER BY tablename, indexname;`,
       )
       .then((indexes) => {
         const necessaryIndexes = [
@@ -307,18 +313,21 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
           (needed) =>
             !indexes.some(
               (idx: { tablename: string; indexdef: string }) =>
-                idx.tablename === needed.table && idx.indexdef.includes(`(${needed.column}`)
-            )
+                idx.tablename === needed.table && idx.indexdef.includes(`(${needed.column}`),
+            ),
         );
 
         if (missingIndexes.length > 0) {
+          // eslint-disable-next-line no-console
           console.warn('Missing recommended database indexes:');
           for (const missing of missingIndexes) {
+            // eslint-disable-next-line no-console
             console.warn(`- Index on ${missing.table}(${missing.column})`);
           }
         }
       })
       .catch((err) => {
+        // eslint-disable-next-line no-console
         console.error('Failed to check database indexes:', err);
       });
   }

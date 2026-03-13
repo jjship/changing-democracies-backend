@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { ENV } from '../env';
 import { UnauthorizedError } from '../errors';
 
@@ -32,7 +32,9 @@ const API_CLIENTS: Record<string, ApiClient> = {
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export default fp(async (fastify: FastifyInstance) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
   fastify.decorate('authenticateApiKey', async (request: FastifyRequest) => {
     try {
       const apiKey = request.headers['x-api-key'];
@@ -45,7 +47,7 @@ export default fp(async (fastify: FastifyInstance) => {
       if (client) {
         request.apiClient = client;
       }
-    } catch (err) {
+    } catch {
       throw new UnauthorizedError('Unauthorized');
     }
   });

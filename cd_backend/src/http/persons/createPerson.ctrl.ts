@@ -2,12 +2,12 @@ import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource, In } from 'typeorm';
 import { LanguageEntity } from '../../db/entities/Language';
-import { personSchema } from './person.schema';
 import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
 import { CountryEntity } from '../../db/entities/Country';
 import { NotFoundError, HttpError } from '../../errors';
 import { normalizeName } from '../../utils/normalizeName';
+import { personSchema } from './person.schema';
 
 export const registerCreatePersonController =
   (app: FastifyInstance) =>
@@ -56,6 +56,7 @@ export const registerCreatePersonController =
 
           const newBios = bios.map((b) => {
             const newBio = new BioEntity();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             newBio.language = languagesMap.get(b.languageCode.toUpperCase())!;
             newBio.bio = b.bio;
             return newBio;

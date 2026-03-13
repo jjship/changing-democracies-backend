@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
+import { createCache } from 'async-cache-dedupe';
 import { TagCategoryEntity } from '../../db/entities/TagCategory';
 import { LanguageEntity } from '../../db/entities/Language';
-import { createCache } from 'async-cache-dedupe';
 
 interface TagCategoryWithTags {
   id: string;
@@ -89,6 +89,7 @@ const createGetCachedClientTagCategories = ({ dbConnection }: { dbConnection: Da
     // Log performance metrics for slow queries (>500ms)
     const totalTime = Date.now() - startTime;
     if (totalTime > 500) {
+      // eslint-disable-next-line no-console
       console.warn(`SLOW QUERY (${totalTime}ms): getCachedClientTagCategories(${languageCode})`);
     }
 

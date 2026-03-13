@@ -1,10 +1,10 @@
 import uuid4 from 'uuid4';
+import { expect } from 'chai';
+import { DataSource } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
-import { DataSource } from 'typeorm';
 
 describe('POST /narratives', () => {
   let dbConnection: DataSource;
@@ -72,18 +72,20 @@ describe('POST /narratives', () => {
     });
 
     expect(newNarrative).to.not.be.null;
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
     expect(newNarrative!.names![0].name).to.equal(createNarrativePayload.attributes.names[0].name);
     expect(newNarrative!.descriptions).to.have.length(1);
     expect(newNarrative!.descriptions![0].language.code).to.equal(
-      createNarrativePayload.attributes.descriptions[0].languageCode.toUpperCase()
+      createNarrativePayload.attributes.descriptions[0].languageCode.toUpperCase(),
     );
     expect(newNarrative!.descriptions![0].description).to.deep.equal(
-      createNarrativePayload.attributes.descriptions[0].description
+      createNarrativePayload.attributes.descriptions[0].description,
     );
     expect(newNarrative!.narrativeFragments).to.have.length(3);
     expect(newNarrative!.narrativeFragments![0].sequence).to.equal(1);
     expect(newNarrative!.narrativeFragments![1].sequence).to.equal(2);
     expect(newNarrative!.narrativeFragments![2].sequence).to.equal(3);
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
     expect(parsedRes.attributes).to.deep.equal({
       names: [{ languageCode: 'EN', name: 'New Narrative' }],

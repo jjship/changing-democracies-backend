@@ -1,13 +1,12 @@
+import path from 'path';
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import sinon from 'sinon';
 import { DataSource, DataSourceOptions } from 'typeorm';
+import { Client } from 'pg';
 import { createDbConnection } from '../db/db';
 import { ENV } from '../env';
 import { setupTestApp } from './testApp';
-import path from 'path';
-import { Client } from 'pg';
-import fs from 'fs';
 
 chai.use(sinonChai);
 chai.should();
@@ -41,6 +40,7 @@ before(async function () {
 
   // If first test run in this session, we'll run migrations
   if (!migrationsApplied) {
+    // eslint-disable-next-line no-console
     console.log('Setting up test database schema with migrations...');
 
     // First connect and check if schema exists
@@ -72,8 +72,10 @@ before(async function () {
         migrationsRun: true, // Run migrations to set up schema
       });
 
+      // eslint-disable-next-line no-console
       console.log('Migrations applied successfully.');
     } else {
+      // eslint-disable-next-line no-console
       console.log('Using existing database schema (migrations already applied).');
     }
 
@@ -110,7 +112,7 @@ async function checkIfMigrationTableExists() {
       )
     `);
     return result[0].exists;
-  } catch (e) {
+  } catch {
     return false;
   }
 }
@@ -127,14 +129,14 @@ async function checkMissingTables(requiredTables: string[]): Promise<string[]> {
           AND table_name = $1
         )
       `,
-        [table]
+        [table],
       );
       if (!result[0].exists) {
         missingTables.push(table);
       }
     }
     return missingTables;
-  } catch (e) {
+  } catch {
     return requiredTables; // If we can't check, assume all tables are missing
   }
 }
@@ -148,8 +150,9 @@ async function cleanupTables() {
     for (const entity of entities) {
       try {
         await connection.query(`TRUNCATE TABLE "${entity.tablePath}" CASCADE;`);
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        // eslint-disable-next-line no-console
         console.warn(`Error truncating table ${entity.tablePath}: ${errorMessage}`);
       }
     }
@@ -188,6 +191,7 @@ async function createTestDatabase() {
 
     // Create database if it doesn't exist
     if (dbCheckResult.rows.length === 0) {
+      // eslint-disable-next-line no-console
       console.log(`Creating test database: ${testDbName}`);
       // Disconnect clients from database if they exist
       await client.query(
@@ -195,16 +199,18 @@ async function createTestDatabase() {
                           FROM pg_stat_activity
                           WHERE pg_stat_activity.datname = $1
                           AND pid <> pg_backend_pid()`,
-        [testDbName]
+        [testDbName],
       );
       // Create the database
       await client.query(`CREATE DATABASE ${testDbName}`);
     } else {
+      // eslint-disable-next-line no-console
       console.log(`Using existing test database: ${testDbName}`);
     }
-  } catch (error) {
-    console.error('Error creating test database:', error);
-    throw error;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('Error creating test database:', err);
+    throw err;
   } finally {
     await client.end();
   }

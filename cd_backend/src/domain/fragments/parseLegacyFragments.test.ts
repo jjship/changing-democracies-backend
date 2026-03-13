@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { serializeFilmsCollection } from './parseLegacyFragments';
 import { BunnyVideo } from '../../services/bunnyStream/api/videos';
+import { serializeFilmsCollection } from './parseLegacyFragments';
 
 suite('serializeFilmsCollection', () => {
   test('should serialize an empty collection', () => {

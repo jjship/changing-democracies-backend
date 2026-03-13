@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, OneToMany, BeforeInsert } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { PersonEntity } from './Person';
 import { NameEntity } from './Name';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('country')
 export class CountryEntity {

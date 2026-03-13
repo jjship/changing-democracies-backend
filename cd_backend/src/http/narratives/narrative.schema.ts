@@ -9,5 +9,5 @@ const narrativeSchema = Type.Object(
     fragmentsSequence: Type.Array(Type.Object({ fragmentId: Type.String(), sequence: Type.Number() })),
     descriptions: Type.Array(Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) })),
   },
-  { $id: 'Narrative' }
+  { $id: 'Narrative' },
 );

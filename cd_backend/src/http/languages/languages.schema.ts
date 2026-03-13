@@ -6,7 +6,7 @@ export const languageSchema = Type.Object(
     name: Type.String(),
     code: Type.String(),
   },
-  { $id: 'Language' }
+  { $id: 'Language' },
 );
 
 export const createLanguageSchema = Type.Object({

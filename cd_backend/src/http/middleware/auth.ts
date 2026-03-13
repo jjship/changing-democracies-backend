@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import jwt from 'jsonwebtoken';
 import { ENV } from '../../env';
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 interface SupabaseJWT {
   aud: string;
   exp: number;
@@ -10,6 +11,7 @@ interface SupabaseJWT {
   role: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export async function authMiddleware(request: FastifyRequest, reply: FastifyReply) {
   try {
     const authHeader = request.headers.authorization;
@@ -26,10 +28,10 @@ export async function authMiddleware(request: FastifyRequest, reply: FastifyRepl
       email: decoded.email,
       role: decoded.role,
     };
-  } catch (error) {
+  } catch (err) {
     reply.status(401).send({
       error: 'Unauthorized',
-      message: error instanceof Error ? error.message : 'Authentication failed',
+      message: err instanceof Error ? err.message : 'Authentication failed',
     });
   }
 }

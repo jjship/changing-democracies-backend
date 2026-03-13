@@ -1,8 +1,8 @@
 import { Column, Entity, PrimaryColumn, OneToMany, BeforeInsert, CreateDateColumn, Index } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
 import { DescriptionEntity } from './Description';
 import { NameEntity } from './Name';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('narrative')
 export class NarrativeEntity {

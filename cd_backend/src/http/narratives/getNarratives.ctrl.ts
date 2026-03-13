@@ -1,10 +1,10 @@
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
-import { narrativeSchema } from './narrative.schema';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 import { parseNarrativeEntity } from '../../domain/narratives/narratives.api';
 import { requireApiKeyOrJwt } from '../../auth/apiKeyAuth';
+import { narrativeSchema } from './narrative.schema';
 
 export const registerGetNarrativesController =
   (app: FastifyInstance) =>
@@ -22,7 +22,7 @@ export const registerGetNarrativesController =
               type: Type.Literal('narrative'),
               id: Type.String(),
               attributes: narrativeSchema,
-            })
+            }),
           ),
         },
       },

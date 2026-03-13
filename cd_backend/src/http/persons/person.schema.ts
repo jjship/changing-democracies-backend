@@ -9,11 +9,11 @@ export const personSchema = Type.Object(
         Type.Object({
           bio: Type.String(),
           languageCode: Type.String(),
-        })
-      )
+        }),
+      ),
     ),
   },
-  { $id: 'Person' }
+  { $id: 'Person' },
 );
 
 export const updatePersonSchema = Type.Object({

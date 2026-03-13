@@ -4,8 +4,8 @@ import { BunnyVideo } from '../../services/bunnyStream/bunnyStreamApiClient';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { PersonEntity } from '../../db/entities/Person';
 import { CountryEntity } from '../../db/entities/Country';
-import { serializeFilmsCollection } from './parseLegacyFragments';
 import { LanguageEntity } from '../../db/entities/Language';
+import { serializeFilmsCollection } from './parseLegacyFragments';
 
 const BATCH_SIZE = 50; // Process in smaller batches to reduce memory usage
 const OPERATION_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes timeout
@@ -31,7 +31,7 @@ export const syncLegacyFragments =
           if (videosToProcess.length < bunnyVideos.length) {
             moduleLogger.warn(
               { totalVideos: bunnyVideos.length, processedVideos: videosToProcess.length },
-              'Limited the number of videos to process to prevent memory exhaustion'
+              'Limited the number of videos to process to prevent memory exhaustion',
             );
           }
 
@@ -73,7 +73,7 @@ export const syncLegacyFragments =
           for (let i = 0; i < films.length; i += BATCH_SIZE) {
             moduleLogger.info(
               { batch: Math.floor(i / BATCH_SIZE) + 1, totalBatches: Math.ceil(films.length / BATCH_SIZE) },
-              'Processing batch of films'
+              'Processing batch of films',
             );
 
             const batch = films.slice(i, i + BATCH_SIZE);
@@ -122,7 +122,7 @@ export const syncLegacyFragments =
                     continue;
                   }
 
-                  let country = await entityManager.findOne(CountryEntity, {
+                  const country = await entityManager.findOne(CountryEntity, {
                     where: { code: countryCode },
                     relations: ['persons'],
                   });
@@ -143,7 +143,7 @@ export const syncLegacyFragments =
                 } catch (err) {
                   moduleLogger.error(
                     { err, guid, countryName, personName },
-                    'Error processing individual film, continuing with next'
+                    'Error processing individual film, continuing with next',
                   );
                   // Continue with next film instead of failing the entire batch
                 }
@@ -154,7 +154,7 @@ export const syncLegacyFragments =
             if (global.gc) {
               try {
                 global.gc();
-              } catch (err) {
+              } catch {
                 // Ignore errors during GC
               }
             }

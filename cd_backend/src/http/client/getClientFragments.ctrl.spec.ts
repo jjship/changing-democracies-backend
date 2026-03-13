@@ -1,9 +1,9 @@
 import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { DataSource } from 'typeorm';
 import { getDbConnection } from '../../db/db';
-import uuid4 from 'uuid4';
 import { ENV } from '../../env';
 import { PersonEntity } from '../../db/entities/Person';
 import { TagEntity } from '../../db/entities/Tag';
@@ -12,6 +12,7 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('GET /client-fragments', async () => {
   let dbConnection: DataSource;
   let apiKey: string;
@@ -375,7 +376,9 @@ describe('GET /client-fragments', async () => {
       .findOneOrFail({ where: { names: { name: 'Heritage' } }, relations: ['names', 'names.language'] });
 
     // Create fragment and associate tags
-    await testDb.saveTestFragments([{ guid: fragmentId, title: 'Fallback Fragment', length: 60, personId: testPerson.id }]);
+    await testDb.saveTestFragments([
+      { guid: fragmentId, title: 'Fallback Fragment', length: 60, personId: testPerson.id },
+    ]);
     const fragmentRepo = dbConnection.getRepository(FragmentEntity);
     const fragment = await fragmentRepo.findOneOrFail({ where: { id: fragmentId } });
     fragment.tags = [testTag, freeBrowsingTag];

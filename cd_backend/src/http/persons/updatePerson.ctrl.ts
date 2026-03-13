@@ -5,8 +5,8 @@ import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
-import { personSchema } from './person.schema';
 import { HttpError, NotFoundError } from '../../errors';
+import { personSchema } from './person.schema';
 
 export const registerUpdatePersonController =
   (app: FastifyInstance) =>
@@ -75,6 +75,7 @@ export const registerUpdatePersonController =
             // Create new bios
             const newBios = bios.map((b) => {
               const newBio = new BioEntity();
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               newBio.language = languagesMap.get(b.languageCode.toUpperCase())!;
               newBio.bio = b.bio;
               newBio.person = existingPerson;
@@ -123,8 +124,8 @@ function updatePersonSchema() {
               Type.Object({
                 languageCode: Type.String(),
                 bio: Type.String(),
-              })
-            )
+              }),
+            ),
           ),
         }),
       }),

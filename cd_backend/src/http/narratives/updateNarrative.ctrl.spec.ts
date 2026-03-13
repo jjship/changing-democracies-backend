@@ -1,11 +1,13 @@
 import { expect } from 'chai';
-import { setupTestApp } from '../../spec/testApp';
 import uuid4 from 'uuid4';
-import { testDb } from '../../spec/testDb';
 import { DataSource } from 'typeorm';
+import { setupTestApp } from '../../spec/testApp';
+import { testDb } from '../../spec/testDb';
 import { getDbConnection } from '../../db/db';
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('PATCH /narratives/:id', async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
 
   beforeEach(async () => {

@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
+import { createCache } from 'async-cache-dedupe';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 import { NarrativeFragmentEntity } from '../../db/entities/NarrativeFragment';
-import { createCache } from 'async-cache-dedupe';
 
 const getClientNarratives =
   ({ dbConnection }: { dbConnection: DataSource }) =>
@@ -103,7 +103,7 @@ const getClientNarratives =
 
     // Process narratives in batches to reduce memory pressure
     const BATCH_SIZE = 10;
-    let result = [];
+    const result = [];
 
     for (let i = 0; i < narratives.length; i += BATCH_SIZE) {
       const batch = narratives.slice(i, i + BATCH_SIZE);
@@ -117,7 +117,7 @@ const getClientNarratives =
 // Helper function to format narrative response
 function formatNarrativeResponse(
   narrative: NarrativeEntity,
-  otherNarrativesMap: Map<string, NarrativeFragmentEntity[]>
+  otherNarrativesMap: Map<string, NarrativeFragmentEntity[]>,
 ) {
   const titles =
     narrative.names?.map((name) => ({

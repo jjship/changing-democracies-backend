@@ -1,7 +1,6 @@
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
-import { narrativeSchema } from './narrative.schema';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 import { parseNarrativeEntity } from '../../domain/narratives/narratives.api';
 import { DescriptionEntity } from '../../db/entities/Description';
@@ -9,6 +8,7 @@ import { LanguageEntity } from '../../db/entities/Language';
 import { NameEntity } from '../../db/entities/Name';
 import { NarrativeFragmentEntity } from '../../db/entities/NarrativeFragment';
 import { FragmentEntity } from '../../db/entities/Fragment';
+import { narrativeSchema } from './narrative.schema';
 
 export const registerCreateNarrativeController =
   (app: FastifyInstance) =>
@@ -30,7 +30,7 @@ export const registerCreateNarrativeController =
           const languageMap = new Map(languages.map((lang) => [lang.code.toUpperCase(), lang]));
 
           const missingLanguage = attributes.descriptions.find(
-            (desc) => !languageMap.has(desc.languageCode.toUpperCase())
+            (desc) => !languageMap.has(desc.languageCode.toUpperCase()),
           );
           if (missingLanguage) {
             throw {
@@ -48,6 +48,7 @@ export const registerCreateNarrativeController =
 
           const descriptions = attributes.descriptions.map((desc) => {
             const newDescription = new DescriptionEntity();
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             newDescription.language = languageMap.get(desc.languageCode.toUpperCase())!;
             newDescription.description = desc.description;
             return newDescription;
@@ -61,6 +62,7 @@ export const registerCreateNarrativeController =
             const newName = new NameEntity();
             newName.type = 'Narrative';
             newName.name = name.name;
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             newName.language = languageMap.get(name.languageCode.toUpperCase())!;
             return newName;
           });
@@ -100,7 +102,7 @@ export const registerCreateNarrativeController =
               await entityManager.getRepository(NarrativeFragmentEntity).save(newNarrativeFragment);
 
               return newNarrativeFragment;
-            })
+            }),
           );
 
           await entityManager.getRepository(NarrativeFragmentEntity).save(narrativeFragments);
@@ -132,7 +134,7 @@ function createNarrativeSchema() {
           names: Type.Array(Type.Object({ languageCode: Type.String(), name: Type.String() })),
           fragmentsSequence: Type.Array(Type.Object({ fragmentId: Type.String(), sequence: Type.Number() })),
           descriptions: Type.Array(
-            Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) })
+            Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) }),
           ),
         }),
       }),
@@ -149,7 +151,7 @@ function createNarrativeSchema() {
             status: Type.String(),
             title: Type.String(),
             detail: Type.String(),
-          })
+          }),
         ),
       }),
     },

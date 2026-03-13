@@ -51,7 +51,7 @@ export async function deleteDuplicateCaptions({
               totalVideos: bunnyVideos.length,
               processedVideos: videosToProcess.length,
             },
-            'Limited the number of videos to process to prevent resource exhaustion'
+            'Limited the number of videos to process to prevent resource exhaustion',
           );
         }
 
@@ -71,7 +71,7 @@ export async function deleteDuplicateCaptions({
                 acc[caption.label] = [...(acc[caption.label] || []), caption];
                 return acc;
               },
-              {} as Record<string, typeof video.captions>
+              {} as Record<string, typeof video.captions>,
             );
 
             const videoDeletions: string[] = [];
@@ -89,7 +89,7 @@ export async function deleteDuplicateCaptions({
                     } catch (err) {
                       opLogger.error(
                         { err, videoId: video.guid, srclang: autoCaption.srclang },
-                        'Failed to delete caption, continuing with other captions'
+                        'Failed to delete caption, continuing with other captions',
                       );
                       // Continue with other captions, don't abort the whole operation
                     }
@@ -111,7 +111,7 @@ export async function deleteDuplicateCaptions({
             // Log error for this video but continue with others
             opLogger.error(
               { err, videoId: video.guid },
-              'Error processing video for duplicate captions, continuing with other videos'
+              'Error processing video for duplicate captions, continuing with other videos',
             );
           }
         }
@@ -123,7 +123,7 @@ export async function deleteDuplicateCaptions({
             totalCaptionsDeleted: deletedCaptions.reduce((total, item) => total + item.deletedCaptions.length, 0),
             dryRun,
           },
-          dryRun ? 'Dry run completed' : 'Successfully deleted duplicate captions'
+          dryRun ? 'Dry run completed' : 'Successfully deleted duplicate captions',
         );
       })(),
       createTimeout(OPERATION_TIMEOUT_MS),
@@ -133,12 +133,12 @@ export async function deleteDuplicateCaptions({
     if ((err as Error).message.includes('timed out')) {
       opLogger.error(
         { err, captionsProcessed: deletedCaptions.length },
-        'Global timeout reached during duplicate captions deletion'
+        'Global timeout reached during duplicate captions deletion',
       );
     } else {
       opLogger.error(
         { err, captionsProcessed: deletedCaptions.length },
-        'Error during duplicate captions deletion process'
+        'Error during duplicate captions deletion process',
       );
     }
     // We still return partial results rather than throwing

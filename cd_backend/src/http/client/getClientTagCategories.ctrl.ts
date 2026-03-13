@@ -54,9 +54,9 @@ function getClientTagCategoriesSchema() {
               Type.Object({
                 id: Type.String(),
                 name: Type.String(),
-              })
+              }),
             ),
-          })
+          }),
         ),
       }),
     },

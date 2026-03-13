@@ -75,7 +75,7 @@ export async function syncFragments({
                 newFragments: newFragments.map((fr) => fr.title),
                 count: newFragments.length,
               },
-              'Added new fragments to database'
+              'Added new fragments to database',
             );
 
             try {
@@ -99,7 +99,7 @@ export async function syncFragments({
                 removedFragments: fragmentsToRemove.map((fr) => fr.title),
                 count: fragmentsToRemove.length,
               },
-              'Removed fragments from database'
+              'Removed fragments from database',
             );
           } catch (err) {
             syncLogger.error({ err }, 'Failed to remove fragments from database');

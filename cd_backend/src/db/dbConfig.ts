@@ -1,5 +1,5 @@
-import { DataSourceOptions } from 'typeorm';
 import path from 'path';
+import { DataSourceOptions } from 'typeorm';
 import { ENV } from '../env';
 
 /**

@@ -10,12 +10,12 @@ export class AddFragmentClientEndpointIndexes1742326990000 implements MigrationI
 
     // Add specialized index for tag names by language for filtered lookups
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_name_tag_language" ON "name" ("tag_id", "language_id") WHERE "tag_id" IS NOT NULL`
+      `CREATE INDEX IF NOT EXISTS "idx_name_tag_language" ON "name" ("tag_id", "language_id") WHERE "tag_id" IS NOT NULL`,
     );
 
     // Add specialized index for country names by language for filtered lookups
     await queryRunner.query(
-      `CREATE INDEX IF NOT EXISTS "idx_name_country_language" ON "name" ("country_id", "language_id") WHERE "country_id" IS NOT NULL`
+      `CREATE INDEX IF NOT EXISTS "idx_name_country_language" ON "name" ("country_id", "language_id") WHERE "country_id" IS NOT NULL`,
     );
 
     // Add index on bios with language filtering

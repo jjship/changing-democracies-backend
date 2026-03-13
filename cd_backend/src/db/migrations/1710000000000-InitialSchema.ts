@@ -129,7 +129,7 @@ export class InitialSchema1710000000000 implements MigrationInterface {
 
     // Basic indexes
     await queryRunner.query(
-      `CREATE INDEX "idx_fragment_narrative" ON "narrative_fragment" ("fragment_id", "narrative_id")`
+      `CREATE INDEX "idx_fragment_narrative" ON "narrative_fragment" ("fragment_id", "narrative_id")`,
     );
 
     // Language indexes
@@ -137,7 +137,7 @@ export class InitialSchema1710000000000 implements MigrationInterface {
 
     // Description and name indexes
     await queryRunner.query(
-      `CREATE INDEX "idx_description_narrative_language" ON "description" ("narrative_id", "language_id")`
+      `CREATE INDEX "idx_description_narrative_language" ON "description" ("narrative_id", "language_id")`,
     );
     await queryRunner.query(`CREATE INDEX "idx_name_narrative_language" ON "name" ("narrative_id", "language_id")`);
 
@@ -145,10 +145,10 @@ export class InitialSchema1710000000000 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX "idx_narrative_fragment_narrative" ON "narrative_fragment" ("narrative_id")`);
     await queryRunner.query(`CREATE INDEX "idx_narrative_fragment_fragment" ON "narrative_fragment" ("fragment_id")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_narrative_fragment_narrative_sequence" ON "narrative_fragment" ("narrative_id", "sequence")`
+      `CREATE INDEX "idx_narrative_fragment_narrative_sequence" ON "narrative_fragment" ("narrative_id", "sequence")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_narrative_fragment_compound" ON "narrative_fragment" ("narrative_id", "fragment_id", "sequence")`
+      `CREATE INDEX "idx_narrative_fragment_compound" ON "narrative_fragment" ("narrative_id", "fragment_id", "sequence")`,
     );
 
     // Fragment and person indexes

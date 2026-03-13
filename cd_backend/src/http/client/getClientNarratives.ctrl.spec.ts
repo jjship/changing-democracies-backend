@@ -1,14 +1,15 @@
 import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { DataSource } from 'typeorm';
 import { getDbConnection } from '../../db/db';
-import uuid4 from 'uuid4';
 import { ENV } from '../../env';
 import { PersonEntity } from '../../db/entities/Person';
 
 // Describe the test suite for the getClientNarratives endpoint
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('GET /client-narratives', async () => {
   let dbConnection: DataSource;
   let apiKey: string;
@@ -149,7 +150,7 @@ describe('GET /client-narratives', async () => {
     ];
 
     const fragmentsWithoutBios = narrativeRes.fragments.map(
-      ({ bios, ...rest }: { bios: { languageCode: string; bio: string }[]; [key: string]: any }) => rest
+      ({ bios, ...rest }: { bios: { languageCode: string; bio: string }[]; [key: string]: any }) => rest,
     );
 
     // Check the fragment properties match expected values

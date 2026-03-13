@@ -1,7 +1,5 @@
 import 'fastify';
 
-import { SupabaseJWTPayload } from '../auth/jwtAuth';
-
 declare module 'fastify' {
   interface FastifyRequest {
     user?: {

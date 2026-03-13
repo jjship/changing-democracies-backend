@@ -43,7 +43,7 @@ function getClientNarrativesSchema() {
           id: Type.String(),
           titles: Type.Array(Type.Object({ languageCode: Type.String(), title: Type.String() })),
           descriptions: Type.Array(
-            Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) })
+            Type.Object({ languageCode: Type.String(), description: Type.Array(Type.String()) }),
           ),
           total_length: Type.Number(),
           fragments: Type.Array(
@@ -62,13 +62,13 @@ function getClientNarrativesSchema() {
                 Type.Object({
                   id: Type.String(),
                   titles: Type.Array(Type.Object({ languageCode: Type.String(), title: Type.String() })),
-                })
+                }),
               ),
               playerUrl: Type.String(),
               thumbnailUrl: Type.String(),
-            })
+            }),
           ),
-        })
+        }),
       ),
     },
   };

@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
-import { PersonEntity } from '../../db/entities/Person';
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+import { PersonEntity } from '../../db/entities/Person';
 import { personSchema } from './person.schema';
 
 export const registerGetPersonsController =
@@ -42,7 +42,7 @@ function getPersonsSchema() {
           type: Type.Literal('person'),
           id: Type.String(),
           attributes: personSchema,
-        })
+        }),
       ),
     },
   };

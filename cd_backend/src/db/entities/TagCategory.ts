@@ -1,7 +1,7 @@
-import { Column, Entity, ManyToMany, OneToMany, PrimaryColumn, BeforeInsert, JoinTable } from 'typeorm';
+import { Entity, ManyToMany, OneToMany, PrimaryColumn, BeforeInsert, JoinTable } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { TagEntity } from './Tag';
 import { NameEntity } from './Name';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('tag_category')
 export class TagCategoryEntity {

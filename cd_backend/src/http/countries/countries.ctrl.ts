@@ -3,9 +3,9 @@ import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { DataSource } from 'typeorm';
 import { CountryEntity } from '../../db/entities/Country';
 import { NameEntity } from '../../db/entities/Name';
-import { countrySchema, createCountrySchema, updateCountrySchema } from './country.schema';
 import { LanguageEntity } from '../../db/entities/Language';
-import { errorResponseSchema, NotFoundError } from '../../errors';
+import { NotFoundError } from '../../errors';
+import { countrySchema, createCountrySchema, updateCountrySchema } from './country.schema';
 
 export const registerCountryControllers =
   (app: FastifyInstance) =>
@@ -35,7 +35,7 @@ export const registerCountryControllers =
             name.type = 'Country';
             name.country = country;
             return name;
-          })
+          }),
         );
 
         country.names = names;
@@ -120,7 +120,7 @@ export const registerCountryControllers =
             name.type = 'Country';
             name.country = country;
             return name;
-          })
+          }),
         );
 
         country.names = names;
@@ -189,7 +189,7 @@ export const registerCountryControllers =
               name: n.name,
             })),
             code: country.code,
-          }))
+          })),
         );
       },
     });

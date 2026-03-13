@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { syncFragments } from '../domain/fragments/syncFragments';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { DataSource } from 'typeorm';
+import { syncFragments } from '../domain/fragments/syncFragments';
 import { BunnyStreamApiClient } from '../services/bunnyStream/bunnyStreamApiClient';
 import { requireApiKey } from '../auth/requireApiKey';
 

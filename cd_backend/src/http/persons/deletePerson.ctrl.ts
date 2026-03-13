@@ -4,7 +4,6 @@ import { DataSource } from 'typeorm';
 import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { NotFoundError } from '../../errors';
 
 interface DeletePersonParams {
   Params: {

@@ -13,11 +13,11 @@ export const tagSchema = Type.Object(
       Type.Object({
         languageCode: Type.String(),
         name: Type.String(),
-      })
+      }),
     ),
     fragments: Type.Array(fragmentSummarySchema),
   },
-  { $id: 'Tag' }
+  { $id: 'Tag' },
 );
 
 export const createTagSchema = Type.Object({
@@ -25,7 +25,7 @@ export const createTagSchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
 });
 
@@ -34,7 +34,7 @@ export const updateTagSchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
   fragmentIds: Type.Optional(Type.Array(Type.String())),
 });

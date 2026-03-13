@@ -19,5 +19,5 @@ const logger =
           levelFirst: true,
           colorize: true,
           translateTime: 'yyyy-mm-dd HH:MM:ss',
-        })
+        }),
       );

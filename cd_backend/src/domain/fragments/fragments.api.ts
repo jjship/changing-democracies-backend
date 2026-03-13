@@ -1,9 +1,7 @@
-import { DataSource } from 'typeorm';
 import { FragmentEntity } from '../../db/entities/Fragment';
 import { ENV } from '../../env';
 import { fragmentSchema } from '../../http/fragments/fragment.schema';
 import { BunnyVideo } from '../../services/bunnyStream/bunnyStreamApiClient';
-import { NameEntity } from '../../db/entities/Name';
 
 export { getFragments } from './getFragments';
 export { syncFragments } from './syncFragments';

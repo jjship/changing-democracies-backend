@@ -1,8 +1,8 @@
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
-import { fragmentSchema } from './fragment.schema';
 import { getFragments } from '../../domain/fragments/fragments.api';
+import { fragmentSchema } from './fragment.schema';
 
 export const registerGetFragmentsController =
   (app: FastifyInstance) =>
@@ -36,7 +36,7 @@ export const registerGetFragmentsController =
                 id: Type.String(),
                 type: Type.Literal('fragment'),
                 attributes: fragmentSchema,
-              })
+              }),
             ),
           }),
         },

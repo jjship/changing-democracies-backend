@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { getDbConnection } from '../../db/db';
-import { syncFragments } from './syncFragments';
-import { FragmentEntity } from '../../db/entities/Fragment';
 import uuid4 from 'uuid4';
+import { getDbConnection } from '../../db/db';
+import { FragmentEntity } from '../../db/entities/Fragment';
 import { logger } from '../../services/logger/logger';
+import { syncFragments } from './syncFragments';
 import { parseVideoToFragment } from './fragments.api';
 
 describe('syncFragments', () => {
