@@ -7,11 +7,11 @@ export const countrySchema = Type.Object(
       Type.Object({
         languageCode: Type.String(),
         name: Type.String(),
-      })
+      }),
     ),
     code: Type.String({ maxLength: 2 }),
   },
-  { $id: 'Country' }
+  { $id: 'Country' },
 );
 
 export const createCountrySchema = Type.Object({
@@ -19,7 +19,7 @@ export const createCountrySchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
   code: Type.String({ maxLength: 2 }),
 });

@@ -1,7 +1,5 @@
 import { expect } from 'chai';
 import { getDbConnection } from './db';
-import { FragmentEntity } from './entities/Fragment';
-import uuid from 'uuid4';
 import { PersonEntity } from './entities/Person';
 import { CountryEntity } from './entities/Country';
 import { LanguageEntity } from './entities/Language';

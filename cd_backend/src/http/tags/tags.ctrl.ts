@@ -1,13 +1,13 @@
 import { FastifyInstance } from 'fastify';
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { DataSource } from 'typeorm';
+import { In } from 'typeorm';
 import { TagEntity } from '../../db/entities/Tag';
 import { NameEntity } from '../../db/entities/Name';
-import { tagSchema, createTagSchema, updateTagSchema } from './tag.schema';
 import { LanguageEntity } from '../../db/entities/Language';
 import { NotFoundError } from '../../errors';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { In } from 'typeorm';
+import { tagSchema, createTagSchema, updateTagSchema } from './tag.schema';
 
 export const registerTagControllers =
   (app: FastifyInstance) =>
@@ -34,8 +34,8 @@ export const registerTagControllers =
               (a, b) =>
                 a.names
                   .find((n) => n.languageCode === 'EN')
-                  ?.name.localeCompare(b.names.find((n) => n.languageCode === 'EN')?.name ?? '') ?? 0
-            )
+                  ?.name.localeCompare(b.names.find((n) => n.languageCode === 'EN')?.name ?? '') ?? 0,
+            ),
         );
       },
     });
@@ -65,7 +65,7 @@ export const registerTagControllers =
             name.type = 'Tag';
             name.tag = tag;
             return name;
-          })
+          }),
         );
 
         tag.names = names;
@@ -120,7 +120,7 @@ export const registerTagControllers =
             name.type = 'Tag';
             name.tag = tag;
             return name;
-          })
+          }),
         );
 
         tag.names = names;

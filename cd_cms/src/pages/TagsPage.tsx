@@ -31,7 +31,7 @@ export function TagsPage() {
 
       const personsData = await personsApi.getPersons();
       setPersons(personsData);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading data, please try again',
         status: 'error',

@@ -1,7 +1,6 @@
 import { createDbConnection } from './db/db';
 import { createBunnyStreamClient } from './services/bunnyStream/bunnyStreamApiClient';
 import { ENV } from './env';
-import { syncFragments } from './domain/fragments/fragments.api';
 import { logger } from './services/logger/logger';
 import { setupApp } from './app';
 import { createCountryLayerApiClient } from './services/coutriesApi/countriesApiClient';

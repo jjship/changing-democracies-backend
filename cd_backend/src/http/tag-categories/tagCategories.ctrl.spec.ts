@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { getDbConnection } from '../../db/db';
 import { LanguageEntity } from '../../db/entities/Language';
@@ -7,9 +8,6 @@ import { TagCategoryEntity } from '../../db/entities/TagCategory';
 import { TagEntity } from '../../db/entities/Tag';
 import { NameEntity } from '../../db/entities/Name';
 import { testDb } from '../../spec/testDb';
-import { v4 as uuidv4 } from 'uuid';
-import { In } from 'typeorm';
-import uuid4 from 'uuid4';
 
 describe('Tag Categories Controller', () => {
   let dbConnection: DataSource;

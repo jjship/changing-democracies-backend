@@ -1,7 +1,7 @@
+import { Agent } from 'https';
 import axios, { AxiosError } from 'axios';
 import axiosRetry, { IAxiosRetryConfig } from 'axios-retry';
 import { FastifyBaseLogger } from 'fastify';
-import { Agent } from 'https';
 import { createVideosApi } from './api/videos';
 
 export { createBunnyStreamClient, BunnyStreamApiClient };
@@ -67,7 +67,7 @@ const createBunnyStreamClient =
             {
               originalLength: response.data.items.length,
             },
-            'Limiting large response array to prevent memory issues'
+            'Limiting large response array to prevent memory issues',
           );
 
           // Only keep the first 600 items to prevent memory issues
@@ -75,7 +75,7 @@ const createBunnyStreamClient =
         }
         return response;
       },
-      (error) => Promise.reject(error)
+      (error) => Promise.reject(error),
     );
 
     // Setup automatic cleanup

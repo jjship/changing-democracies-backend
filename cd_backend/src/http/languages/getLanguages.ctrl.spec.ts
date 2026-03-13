@@ -1,19 +1,14 @@
 import { expect } from 'chai';
-import { DataSource } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
-import { getDbConnection } from '../../db/db';
-import { LanguageEntity } from '../../db/entities/Language';
 import { testDb } from '../../spec/testDb';
 import { ENV } from '../../env';
 
 describe('Languages Controller', () => {
-  let dbConnection: DataSource;
   let testApp: Awaited<ReturnType<typeof setupTestApp>>;
   let authToken: string;
 
   beforeEach(async () => {
     testApp = await setupTestApp();
-    dbConnection = getDbConnection();
     authToken = testApp.createAuthToken();
   });
 

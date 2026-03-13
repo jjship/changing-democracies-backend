@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, ManyToOne, Column, Index, Unique, JoinColumn, BeforeInsert } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { NarrativeEntity } from './Narrative';
 import { FragmentEntity } from './Fragment';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('narrative_fragment')
 @Index('idx_fragment_narrative', ['fragment', 'narrative'])

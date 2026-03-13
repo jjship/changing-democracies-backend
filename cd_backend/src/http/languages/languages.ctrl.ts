@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyRequest } from 'fastify';
 import { Type, TypeBoxTypeProvider, Static } from '@fastify/type-provider-typebox';
 import { DataSource } from 'typeorm';
 import { LanguageEntity } from '../../db/entities/Language';
-import { languageSchema, createLanguageSchema, updateLanguageSchema } from './languages.schema';
 import { NotFoundError } from '../../errors';
+import { languageSchema, createLanguageSchema, updateLanguageSchema } from './languages.schema';
 
 type CreateLanguageRequest = FastifyRequest<{
   Body: Static<typeof createLanguageSchema>;

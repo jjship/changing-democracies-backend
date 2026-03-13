@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import axios from 'axios';
-import { createVideosApi } from './videos';
 import { logger } from '../../logger/logger';
+import { createVideosApi } from './videos';
 
 describe('VideosApi Integration Tests', () => {
   let axiosInstance: any;

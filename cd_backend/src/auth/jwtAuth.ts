@@ -10,6 +10,7 @@ declare module 'fastify' {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/naming-convention
 export interface SupabaseJWTPayload {
   aud: string;
   exp: number;
@@ -19,6 +20,7 @@ export interface SupabaseJWTPayload {
 }
 
 declare module '@fastify/jwt' {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   interface FastifyJWT {
     payload: SupabaseJWTPayload;
     user: {
@@ -45,7 +47,7 @@ export default fp(async (fastify: FastifyInstance) => {
         email: jwtUser.email,
         role: jwtUser.role,
       };
-    } catch (err) {
+    } catch {
       throw new UnauthorizedError('Unauthorized');
     }
   });

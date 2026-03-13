@@ -1,0 +1,287 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  backend-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: cd_backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: 'npm'
+          cache-dependency-path: cd_backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  cms-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: cd_cms
+    env:
+      VITE_SUPABASE_URL: https://dummy.supabase.co
+      VITE_SUPABASE_ANON_KEY: dummy-anon-key
+      VITE_BACKEND_URL: http://localhost:8083
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: 'npm'
+          cache-dependency-path: cd_cms/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: backend-quality
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cd_backend
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: cd_backend
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: cd_backend
+      TEST_DATABASE: cd_backend_test
+      BACKEND_HOST: 0.0.0.0
+      BACKEND_PORT: 8083
+      BACKEND_URL: http://localhost:8083
+      BUNNY_STREAM_BASE_URL: https://dummy.bunny.net
+      BUNNY_STREAM_API_KEY: dummy-key
+      BUNNY_STREAM_LIBRARY_ID: dummy-lib
+      BUNNY_STREAM_PULL_ZONE: dummy-zone
+      BUNNY_STREAM_COLLECTION_ID: dummy-collection
+      COUNTRY_LAYER_BASE_URL: https://dummy.countrylayer.com
+      COUNTRY_LAYER_API_KEY: dummy-key
+      SYNC_COUNTRIES: 'false'
+      SYNC_LEGACY_FRAGMENTS: 'false'
+      SUPABASE_JWT_SECRET: dummy-jwt-secret-that-is-long-enough
+      GITHUB_API_KEY: dummy-github-key
+      CLIENT_API_KEY: dummy-client-key
+      CMS_URL: http://localhost:3001
+      CLIENT_URL: http://localhost:3000
+      USE_NEON_DB: 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.12'
+          cache: 'npm'
+          cache-dependency-path: cd_backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend-quality, cms-quality]
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build backend Docker image
+        run: docker build --target production -f cd_backend/Dockerfile cd_backend/
+
+      - name: Build CMS Docker image
+        run: >
+          docker build --target production -f cd_cms/Dockerfile cd_cms/
+          --build-arg VITE_SUPABASE_URL=https://dummy.supabase.co
+          --build-arg VITE_SUPABASE_ANON_KEY=dummy-key
+          --build-arg VITE_BACKEND_URL=http://localhost:8083
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [integration-tests, docker-build]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    environment: production
+    timeout-minutes: 15
+    concurrency:
+      group: production_environment
+      cancel-in-progress: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          cat >> ~/.ssh/config << EOF
+          Host deployment_target
+            HostName ${{ secrets.VM_HOST }}
+            User ${{ secrets.VM_USER }}
+            Port ${{ secrets.VM_SSH_PORT }}
+            IdentityFile ~/.ssh/deploy_key
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+          EOF
+          chmod 600 ~/.ssh/config
+
+      - name: Perform Docker cleanup
+        run: |
+          ssh deployment_target 'bash -s' < scripts/docker-cleanup.sh
+
+      - name: Save current state for rollback
+        id: save_state
+        run: |
+          PREVIOUS_COMMIT=$(ssh deployment_target '
+            cd /opt/cd_admin
+            if [ -d ".git" ]; then
+              git rev-parse HEAD
+            fi
+          ')
+
+          CONTAINERS=$(ssh deployment_target '
+            cd /opt/cd_admin
+            docker compose ps --format "{{.Name}}" | tr "\n" " "
+          ')
+
+          if [ ! -z "$PREVIOUS_COMMIT" ]; then
+            echo "PREVIOUS_COMMIT=$PREVIOUS_COMMIT" >> $GITHUB_ENV
+          fi
+
+      - name: Deploy to VM
+        id: deploy
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+        run: |
+          ssh deployment_target '
+            set -eo pipefail
+
+            echo "Starting deployment of commit $GITHUB_SHA..."
+            cd /opt/cd_admin
+
+            if [ -d ".git" ]; then
+              git fetch origin main
+              git reset --hard origin/main
+            else
+              git clone ${{ github.server_url }}/${{ github.repository }} /tmp/cd_admin_temp
+              cp -r /tmp/cd_admin_temp/. .
+              rm -rf /tmp/cd_admin_temp
+            fi
+
+            ./scripts/deploy.sh;
+          '
+
+      - name: Verify deployment
+        id: verify
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.API_URL }}/health; then
+            echo "::error::Health check failed"
+            exit 1
+          fi
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment failed, initiating rollback..."
+          ssh deployment_target '
+            set -eo pipefail
+            cd /opt/cd_admin
+
+            echo "Rolling back to commit ${{ env.PREVIOUS_COMMIT }}"
+
+            git reset --hard ${{ env.PREVIOUS_COMMIT }}
+
+            # Run the deploy script to set up the environment and start services
+            ./scripts/deploy.sh
+
+            echo "Rollback completed"
+          '
+
+      - name: Verify rollback
+        if: failure()
+        run: |
+          sleep 10
+          if ! curl -sSf http://${{ secrets.VM_HOST }}/health; then
+            echo "::error::Rollback verification failed"
+            exit 1
+          fi
+          echo "Rollback verified successfully"
+
+      - name: Log deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "Deployment successful"
+          elif [ "${{ job.status }}" == "failure" ]; then
+            echo "Deployment failed and rolled back"
+          fi
+
+      - name: Create issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: 'Deployment Failed',
+              body: `Deployment failed for commit ${context.sha}\nWorkflow: ${context.workflow}\nSee: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            })

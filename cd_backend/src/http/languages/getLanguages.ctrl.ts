@@ -1,9 +1,9 @@
 import { DataSource } from 'typeorm';
-import { Type, TypeBoxTypeProvider, Static } from '@fastify/type-provider-typebox';
-import { LanguageEntity } from '../../db/entities/Language';
-import { languageSchema } from './languages.schema';
+import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
+import { LanguageEntity } from '../../db/entities/Language';
 import { requireApiKeyOrJwt } from '../../auth/apiKeyAuth';
+import { languageSchema } from './languages.schema';
 
 export const registerGetLanguagesController =
   (app: FastifyInstance) =>
@@ -21,7 +21,7 @@ export const registerGetLanguagesController =
             id: language.id,
             name: language.name,
             code: language.code,
-          }))
+          })),
         );
       },
     });

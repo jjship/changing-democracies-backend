@@ -1,3 +1,4 @@
+import { In } from 'typeorm';
 import { getDbConnection } from '../db/db';
 import { CountryEntity } from '../db/entities/Country';
 import { FragmentEntity } from '../db/entities/Fragment';
@@ -12,7 +13,6 @@ import { LanguageEntity } from '../db/entities/Language';
 import { NameEntity } from '../db/entities/Name';
 import { NarrativeFragmentEntity } from '../db/entities/NarrativeFragment';
 import { TagCategoryEntity } from '../db/entities/TagCategory';
-import { In } from 'typeorm';
 
 export const testDb = {
   async saveTestCountries(countries: { name: string; code: string }[]) {
@@ -150,7 +150,7 @@ export const testDb = {
   },
 
   async createTestDescriptions(
-    descriptions: Array<{ languageCode: string; description: string[]; narrative: NarrativeEntity }>
+    descriptions: Array<{ languageCode: string; description: string[]; narrative: NarrativeEntity }>,
   ) {
     const dbConnection = getDbConnection();
     const languageRepo = dbConnection.getRepository(LanguageEntity);
@@ -166,14 +166,14 @@ export const testDb = {
         description.description = desc.description;
         description.narrative = desc.narrative;
         return description;
-      })
+      }),
     );
 
     return dbConnection.manager.save(descriptionEntities);
   },
 
   async createTestNames(
-    names: Array<{ languageCode: string; name: string; type: string; narrative: NarrativeEntity }>
+    names: Array<{ languageCode: string; name: string; type: string; narrative: NarrativeEntity }>,
   ) {
     const dbConnection = getDbConnection();
     const languageRepo = dbConnection.getRepository(LanguageEntity);
@@ -190,14 +190,14 @@ export const testDb = {
         nameEntity.type = name.type as any;
         nameEntity.narrative = name.narrative;
         return nameEntity;
-      })
+      }),
     );
 
     return dbConnection.manager.save(nameEntities);
   },
 
   async createTestNarrativeFragments(
-    fragments: Array<{ fragmentId: string; sequence: number; narrative: NarrativeEntity }>
+    fragments: Array<{ fragmentId: string; sequence: number; narrative: NarrativeEntity }>,
   ) {
     const dbConnection = getDbConnection();
     const fragmentRepo = dbConnection.getRepository(FragmentEntity);
@@ -213,7 +213,7 @@ export const testDb = {
         narrativeFragment.sequence = fragment.sequence;
         narrativeFragment.narrative = fragment.narrative;
         return narrativeFragment;
-      })
+      }),
     );
 
     return dbConnection.manager.save(fragmentEntities);
@@ -253,7 +253,7 @@ export const testDb = {
             bioEntity.bio = bio.bio;
             bioEntity.language = language;
             return entityManager.save(BioEntity, bioEntity);
-          })
+          }),
         );
       }
 
@@ -262,10 +262,9 @@ export const testDb = {
   },
 
   async saveTestTagCategories(
-    categories: Array<{ names: Array<{ languageCode: string; name: string }>; tagIds?: string[] }>
+    categories: Array<{ names: Array<{ languageCode: string; name: string }>; tagIds?: string[] }>,
   ) {
     const dbConnection = getDbConnection();
-    const categoryRepo = dbConnection.getRepository(TagCategoryEntity);
     const languageRepo = dbConnection.getRepository(LanguageEntity);
     const tagRepo = dbConnection.getRepository(TagEntity);
 
@@ -285,7 +284,7 @@ export const testDb = {
             name.type = 'TagCategory';
             name.tagCategory = tagCategory;
             return name;
-          })
+          }),
         );
 
         // Handle tag associations if tagIds are provided

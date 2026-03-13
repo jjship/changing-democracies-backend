@@ -5,7 +5,7 @@ import { FragmentEntity } from '../../db/entities/Fragment';
 import { PersonEntity } from '../../db/entities/Person';
 import { TagEntity } from '../../db/entities/Tag';
 import { parseFragmentEntity } from '../../domain/fragments/fragments.api';
-import { errorResponseSchema, NotFoundError } from '../../errors';
+import { NotFoundError } from '../../errors';
 
 export const registerUpdateFragmentsController =
   (app: FastifyInstance) =>
@@ -34,6 +34,7 @@ export const registerUpdateFragmentsController =
 
           const updates = await Promise.all(
             req.body.data.map(async (update) => {
+              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
               const fragment = existingFragments.find((f) => f.id === update.id)!;
 
               if (update.title) {
@@ -63,7 +64,7 @@ export const registerUpdateFragmentsController =
               }
 
               return fragment;
-            })
+            }),
           );
 
           await entityManager.save(updates);
@@ -100,7 +101,7 @@ function updateFragmentsSchema() {
           title: Type.Optional(Type.String()),
           personId: Type.Optional(Type.String()),
           tagIds: Type.Optional(Type.Array(Type.String())),
-        })
+        }),
       ),
     }),
     response: {
@@ -118,7 +119,7 @@ function updateFragmentsSchema() {
                 Type.Object({
                   id: Type.String(),
                   name: Type.String(),
-                })
+                }),
               ),
               tags: Type.Array(
                 Type.Object({
@@ -127,12 +128,12 @@ function updateFragmentsSchema() {
                     Type.Object({
                       languageCode: Type.String(),
                       name: Type.String(),
-                    })
+                    }),
                   ),
-                })
+                }),
               ),
             }),
-          })
+          }),
         ),
       }),
     },

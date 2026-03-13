@@ -6,7 +6,7 @@ export const tagSummarySchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
 });
 
@@ -17,11 +17,11 @@ export const tagCategorySchema = Type.Object(
       Type.Object({
         languageCode: Type.String(),
         name: Type.String(),
-      })
+      }),
     ),
     tags: Type.Array(tagSummarySchema),
   },
-  { $id: 'TagCategory' }
+  { $id: 'TagCategory' },
 );
 
 export const createTagCategorySchema = Type.Object({
@@ -29,7 +29,7 @@ export const createTagCategorySchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
   tagIds: Type.Optional(Type.Array(Type.String())),
 });
@@ -39,7 +39,7 @@ export const updateTagCategorySchema = Type.Object({
     Type.Object({
       languageCode: Type.String(),
       name: Type.String(),
-    })
+    }),
   ),
   tagIds: Type.Optional(Type.Array(Type.String())),
 });

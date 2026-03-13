@@ -1,13 +1,16 @@
 import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { DataSource } from 'typeorm';
 import { getDbConnection } from '../../db/db';
-import uuid4 from 'uuid4';
 import { ENV } from '../../env';
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('GET /narratives', async () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let apiKey: string;
 
   beforeEach(async () => {
@@ -36,7 +39,8 @@ describe('GET /narratives', async () => {
 
     await testDb.saveTestFragments(testVideos);
 
-    const narrative1 = await testApp
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _narrative1 = await testApp
       .request()
       .post('/narratives')
       .headers({ Authorization: `Bearer ${authToken}` })
@@ -66,7 +70,8 @@ describe('GET /narratives', async () => {
       })
       .end();
 
-    const narrative2 = await testApp
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _narrative2 = await testApp
       .request()
       .post('/narratives')
       .headers({ Authorization: `Bearer ${authToken}` })

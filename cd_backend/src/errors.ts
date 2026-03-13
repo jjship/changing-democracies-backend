@@ -33,6 +33,6 @@ export const errorResponseSchema = Type.Object({
       status: Type.String(),
       title: Type.String(),
       detail: Type.String(),
-    })
+    }),
   ),
 });

@@ -7,7 +7,7 @@ import { NameEntity } from '../../db/entities/Name';
 import { LanguageEntity } from '../../db/entities/Language';
 import { TagEntity } from '../../db/entities/Tag';
 import { NotFoundError } from '../../errors';
-import { tagCategorySchema, createTagCategorySchema } from './tag-category.schema';
+import { tagCategorySchema } from './tagCategory.schema';
 
 export const registerTagCategoryControllers =
   (app: FastifyInstance) =>
@@ -22,7 +22,7 @@ export const registerTagCategoryControllers =
             Type.Object({
               languageCode: Type.String(),
               name: Type.String(),
-            })
+            }),
           ),
           tagIds: Type.Optional(Type.Array(Type.String())),
         }),
@@ -73,7 +73,7 @@ export const registerTagCategoryControllers =
             name.type = 'TagCategory';
             name.tagCategory = category;
             return name;
-          })
+          }),
         );
 
         category.names = newNames;
@@ -148,7 +148,7 @@ const parseTagCategoryEntity = (
   category: TagCategoryEntity & {
     names?: NameEntity[] | null;
     tags?: (TagEntity & { names?: NameEntity[] | null })[] | null;
-  }
+  },
 ) => {
   return {
     id: category.id,

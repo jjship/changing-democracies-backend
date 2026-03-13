@@ -1,13 +1,14 @@
 import uuid4 from 'uuid4';
+import { expect } from 'chai';
+import { DataSource, In } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { NarrativeEntity } from '../../db/entities/Narrative';
-import { DataSource, In } from 'typeorm';
 import { FragmentEntity } from '../../db/entities/Fragment';
 
 describe('DELETE /narratives/:id', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
 
   beforeEach(async () => {
@@ -71,9 +72,11 @@ describe('DELETE /narratives/:id', () => {
       relations: ['descriptions', 'names', 'narrativeFragments'],
     });
     expect(narrativeBeforeDelete).to.not.be.null;
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
     expect(narrativeBeforeDelete!.descriptions).to.have.length(1);
     expect(narrativeBeforeDelete!.names).to.have.length(1);
     expect(narrativeBeforeDelete!.narrativeFragments).to.have.length(2);
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
     // Perform delete request
     const res = await testApp

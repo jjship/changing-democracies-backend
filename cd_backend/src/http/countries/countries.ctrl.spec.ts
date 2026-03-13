@@ -1,12 +1,12 @@
 import { expect } from 'chai';
 import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { getDbConnection } from '../../db/db';
 import { LanguageEntity } from '../../db/entities/Language';
 import { CountryEntity } from '../../db/entities/Country';
 import { NameEntity } from '../../db/entities/Name';
 import { testDb } from '../../spec/testDb';
-import uuid4 from 'uuid4';
 
 describe('Countries Controller', () => {
   let dbConnection: DataSource;

@@ -1,6 +1,5 @@
 import { FastifyBaseLogger } from 'fastify';
 import { DataSource } from 'typeorm';
-import { CountryData } from '../../services/coutriesApi/countriesApiClient';
 import { LanguageEntity } from '../../db/entities/Language';
 
 export const saveNewLanguages = async ({

@@ -1,14 +1,15 @@
 import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { DataSource } from 'typeorm';
 import { getDbConnection } from '../../db/db';
-import uuid4 from 'uuid4';
 import { ENV } from '../../env';
 import { PersonEntity } from '../../db/entities/Person';
 
 // Describe the test suite for the getClientNarratives endpoint
 
+// eslint-disable-next-line @typescript-eslint/require-await
 describe('GET /client-narratives', async () => {
   let dbConnection: DataSource;
   let apiKey: string;
@@ -129,8 +130,8 @@ describe('GET /client-narratives', async () => {
           names: [{ languageCode: 'EN', name: 'United States' }],
         },
         otherPaths: [],
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid1}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid1}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid1}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid1}/thumbnail.jpg`,
       },
       {
         guid: guid2,
@@ -143,13 +144,13 @@ describe('GET /client-narratives', async () => {
           names: [{ languageCode: 'EN', name: 'United States' }],
         },
         otherPaths: [],
-        playerUrl: `https://iframe.mediadelivery.net/embed/239326/${guid2}`,
-        thumbnailUrl: `https://vz-cac74041-8b3.b-cdn.net/${guid2}/thumbnail.jpg`,
+        playerUrl: `https://iframe.mediadelivery.net/embed/${ENV.BUNNY_STREAM_LIBRARY_ID}/${guid2}`,
+        thumbnailUrl: `https://${ENV.BUNNY_STREAM_PULL_ZONE}.b-cdn.net/${guid2}/thumbnail.jpg`,
       },
     ];
 
     const fragmentsWithoutBios = narrativeRes.fragments.map(
-      ({ bios, ...rest }: { bios: { languageCode: string; bio: string }[]; [key: string]: any }) => rest
+      ({ bios, ...rest }: { bios: { languageCode: string; bio: string }[]; [key: string]: any }) => rest,
     );
 
     // Check the fragment properties match expected values

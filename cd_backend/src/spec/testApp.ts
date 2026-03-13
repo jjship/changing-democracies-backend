@@ -1,11 +1,9 @@
-import { Response } from 'light-my-request';
 import sinon from 'sinon';
-import { expect } from 'chai';
+import { FastifyInstance } from 'fastify';
+import jwt from 'jsonwebtoken';
 import { AppDeps, setupApp } from '../app';
 import { getDbConnection } from '../db/db';
-import { FastifyInstance } from 'fastify';
 import { ENV } from '../env';
-import jwt from 'jsonwebtoken';
 
 type TestApp = {
   request: () => ReturnType<FastifyInstance['inject']>;
@@ -44,7 +42,7 @@ export async function setupTestApp({ dbConnection, bunnyStream }: Partial<AppDep
         email: testUser.email,
         role: testUser.role,
       },
-      ENV.SUPABASE_JWT_SECRET
+      ENV.SUPABASE_JWT_SECRET,
     );
   }
 

@@ -21,7 +21,7 @@ export function TagCategoriesPage() {
     try {
       const data = await tagCategoriesApi.getTagCategories();
       setTagCategories(data);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading tag categories, please try again',
         status: 'error',
@@ -50,7 +50,7 @@ export function TagCategoriesPage() {
         duration: 3000,
       });
       setRefresh(!refresh);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error deleting tag category',
         status: 'error',

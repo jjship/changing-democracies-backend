@@ -1,16 +1,18 @@
+import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { PersonEntity } from '../../db/entities/Person';
-import { DataSource } from 'typeorm';
 import { ENV } from '../../env';
-import uuid4 from 'uuid4';
 
 describe('GET /person', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
   let authToken: string;
   let existingPerson: PersonEntity;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
@@ -48,7 +50,7 @@ describe('GET /person', () => {
     const person = await res.json();
     expect(person.attributes.name).to.equal('John Doe');
     expect(person.attributes.countryCode).to.equal('US');
-    // @ts-ignore
+    // @ts-expect-error - sorting untyped response
     const sortedBios = person.attributes.bios.sort((a, b) => a.languageCode.localeCompare(b.languageCode));
     const expectedBios = [
       { bio: 'English biography', languageCode: 'EN' },
@@ -71,7 +73,7 @@ describe('GET /person', () => {
     const person = await res.json();
     expect(person.attributes.name).to.equal('John Doe');
     expect(person.attributes.countryCode).to.equal('US');
-    // @ts-ignore
+    // @ts-expect-error - sorting untyped response
     const sortedBios = person.attributes.bios.sort((a, b) => a.languageCode.localeCompare(b.languageCode));
     const expectedBios = [
       { bio: 'English biography', languageCode: 'EN' },

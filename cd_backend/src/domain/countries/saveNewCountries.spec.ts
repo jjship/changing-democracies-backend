@@ -1,10 +1,9 @@
-import sinon from 'sinon';
+import pino from 'pino';
+import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { CountryEntity } from '../../db/entities/Country';
 import { testDb } from '../../spec/testDb';
 import { saveNewCountries } from './saveNewCountries';
-import pino from 'pino';
-import { expect } from 'chai';
 
 describe('saveNewCountries', () => {
   it('should add countries if not already in DB', async () => {

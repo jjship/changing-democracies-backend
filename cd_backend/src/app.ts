@@ -1,20 +1,21 @@
 import fastify, { FastifyBaseLogger } from 'fastify';
+import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
+import { DataSource } from 'typeorm';
+import rateLimit from '@fastify/rate-limit';
 import { logger } from './services/logger/logger';
 import jwtAuthPlugin from './auth/jwtAuth';
 import apiKeyAuthPlugin from './auth/apiKeyAuth';
-import cors from '@fastify/cors';
-import helmet from '@fastify/helmet';
 import { registerGetFragmentsController } from './http/fragments/getFragments.ctrl';
 import { registerCreateNarrativeController } from './http/narratives/createNarrative.ctrl';
 import { BunnyStreamApiClient } from './services/bunnyStream/bunnyStreamApiClient';
-import { DataSource } from 'typeorm';
 import { registerUpdateFragmentsController } from './http/fragments/updateFragments.ctrl';
 import { registerUpdateNarrativeController } from './http/narratives/updateNarrative.ctrl';
 import { registerDeleteNarrativeController } from './http/narratives/deleteNarrative.ctrl';
 import { registerTagControllers } from './http/tags/tags.ctrl';
 import { ENV } from './env';
 import { registerCountryControllers } from './http/countries/countries.ctrl';
-import { NotFoundError, HttpError } from './errors';
+import { HttpError } from './errors';
 import { registerGetNarrativesController } from './http/narratives/getNarratives.ctrl';
 import { registerLanguageControllers } from './http/languages/languages.ctrl';
 import { registerSyncFragmentsController } from './http/syncFragments.ctrl';
@@ -29,8 +30,7 @@ import { registerGetLanguagesController } from './http/languages/getLanguages.ct
 import { registerDeleteDuplicateCaptionsController } from './http/deleteDuplicateCaptions.ctrl';
 import createGetCachedClientNarratives from './domain/narratives/getCachedClientNarratives';
 import createGetCachedClientFragments from './domain/fragments/getCachedClientFragments';
-import rateLimit from '@fastify/rate-limit';
-import { registerTagCategoryControllers } from './http/tag-categories/tag-categories.ctrl';
+import { registerTagCategoryControllers } from './http/tag-categories/tagCategories.ctrl';
 import { registerGetClientTagCategoriesController } from './http/client/getClientTagCategories.ctrl';
 import createGetCachedClientTagCategories from './domain/tagCategories/getCachedClientTagCategories';
 
@@ -103,6 +103,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     reply.status(500).send({ ok: false, error: 'Internal Server Error' });
   });
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   app.get('/health', async () => ({ status: 'ok' }));
 
   await app.register(async (app) => {
@@ -155,7 +156,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
         host: request.headers.host,
         remoteAddress: request.ip,
       },
-      `Route ${request.method}:${request.url} not found`
+      `Route ${request.method}:${request.url} not found`,
     );
 
     // Return 500 for non-existent routes to avoid revealing route existence

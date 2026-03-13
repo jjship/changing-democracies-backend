@@ -32,6 +32,7 @@ export const registerGetClientFragmentsController =
           limit: validatedLimit,
         });
 
+        // eslint-disable-next-line no-console
         console.log({ len: clientFragments.data.length });
 
         // Add cache headers to improve client-side caching
@@ -87,9 +88,9 @@ function getClientFragmentsSchema() {
               Type.Object({
                 id: Type.String(),
                 name: Type.String(),
-              })
+              }),
             ),
-          })
+          }),
         ),
         pagination: Type.Object({
           total: Type.Number(),

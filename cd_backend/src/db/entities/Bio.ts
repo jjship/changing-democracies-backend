@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, BeforeInsert, Index } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { PersonEntity } from './Person';
 import { LanguageEntity } from './Language';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('bio')
 @Index('idx_bio_person_language', ['person', 'language'])

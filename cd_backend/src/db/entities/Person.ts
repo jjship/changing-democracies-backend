@@ -1,8 +1,8 @@
 import { Entity, PrimaryColumn, Column, OneToMany, ManyToOne, JoinColumn, BeforeInsert } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { FragmentEntity } from './Fragment';
 import { BioEntity } from './Bio';
 import { CountryEntity } from './Country';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('person')
 export class PersonEntity {

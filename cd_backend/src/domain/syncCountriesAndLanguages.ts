@@ -1,9 +1,9 @@
 import { FastifyBaseLogger } from 'fastify';
 import { DataSource } from 'typeorm';
 import { CountriesApiClient, CountryData } from '../services/coutriesApi/countriesApiClient';
+import { ENV } from '../env';
 import { saveNewCountries } from './countries/saveNewCountries';
 import { saveNewLanguages } from './languages/saveNewLanguages';
-import { ENV } from '../env';
 
 export const syncCountriesAndLanguages = async ({
   dbConnection,
@@ -44,6 +44,6 @@ function getBaseCountries() {
 
       return acc;
     },
-    [] as Pick<CountryData, 'name' | 'alpha2Code'>[]
+    [] as Pick<CountryData, 'name' | 'alpha2Code'>[],
   );
 }

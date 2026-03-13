@@ -1,12 +1,13 @@
 import uuid4 from 'uuid4';
+import { expect } from 'chai';
+import { DataSource, In } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { DataSource, In } from 'typeorm';
 
 describe('PATCH /fragments', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let dbConnection: DataSource;
 
   beforeEach(async () => {

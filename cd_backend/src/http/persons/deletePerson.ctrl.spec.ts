@@ -1,19 +1,20 @@
+import { expect } from 'chai';
+import { DataSource } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
+import uuid4 from 'uuid4';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { PersonEntity } from '../../db/entities/Person';
 import { BioEntity } from '../../db/entities/Bio';
-import { DataSource } from 'typeorm';
 import { FragmentEntity } from '../../db/entities/Fragment';
-import { v4 as uuidv4 } from 'uuid';
 import { ENV } from '../../env';
-import uuid4 from 'uuid4';
 
 describe('DELETE /persons/:id', () => {
   let dbConnection: DataSource;
   let authToken: string;
   let existingPerson: PersonEntity;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const apiKey = ENV.CLIENT_API_KEY;
 
   beforeEach(async () => {
@@ -87,8 +88,8 @@ describe('DELETE /persons/:id', () => {
     if (existingPerson.fragments) {
       const currentFragments = await Promise.all(
         existingPerson.fragments.map((fragment) =>
-          dbConnection.getRepository(FragmentEntity).findOne({ where: { id: fragment.id } })
-        )
+          dbConnection.getRepository(FragmentEntity).findOne({ where: { id: fragment.id } }),
+        ),
       );
       currentFragments.forEach((fragment) => expect(fragment).not.to.be.null);
     }

@@ -31,7 +31,7 @@ export class AddTagCategory1742326991000 implements MigrationInterface {
     await queryRunner.query(`CREATE INDEX "idx_tag_category_tags_category" ON "tag_category_tags" ("tag_category_id")`);
     await queryRunner.query(`CREATE INDEX "idx_tag_category_tags_tag" ON "tag_category_tags" ("tag_id")`);
     await queryRunner.query(
-      `CREATE INDEX "idx_name_tag_category_language" ON "name" ("tag_category_id", "language_id") WHERE "tag_category_id" IS NOT NULL`
+      `CREATE INDEX "idx_name_tag_category_language" ON "name" ("tag_category_id", "language_id") WHERE "tag_category_id" IS NOT NULL`,
     );
   }
 

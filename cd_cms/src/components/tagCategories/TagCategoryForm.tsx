@@ -55,7 +55,7 @@ export function TagCategoryForm({
       if (tagCategory.tags) {
         setSelectedTagIds(tagCategory.tags.map((t) => t.id));
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading tag category',
         status: 'error',
@@ -71,7 +71,7 @@ export function TagCategoryForm({
       if (langs.length > 0 && !languageCode) {
         setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading languages',
         status: 'error',
@@ -85,7 +85,7 @@ export function TagCategoryForm({
     try {
       const allTags = await tagsApi.getTags();
       setTags(allTags);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading tags',
         status: 'error',
@@ -125,7 +125,7 @@ export function TagCategoryForm({
       } else {
         setLanguageCode('');
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: `Error ${tagCategory ? 'updating' : 'creating'} tag category`,
         status: 'error',

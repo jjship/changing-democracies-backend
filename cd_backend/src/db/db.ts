@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { ConnectionNotFoundError, DataSource, DataSourceOptions } from 'typeorm';
-import { getDataSourceOptions } from './dbConfig';
 import { logger } from '../services/logger/logger';
+import { getDataSourceOptions } from './dbConfig';
 
 export { createDbConnection, getDbConnection };
 
@@ -21,7 +21,7 @@ async function createDbConnection(options?: Partial<DataSourceOptions>) {
 
   // Add retry logic
   let retries = 5;
-  let lastError: any;
+  let lastError: unknown;
 
   while (retries > 0) {
     try {
@@ -29,10 +29,10 @@ async function createDbConnection(options?: Partial<DataSourceOptions>) {
       const connection = await dataSource.initialize();
       logger.info('Database connection established successfully');
       return connection;
-    } catch (error) {
-      lastError = error;
+    } catch (err) {
+      lastError = err;
       logger.warn(
-        `Failed to connect to database. Retrying in 2 seconds. Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to connect to database. Retrying in 2 seconds. Error: ${err instanceof Error ? err.message : 'Unknown error'}`,
       );
       retries--;
 

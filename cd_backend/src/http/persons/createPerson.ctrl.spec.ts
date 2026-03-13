@@ -1,10 +1,9 @@
+import { expect } from 'chai';
+import { DataSource } from 'typeorm';
 import { setupTestApp } from '../../spec/testApp';
 import { testDb } from '../../spec/testDb';
-import { expect } from 'chai';
 import { getDbConnection } from '../../db/db';
 import { PersonEntity } from '../../db/entities/Person';
-import { DataSource } from 'typeorm';
-import { ENV } from '../../env';
 
 describe('POST /persons', () => {
   let dbConnection: DataSource;
@@ -48,7 +47,7 @@ describe('POST /persons', () => {
     const person = await res.json();
     expect(person.attributes.name).to.equal('John Doe');
     expect(person.attributes.countryCode).to.equal('US');
-    // @ts-ignore
+    // @ts-expect-error - sorting untyped response
     const sortedBios = person.attributes.bios.sort((a, b) => a.languageCode.localeCompare(b.languageCode));
     const expectedBios = [
       { bio: 'English biography', languageCode: 'EN' },
@@ -67,7 +66,7 @@ describe('POST /persons', () => {
     expect(createdPerson?.country?.code).to.equal('US');
     expect(createdPerson?.bios).to.have.length(2);
     expect(createdPerson?.bios?.map((b) => b.bio).sort()).to.deep.equal(
-      ['English biography', 'Spanish biography'].sort()
+      ['English biography', 'Spanish biography'].sort(),
     );
   });
 

@@ -10,11 +10,10 @@ import {
   JoinColumn,
   BeforeInsert,
 } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { PersonEntity } from './Person';
 import { TagEntity } from './Tag';
 import { NarrativeFragmentEntity } from './NarrativeFragment';
-import { NameEntity } from './Name';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('fragment')
 @Index('idx_fragment_title', ['title'])

@@ -1,8 +1,7 @@
 import { Entity, PrimaryColumn, Column, OneToMany, Index, BeforeInsert } from 'typeorm';
-import { PersonEntity } from './Person';
+import { v4 as uuidv4 } from 'uuid';
 import { BioEntity } from './Bio';
 import { DescriptionEntity } from './Description';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('language')
 export class LanguageEntity {

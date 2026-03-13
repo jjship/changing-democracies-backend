@@ -28,13 +28,13 @@ export type BunnyVideo = {
   averageWatchTime: number;
   totalWatchTime: number;
   category: string;
-  chapters: any[];
-  moments: any[];
+  chapters: unknown[];
+  moments: unknown[];
   metaTags: {
     property: string;
     value: string;
   }[];
-  transcodingMessages: any[];
+  transcodingMessages: unknown[];
 };
 
 type GetVideosResponse = {
@@ -53,10 +53,10 @@ const MAX_ATTEMPTS_PER_REQUEST = 3;
 const REQUEST_TIMEOUT_MS = 10000; // 10 seconds timeout for individual requests
 
 // Helper function to determine if an error is a connection-related error
-const isConnectionError = (error: any): boolean => {
-  if (error?.code) {
+const isConnectionError = (error: unknown): boolean => {
+  if (error && typeof error === 'object' && 'code' in error) {
     return ['ECONNABORTED', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'EHOSTUNREACH'].includes(
-      error.code
+      (error as { code: string }).code,
     );
   }
   return false;
@@ -88,7 +88,7 @@ export const createVideosApi =
                 const error = err as Error | AxiosError;
 
                 // Check if this is a network-related error that could benefit from retry
-                if (isConnectionError((error as any).code) || (error as AxiosError).code === 'ECONNABORTED') {
+                if (isConnectionError(error) || (error as AxiosError).code === 'ECONNABORTED') {
                   retryCount++;
 
                   if (retryCount < maxRetries) {
@@ -102,7 +102,7 @@ export const createVideosApi =
                         retryAttempt: retryCount,
                         backoffMs: backoffTime,
                       },
-                      'Connection error while deleting video captions. Retrying...'
+                      'Connection error while deleting video captions. Retrying...',
                     );
 
                     await delay(backoffTime);
@@ -112,7 +112,7 @@ export const createVideosApi =
 
                 logger.error(
                   { err, videoId, srclang, retryAttempts: retryCount },
-                  'Error while deleting video captions. Giving up.'
+                  'Error while deleting video captions. Giving up.',
                 );
                 throw err;
               }
@@ -149,7 +149,7 @@ export const createVideosApi =
               if (pagesFetched >= MAX_PAGES) {
                 logger.warn(
                   { currentPage, totalPages: pagesFetched, videosCollected: allVideos.length },
-                  'Reached maximum page limit. Breaking to prevent infinite loop.'
+                  'Reached maximum page limit. Breaking to prevent infinite loop.',
                 );
                 break;
               }
@@ -192,13 +192,13 @@ export const createVideosApi =
                       totalCollected: allVideos.length,
                       expectedTotal: totalItems,
                     },
-                    'Successfully fetched page of videos'
+                    'Successfully fetched page of videos',
                   );
                 } catch (err) {
                   const error = err as Error | AxiosError;
 
                   // Check if this is a network-related error that could benefit from retry
-                  if (isConnectionError((error as any).code) || (error as AxiosError).code === 'ECONNABORTED') {
+                  if (isConnectionError(error) || (error as AxiosError).code === 'ECONNABORTED') {
                     pageRetryCount++;
 
                     if (pageRetryCount < maxPageRetries) {
@@ -211,7 +211,7 @@ export const createVideosApi =
                           retryAttempt: pageRetryCount,
                           backoffMs: backoffTime,
                         },
-                        'Connection error while fetching videos page. Retrying...'
+                        'Connection error while fetching videos page. Retrying...',
                       );
 
                       await delay(backoffTime);
@@ -226,7 +226,7 @@ export const createVideosApi =
                       currentPage,
                       retryAttempts: pageRetryCount,
                     },
-                    'Error while fetching videos page. Giving up on this page.'
+                    'Error while fetching videos page. Giving up on this page.',
                   );
 
                   // Instead of throwing, we'll mark the page as failed and continue
@@ -242,7 +242,7 @@ export const createVideosApi =
                     totalCollected: allVideos.length,
                     expectedTotal: totalItems,
                   },
-                  'Breaking video fetch loop due to persistent errors'
+                  'Breaking video fetch loop due to persistent errors',
                 );
                 break;
               }
@@ -259,7 +259,7 @@ export const createVideosApi =
                 totalPages: pagesFetched,
                 expectedTotal: totalItems,
               },
-              'Completed fetching videos'
+              'Completed fetching videos',
             );
 
             return allVideos;

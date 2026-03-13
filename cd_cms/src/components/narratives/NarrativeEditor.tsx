@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import {
   Box,
   Card,
@@ -94,7 +94,7 @@ export default function NarrativeEditor({
     markUnsaved();
   };
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult) => {
     if (!result.destination || !currentNarrative) return;
 
     const fragments = currentNarrative.fragmentsSequence

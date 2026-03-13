@@ -1,10 +1,10 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, JoinColumn, BeforeInsert, Index } from 'typeorm';
+import { v4 as uuidv4 } from 'uuid';
 import { NarrativeEntity } from './Narrative';
 import { LanguageEntity } from './Language';
 import { CountryEntity } from './Country';
 import { TagEntity } from './Tag';
 import { TagCategoryEntity } from './TagCategory';
-import { v4 as uuidv4 } from 'uuid';
 
 @Entity('name')
 @Index('idx_name_narrative_language', ['narrative', 'language'])
