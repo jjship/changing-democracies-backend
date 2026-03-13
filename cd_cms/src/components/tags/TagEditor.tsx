@@ -150,14 +150,13 @@ export default function TagEditor({
       const fragmentIds = tagFragments.map((fragment) => fragment.id);
 
       // Update or create the tag
-      let savedTag: Tag;
       if (currentTag.id) {
-        savedTag = await tagsApi.updateTag(currentTag.id, currentTag.names, fragmentIds);
+        await tagsApi.updateTag(currentTag.id, currentTag.names, fragmentIds);
       } else {
-        savedTag = await tagsApi.createTag(currentTag.names);
+        const createdTag = await tagsApi.createTag(currentTag.names);
         // If we have fragments to associate and this is a new tag, we need to update it again
         if (fragmentIds.length > 0) {
-          savedTag = await tagsApi.updateTag(savedTag.id, savedTag.names, fragmentIds);
+          await tagsApi.updateTag(createdTag.id, createdTag.names, fragmentIds);
         }
       }
 

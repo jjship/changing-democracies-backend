@@ -38,7 +38,7 @@ export function PersonForm({
         setBios(person.bios);
         setLanguageCode(person.bios[0].languageCode);
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading person bio',
         status: 'error',
@@ -54,7 +54,7 @@ export function PersonForm({
       if (langs.length > 0 && !languageCode) {
         setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading languages',
         status: 'error',
@@ -124,7 +124,7 @@ export function PersonForm({
       } else {
         setLanguageCode('');
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: `Error ${person ? 'updating' : 'creating'} person`,
         status: 'error',

@@ -30,7 +30,7 @@ export function NarrativesPage() {
       setNarratives(narrativesData);
       setFragments(fragmentsResponse.data);
       setPersons(personsData);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading data, please try again',
         status: 'error',

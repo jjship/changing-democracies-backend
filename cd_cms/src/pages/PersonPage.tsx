@@ -21,7 +21,7 @@ export function PersonsPage() {
     try {
       const data = await personsApi.getPersons();
       setPersons(data);
-    } catch (error) {
+    } catch (_error) {
       toast({
         title: 'Error loading persons, please try again',
         status: 'error',
