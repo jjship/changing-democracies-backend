@@ -23,7 +23,7 @@ export const registerUploadPosterController = (app: FastifyInstance) => () => {
         return res.status(400).send({ ok: false, error: 'Missing fileName field' });
       }
 
-      const blob = await data.toBuffer();
+      const buffer = await data.toBuffer();
       const url = `https://storage.bunnycdn.com/${ENV.BUNNY_STORAGE_NAME}/posters/${fileNameValue}`;
 
       const response = await fetch(url, {
@@ -32,7 +32,7 @@ export const registerUploadPosterController = (app: FastifyInstance) => () => {
           AccessKey: ENV.BUNNY_STORAGE_API_KEY,
           'Content-Type': 'application/octet-stream',
         },
-        body: blob,
+        body: new Uint8Array(buffer),
       });
 
       if (!response.ok) {
