@@ -252,9 +252,9 @@ describe('Photobooth endpoints', () => {
         )
         .end();
 
-      // The Resend SDK will fail in test env (no real API key), but we test the route logic
-      // In a real test setup you'd mock Resend. For now, we verify the fetch was called for image download.
-      expect(fetchStub.calledOnce).to.be.true;
+      // The Resend SDK also calls fetch internally, so we check that fetch was called
+      // and verify the first call was to download the image.
+      expect(fetchStub.called).to.be.true;
       const [imageUrl] = fetchStub.firstCall.args;
       expect(imageUrl).to.equal('https://test.b-cdn.net/posters/test.jpeg');
     });
