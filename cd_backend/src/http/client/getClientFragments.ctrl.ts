@@ -46,7 +46,7 @@ export const registerGetClientFragmentsController =
         // Check if client has a fresh copy (304 Not Modified)
         const ifNoneMatch = req.headers['if-none-match'];
         if (ifNoneMatch === etag) {
-          return res.status(304).send();
+          return res.status(304).send(null);
         }
 
         return res.status(200).send(clientFragments);
@@ -99,6 +99,7 @@ function getClientFragmentsSchema() {
           pages: Type.Number(),
         }),
       }),
+      304: Type.Null(),
     },
   };
 }

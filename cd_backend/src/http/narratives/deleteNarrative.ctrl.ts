@@ -41,7 +41,7 @@ export const registerDeleteNarrativeController =
           await entityManager.remove(existingNarrative);
         });
 
-        return res.status(204).send();
+        return res.status(204).send(null);
       },
     });
   };

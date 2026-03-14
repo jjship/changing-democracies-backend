@@ -29,7 +29,7 @@ export const registerGetClientTagCategoriesController =
         // Check if client has a fresh copy (304 Not Modified)
         const ifNoneMatch = req.headers['if-none-match'];
         if (ifNoneMatch === etag) {
-          return res.status(304).send();
+          return res.status(304).send(null);
         }
 
         return res.status(200).send({ tagCategories });
@@ -45,6 +45,7 @@ function getClientTagCategoriesSchema() {
       languageCode: Type.Optional(Type.String({ minLength: 2, maxLength: 2 })),
     }),
     response: {
+      304: Type.Null(),
       200: Type.Object({
         tagCategories: Type.Array(
           Type.Object({

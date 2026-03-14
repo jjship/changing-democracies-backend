@@ -171,7 +171,7 @@ export const registerTagControllers =
           await tagRepo.delete(request.params.id);
         }
 
-        return reply.status(204).send();
+        return reply.status(204).send(null);
       },
     });
   };
