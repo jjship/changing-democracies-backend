@@ -57,6 +57,13 @@ const envSchema = z.object({
 
   CMS_URL: z.string(),
   CLIENT_URL: z.string(),
+
+  BUNNY_STORAGE_API_KEY: z.string(),
+  BUNNY_STORAGE_NAME: z.string(),
+  BUNNY_STORAGE_PULL_ZONE: z.string(),
+  BUNNY_ADMIN_API_KEY: z.string(),
+  RESEND_API_KEY: z.string(),
+  PHOTOBOOTH_API_KEY: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);
