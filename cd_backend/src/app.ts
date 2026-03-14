@@ -88,7 +88,7 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     }
 
     // Handle database errors
-    if (error.name === 'QueryFailedError') {
+    if (error instanceof Error && error.name === 'QueryFailedError') {
       // For duplicate key violations, return 409
       if (error.message.includes('duplicate key')) {
         return reply.status(409).send({ ok: false, error: 'Resource already exists' });

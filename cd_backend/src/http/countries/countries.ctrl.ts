@@ -164,7 +164,7 @@ export const registerCountryControllers =
       },
       handler: async (request, reply) => {
         await dbConnection.getRepository(CountryEntity).delete(request.params.id);
-        return reply.status(204).send();
+        return reply.status(204).send(null);
       },
     });
 

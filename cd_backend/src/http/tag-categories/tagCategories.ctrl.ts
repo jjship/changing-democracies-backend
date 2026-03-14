@@ -122,7 +122,7 @@ export const registerTagCategoryControllers =
           await categoryRepo.remove(category);
         }
 
-        return reply.status(204).send();
+        return reply.status(204).send(null);
       },
     });
 

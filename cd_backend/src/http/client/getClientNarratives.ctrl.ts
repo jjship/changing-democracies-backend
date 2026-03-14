@@ -25,7 +25,7 @@ export const registerGetClientNarrativesController =
         // Check if client has a fresh copy (304 Not Modified)
         const ifNoneMatch = req.headers['if-none-match'];
         if (ifNoneMatch === etag) {
-          return res.status(304).send();
+          return res.status(304).send(null);
         }
 
         return res.status(200).send(clientNarratives);
@@ -38,6 +38,7 @@ function getClientNarrativesSchema() {
     description: 'Get all client narratives with all language versions',
     tags: ['narratives'],
     response: {
+      304: Type.Null(),
       200: Type.Array(
         Type.Object({
           id: Type.String(),
