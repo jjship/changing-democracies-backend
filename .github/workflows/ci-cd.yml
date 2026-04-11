@@ -201,7 +201,7 @@ jobs:
 
           CONTAINERS=$(ssh deployment_target '
             cd /opt/cd_admin
-            docker compose ps --format "{{.Name}}" | tr "\n" " "
+            docker compose -f docker-compose.scaleway.yml ps --format "{{.Name}}" | tr "\n" " "
           ')
 
           if [ ! -z "$PREVIOUS_COMMIT" ]; then
@@ -235,7 +235,7 @@ jobs:
         id: verify
         run: |
           sleep 10
-          if ! curl -sSf http://${{ secrets.API_URL }}/health; then
+          if ! curl -sSf https://${{ secrets.API_URL }}/health; then
             echo "::error::Health check failed"
             exit 1
           fi
@@ -262,7 +262,7 @@ jobs:
         if: failure()
         run: |
           sleep 10
-          if ! curl -sSf http://${{ secrets.VM_HOST }}/health; then
+          if ! curl -sSf https://${{ secrets.API_URL }}/health; then
             echo "::error::Rollback verification failed"
             exit 1
           fi
