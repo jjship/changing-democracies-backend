@@ -38,6 +38,7 @@ services:
     environment:
       SCW_LOKI_URL: ${SCW_LOKI_URL}
       SCW_LOKI_TOKEN: ${SCW_LOKI_TOKEN}
+      SCW_PROJECT_ID: ${SCW_PROJECT_ID}
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock
