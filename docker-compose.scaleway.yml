@@ -1,0 +1,37 @@
+services:
+  cd_backend:
+    build:
+      context: ./cd_backend
+      dockerfile: Dockerfile
+      target: production
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8083:8083"
+    env_file: .env
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  cd_cms:
+    build:
+      context: ./cd_cms
+      dockerfile: Dockerfile
+      target: production
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${CMS_PORT}:80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    name: app_network
