@@ -26,30 +26,26 @@ export const registerGetClientFragmentsController =
         const validatedLimit = Math.min(limit, 500);
         const validatedPage = Math.max(page, 1);
 
-        const clientFragments = await getCachedClientFragments({
+        const { json, etag } = await getCachedClientFragments({
           languageCode,
           page: validatedPage,
           limit: validatedLimit,
         });
 
-        // eslint-disable-next-line no-console
-        console.log({ len: clientFragments.data.length });
-
-        // Add cache headers to improve client-side caching
         res.header('Cache-Control', 'public, max-age=600, stale-while-revalidate=3600');
         res.header('Vary', 'Accept-Encoding, Accept-Language');
-
-        // Generate ETag for efficient caching
-        const etag = `W/"${Buffer.from(JSON.stringify(clientFragments)).length.toString(16)}"`;
         res.header('ETag', etag);
 
-        // Check if client has a fresh copy (304 Not Modified)
         const ifNoneMatch = req.headers['if-none-match'];
         if (ifNoneMatch === etag) {
           return res.status(304).send(null);
         }
 
-        return res.status(200).send(clientFragments);
+        res
+          .status(200)
+          .type('application/json')
+          .serializer(() => json);
+        return res.send(json as never);
       },
     });
   };
