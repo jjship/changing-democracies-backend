@@ -27,12 +27,11 @@ export const registerGetClientTagCategoriesController =
           return res.status(304).send(null);
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return res
+        res
           .status(200)
           .type('application/json')
-          .serializer(() => json)
-          .send(json as any);
+          .serializer(() => json);
+        return res.send(json as never);
       },
     });
   };
