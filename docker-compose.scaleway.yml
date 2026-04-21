@@ -8,6 +8,12 @@ services:
     ports:
       - "127.0.0.1:8083:8083"
     env_file: .env
+    environment:
+      NODE_OPTIONS: "--max-old-space-size=2048"
+    deploy:
+      resources:
+        limits:
+          memory: 2560m
     logging:
       driver: json-file
       options:
