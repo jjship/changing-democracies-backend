@@ -204,20 +204,33 @@ function formatNarrativeResponse(
   };
 }
 
+export type PreSerializedResponse = { json: string; etag: string };
+
 export type GetCachedClientNarratives = ReturnType<typeof createGetCachedClientNarratives>;
 
 const createGetCachedClientNarratives = ({ dbConnection }: { dbConnection: DataSource }) => {
-  // Improved caching with shorter TTL but longer stale time to reduce database pressure
   const cache = createCache({
-    ttl: 30 * 60, // 30 minutes fresh cache
-    stale: 3 * 60 * 60, // 3 hours stale cache
+    ttl: 30 * 60,
+    stale: 3 * 60 * 60,
     storage: {
       type: 'memory',
     },
   }).define('getClientNarratives', getClientNarratives({ dbConnection }));
 
-  return async () => {
-    return await cache.getClientNarratives();
+  let serialized: PreSerializedResponse | null = null;
+  let lastDataRef: unknown = null;
+
+  return async (): Promise<PreSerializedResponse> => {
+    const data = await cache.getClientNarratives();
+
+    if (data !== lastDataRef || !serialized) {
+      const json = JSON.stringify(data);
+      const etag = `W/"${Buffer.byteLength(json).toString(16)}"`;
+      serialized = { json, etag };
+      lastDataRef = data;
+    }
+
+    return serialized;
   };
 };
 

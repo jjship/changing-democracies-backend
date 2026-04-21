@@ -332,7 +332,9 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
       });
   }
 
-  return async (params: { languageCode: string; page?: number; limit?: number }) => {
+  const serializedMap = new Map<string, { json: string; etag: string; dataRef: unknown }>();
+
+  return async (params: { languageCode: string; page?: number; limit?: number }): Promise<{ json: string; etag: string }> => {
     const startTime = Date.now();
 
     const CACHE_INVALIDATION_TIMESTAMP = '20230705-fragment-ids-cache';
@@ -343,7 +345,18 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
     const totalTime = Date.now() - startTime;
     logSlowQueries(totalTime, `getClientFragments(${JSON.stringify(params)})`, 500);
 
-    return result;
+    const mapKey = JSON.stringify(params);
+    const cached = serializedMap.get(mapKey);
+
+    if (cached && cached.dataRef === result) {
+      return { json: cached.json, etag: cached.etag };
+    }
+
+    const json = JSON.stringify(result);
+    const etag = `W/"${Buffer.byteLength(json).toString(16)}"`;
+    serializedMap.set(mapKey, { json, etag, dataRef: result });
+
+    return { json, etag };
   };
 };
 

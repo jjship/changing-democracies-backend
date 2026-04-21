@@ -12,23 +12,20 @@ export const registerGetClientNarrativesController =
       preHandler: [requireApiKey('read:client-protected')],
       schema: getClientNarrativesSchema(),
       handler: async (req, res) => {
-        const clientNarratives = await getCachedClientNarratives();
+        const { json, etag } = await getCachedClientNarratives();
 
-        // Add cache headers to improve client-side caching
         res.header('Cache-Control', 'public, max-age=600, stale-while-revalidate=3600');
         res.header('Vary', 'Accept-Encoding');
-
-        // Generate ETag for efficient caching
-        const etag = `W/"${Buffer.from(JSON.stringify(clientNarratives)).length.toString(16)}"`;
         res.header('ETag', etag);
 
-        // Check if client has a fresh copy (304 Not Modified)
         const ifNoneMatch = req.headers['if-none-match'];
         if (ifNoneMatch === etag) {
           return res.status(304).send(null);
         }
 
-        return res.status(200).send(clientNarratives);
+        // Pre-serialized JSON string — serializer(() => json) bypasses Fastify's schema serializer
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return res.status(200).type('application/json').serializer(() => json).send(json as any);
       },
     });
   };

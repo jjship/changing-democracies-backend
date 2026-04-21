@@ -77,23 +77,33 @@ const createGetCachedClientTagCategories = ({ dbConnection }: { dbConnection: Da
     },
   }).define('getTagCategories', getTagCategories({ dbConnection }));
 
-  return async (languageCode: string): Promise<TagCategoryWithTags[]> => {
+  const serializedMap = new Map<string, { json: string; etag: string; dataRef: unknown }>();
+
+  return async (languageCode: string): Promise<{ json: string; etag: string }> => {
     const startTime = Date.now();
 
-    // Cache invalidation for the query change with optimized implementation
     const CACHE_INVALIDATION_TIMESTAMP = '20240319-tag-categories-cache';
     const cacheKey = JSON.stringify({ languageCode, _cacheInvalidation: CACHE_INVALIDATION_TIMESTAMP });
 
     const result = await cache.getTagCategories(cacheKey);
 
-    // Log performance metrics for slow queries (>500ms)
     const totalTime = Date.now() - startTime;
     if (totalTime > 500) {
       // eslint-disable-next-line no-console
       console.warn(`SLOW QUERY (${totalTime}ms): getCachedClientTagCategories(${languageCode})`);
     }
 
-    return result;
+    const cached = serializedMap.get(languageCode);
+
+    if (cached && cached.dataRef === result) {
+      return { json: cached.json, etag: cached.etag };
+    }
+
+    const json = JSON.stringify({ tagCategories: result });
+    const etag = `W/"${Buffer.byteLength(json).toString(16)}"`;
+    serializedMap.set(languageCode, { json, etag, dataRef: result });
+
+    return { json, etag };
   };
 };
 
