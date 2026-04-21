@@ -42,7 +42,11 @@ export const registerGetClientFragmentsController =
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return res.status(200).type('application/json').serializer(() => json).send(json as any);
+        return res
+          .status(200)
+          .type('application/json')
+          .serializer(() => json)
+          .send(json as any);
       },
     });
   };

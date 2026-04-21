@@ -25,7 +25,11 @@ export const registerGetClientNarrativesController =
 
         // Pre-serialized JSON string — serializer(() => json) bypasses Fastify's schema serializer
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return res.status(200).type('application/json').serializer(() => json).send(json as any);
+        return res
+          .status(200)
+          .type('application/json')
+          .serializer(() => json)
+          .send(json as any);
       },
     });
   };

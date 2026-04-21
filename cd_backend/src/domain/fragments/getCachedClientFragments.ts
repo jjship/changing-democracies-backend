@@ -334,7 +334,11 @@ const createGetCachedClientFragments = ({ dbConnection }: { dbConnection: DataSo
 
   const serializedMap = new Map<string, { json: string; etag: string; dataRef: unknown }>();
 
-  return async (params: { languageCode: string; page?: number; limit?: number }): Promise<{ json: string; etag: string }> => {
+  return async (params: {
+    languageCode: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ json: string; etag: string }> => {
     const startTime = Date.now();
 
     const CACHE_INVALIDATION_TIMESTAMP = '20230705-fragment-ids-cache';
