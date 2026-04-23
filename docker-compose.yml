@@ -56,6 +56,24 @@ services:
       VITE_SUPABASE_URL: ${SUPABASE_URL}
       VITE_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
 
+  cd_photobooth:
+    build:
+      context: ./cd_photobooth
+      dockerfile: Dockerfile
+    volumes:
+      - ./cd_photobooth:/cd_photobooth
+      - ./cd_photobooth/node_modules:/cd_photobooth/node_modules
+    ports:
+      - 127.0.0.1:${PHOTOBOOTH_PORT:-5174}:5174
+    env_file:
+      - .env
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+      VITE_API_BASE_URL: ${BACKEND_URL}
+      VITE_API_KEY: ${PHOTOBOOTH_API_KEY}
+      VITE_STORAGE_PULL_ZONE: ${BUNNY_STORAGE_PULL_ZONE}
+
 volumes:
   postgres_data:
     driver: local

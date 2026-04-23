@@ -30,6 +30,10 @@ const API_CLIENTS: Record<string, ApiClient> = {
     name: 'github',
     permissions: ['read:public', 'read:github-protected', 'write:github-protected'],
   },
+  [ENV.PHOTOBOOTH_API_KEY]: {
+    name: 'photobooth',
+    permissions: ['read:photobooth', 'write:photobooth'],
+  },
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
