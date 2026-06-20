@@ -114,6 +114,12 @@ jobs:
       BUNNY_STREAM_LIBRARY_ID: dummy-lib
       BUNNY_STREAM_PULL_ZONE: dummy-zone
       BUNNY_STREAM_COLLECTION_ID: dummy-collection
+      BUNNY_STORAGE_API_KEY: dummy-storage-key
+      BUNNY_STORAGE_NAME: dummy-storage
+      BUNNY_STORAGE_PULL_ZONE: dummy-storage-zone
+      BUNNY_ADMIN_API_KEY: dummy-admin-key
+      RESEND_API_KEY: dummy-resend-key
+      PHOTOBOOTH_API_KEY: dummy-photobooth-key
       COUNTRY_LAYER_BASE_URL: https://dummy.countrylayer.com
       COUNTRY_LAYER_API_KEY: dummy-key
       SYNC_COUNTRIES: 'false'

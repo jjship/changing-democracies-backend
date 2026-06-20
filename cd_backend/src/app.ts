@@ -1,6 +1,7 @@
 import fastify, { FastifyBaseLogger } from 'fastify';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
+import multipart from '@fastify/multipart';
 import { DataSource } from 'typeorm';
 import rateLimit from '@fastify/rate-limit';
 import { logger } from './services/logger/logger';
@@ -33,6 +34,10 @@ import createGetCachedClientFragments from './domain/fragments/getCachedClientFr
 import { registerTagCategoryControllers } from './http/tag-categories/tagCategories.ctrl';
 import { registerGetClientTagCategoriesController } from './http/client/getClientTagCategories.ctrl';
 import createGetCachedClientTagCategories from './domain/tagCategories/getCachedClientTagCategories';
+import { registerUploadPosterController } from './http/photobooth/uploadPoster.ctrl';
+import { registerListPostersController } from './http/photobooth/listPosters.ctrl';
+import { registerDeletePosterController } from './http/photobooth/deletePoster.ctrl';
+import { registerSendPosterEmailController } from './http/photobooth/sendPosterEmail.ctrl';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -103,6 +108,8 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     reply.status(500).send({ ok: false, error: 'Internal Server Error' });
   });
 
+  await app.register(multipart);
+
   // eslint-disable-next-line @typescript-eslint/require-await
   app.get('/health', async () => ({ status: 'ok' }));
 
@@ -144,6 +151,15 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     await app.register(apiKeyAuthPlugin);
     app.addHook('onRequest', app.authenticateApiKey);
     registerGetLanguagesController(app)({ dbConnection });
+  });
+
+  await app.register(async (app) => {
+    await app.register(apiKeyAuthPlugin);
+    app.addHook('onRequest', app.authenticateApiKey);
+    registerUploadPosterController(app)();
+    registerListPostersController(app)();
+    registerDeletePosterController(app)();
+    registerSendPosterEmailController(app)();
   });
 
   // Add a catch-all 404 handler for non-existent routes
