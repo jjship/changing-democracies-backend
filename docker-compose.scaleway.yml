@@ -10,6 +10,11 @@ services:
     env_file: .env
     environment:
       NODE_OPTIONS: "--max-old-space-size=2048"
+      # Trust Scaleway managed-PG self-signed cert so TypeORM's rejectUnauthorized:true verifies.
+      # scaleway-ca.pem is a persistent untracked artifact in /opt/cd_admin (like .env).
+      NODE_EXTRA_CA_CERTS: /etc/ssl/scaleway-ca.pem
+    volumes:
+      - ./scaleway-ca.pem:/etc/ssl/scaleway-ca.pem:ro
     deploy:
       resources:
         limits:
