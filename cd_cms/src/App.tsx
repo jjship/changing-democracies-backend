@@ -8,6 +8,7 @@ import { TagsPage } from './pages/TagsPage';
 import { PersonsPage } from './pages/PersonPage';
 import { NarrativesPage } from './pages/NarrativesPage';
 import { TagCategoriesPage } from './pages/TagCategoriesPage';
+import { VideosPage } from './pages/VideosPage';
 import ErrorBoundary from './components/ErrorBoundary';
 import { NavigationPanel } from './components/NavigationPanel';
 
@@ -82,6 +83,14 @@ export default function App() {
                   element={
                     <ProtectedRoute>
                       <TagCategoriesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/videos"
+                  element={
+                    <ProtectedRoute>
+                      <VideosPage />
                     </ProtectedRoute>
                   }
                 />

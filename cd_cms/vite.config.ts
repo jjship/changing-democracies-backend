@@ -8,6 +8,7 @@ export default defineConfig({
     'process.env.VITE_SUPABASE_URL': JSON.stringify(process.env.VITE_SUPABASE_URL),
     'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(process.env.VITE_SUPABASE_ANON_KEY),
     'process.env.VITE_BACKEND_URL': JSON.stringify(process.env.VITE_BACKEND_URL),
+    'process.env.VITE_LIBRARY_ID': JSON.stringify(process.env.VITE_LIBRARY_ID),
   },
   server: {
     host: '0.0.0.0',
