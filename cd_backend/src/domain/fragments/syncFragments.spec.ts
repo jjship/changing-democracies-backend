@@ -24,6 +24,8 @@ describe('syncFragments', () => {
     const bunnyStreamApiMock = {
       getVideos: sinon.stub().resolves(mockVids),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     await syncFragments({ dbConnection, bunnyStream: bunnyStreamApiMock, logger: logger });
@@ -68,6 +70,8 @@ describe('syncFragments', () => {
     const bunnyStreamApiMock = {
       getVideos: sinon.stub().resolves(currVids),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     await syncFragments({ dbConnection, bunnyStream: bunnyStreamApiMock, logger: logger });

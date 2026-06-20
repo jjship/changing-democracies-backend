@@ -18,6 +18,8 @@ describe('Delete Duplicate Captions Controller', () => {
     const bunnyStreamMock = {
       getVideos: sinon.stub().resolves(mockVideos),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     const app = await setupTestApp({ bunnyStream: bunnyStreamMock });
@@ -48,6 +50,8 @@ describe('Delete Duplicate Captions Controller', () => {
     const bunnyStreamMock = {
       getVideos: sinon.stub().resolves(mockVideos),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     const app = await setupTestApp({ bunnyStream: bunnyStreamMock });
@@ -79,6 +83,8 @@ describe('Delete Duplicate Captions Controller', () => {
     const bunnyStreamMock = {
       getVideos: sinon.stub().resolves(mockVideos),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     const app = await setupTestApp({ bunnyStream: bunnyStreamMock });
@@ -112,6 +118,8 @@ describe('Delete Duplicate Captions Controller', () => {
     const bunnyStreamMock = {
       getVideos: sinon.stub().resolves(mockVideos),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     };
 
     const app = await setupTestApp({ bunnyStream: bunnyStreamMock });

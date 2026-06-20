@@ -34,6 +34,10 @@ import createGetCachedClientFragments from './domain/fragments/getCachedClientFr
 import { registerTagCategoryControllers } from './http/tag-categories/tagCategories.ctrl';
 import { registerGetClientTagCategoriesController } from './http/client/getClientTagCategories.ctrl';
 import createGetCachedClientTagCategories from './domain/tagCategories/getCachedClientTagCategories';
+import { registerListVideosController } from './http/videos/listVideos.ctrl';
+import { registerGetVideoCaptionsController } from './http/videos/getVideoCaptions.ctrl';
+import { registerUpdateVideoController } from './http/videos/updateVideo.ctrl';
+import { registerUploadCaptionsController } from './http/videos/uploadCaptions.ctrl';
 import { registerUploadPosterController } from './http/photobooth/uploadPoster.ctrl';
 import { registerListPostersController } from './http/photobooth/listPosters.ctrl';
 import { registerDeletePosterController } from './http/photobooth/deletePoster.ctrl';
@@ -133,6 +137,11 @@ export async function setupApp({ dbConnection, bunnyStream }: AppDeps) {
     registerCountryControllers(app)({ dbConnection });
     registerGetFragmentsController(app)({ dbConnection });
     registerLanguageControllers(app)({ dbConnection });
+
+    registerListVideosController(app)({ bunnyStream });
+    registerGetVideoCaptionsController(app)();
+    registerUpdateVideoController(app)({ bunnyStream });
+    registerUploadCaptionsController(app)({ bunnyStream });
   });
 
   await app.register(async (app) => {
