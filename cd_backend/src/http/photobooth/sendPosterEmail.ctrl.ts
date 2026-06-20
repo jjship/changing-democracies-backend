@@ -9,9 +9,7 @@ const ALLOWED_HOSTS = ['b-cdn.net', 'bunnycdn.com', 'changingdemocracies.eu'];
 function isAllowedUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return ALLOWED_HOSTS.some(
-      (host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`),
-    );
+    return ALLOWED_HOSTS.some((host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`));
   } catch {
     return false;
   }

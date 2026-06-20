@@ -26,11 +26,7 @@ describe('Photobooth endpoints', () => {
     it('should return 403 with wrong permissions', async () => {
       const testApp = await setupTestApp();
 
-      const res = await testApp
-        .request()
-        .get('/photobooth/posters')
-        .headers({ 'x-api-key': ENV.CLIENT_API_KEY })
-        .end();
+      const res = await testApp.request().get('/photobooth/posters').headers({ 'x-api-key': ENV.CLIENT_API_KEY }).end();
 
       expect(res.statusCode).to.equal(403);
     });
@@ -236,7 +232,7 @@ describe('Photobooth endpoints', () => {
         }),
       );
 
-      const res = await testApp
+      await testApp
         .request()
         .post('/photobooth/posters/send-email')
         .headers({
