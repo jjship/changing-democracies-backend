@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button, Flex, FormLabel, Input, Select, Textarea, VStack, useToast } from '@chakra-ui/react';
 import { Video, videosApi } from '../../api/videos';
 import { languagesApi, Language } from '../../api/languages';
@@ -15,18 +15,18 @@ export function VideoForm({ video, onSave, onCancel }: { video: Video; onSave: (
   const { saveColor, markUnsaved, markSaved } = useSaveColor();
   const toast = useToast();
 
-  useEffect(() => {
-    loadLanguages();
-  }, []);
-
-  const loadLanguages = async () => {
+  const loadLanguages = useCallback(async () => {
     try {
       const langs = await languagesApi.getLanguages();
       setLanguages(langs);
     } catch (_error) {
       toast({ title: 'Error loading languages', status: 'error', duration: 3000 });
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadLanguages();
+  }, [loadLanguages]);
 
   const handleSelectLanguage = async (srclang: string) => {
     setSelectedSrclang(srclang);

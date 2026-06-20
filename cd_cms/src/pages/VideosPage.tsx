@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Button, Container, Flex, Heading, Input, Select, useToast } from '@chakra-ui/react';
 import { EnrichedVideo, VideoMeta, videosApi } from '../api/videos';
 import { VideoList } from '../components/videos/VideoList';
@@ -16,11 +16,7 @@ export function VideosPage() {
   const [country, setCountry] = useState('');
   const toast = useToast();
 
-  useEffect(() => {
-    loadVideos();
-  }, [refresh]);
-
-  const loadVideos = async () => {
+  const loadVideos = useCallback(async () => {
     setIsLoading(true);
     try {
       const [vids, meta] = await Promise.all([
@@ -33,7 +29,11 @@ export function VideosPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadVideos();
+  }, [loadVideos, refresh]);
 
   const persons = useMemo(() => {
     const byId = new Map<string, string>();
