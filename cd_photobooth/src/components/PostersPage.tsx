@@ -20,7 +20,7 @@ export const PostersPage: React.FC<PostersPageProps> = ({ initialPosters, isLoad
     const getLocations = () => {
       const newLocations = new Set<string>();
       initialPosters.forEach((poster) => {
-        const posterLocation = poster.fileName.split('.')[0].split('_').pop();
+        const posterLocation = poster.fileName.split('.')[0]?.split('_').pop();
         if (posterLocation) newLocations.add(posterLocation);
       });
       setPrevLocations(Array.from(newLocations));

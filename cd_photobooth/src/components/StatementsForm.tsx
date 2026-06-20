@@ -83,7 +83,7 @@ export const StatementsForm: FC = () => {
         const indexToFocus = index === 0 ? 0 : index - 1;
         setFocusedIdx(indexToFocus);
         setTimeout(() => {
-          keyboardRef.current?.setInput(fields[indexToFocus].text);
+          keyboardRef.current?.setInput(fields[indexToFocus]?.text ?? '');
           inputRefs.current[indexToFocus]?.focus();
         }, 0);
       }
@@ -101,9 +101,10 @@ export const StatementsForm: FC = () => {
 
   const handleChange = (input: string, index: number) => {
     const currentValues = form.getValues('inputStatements');
-    if (currentValues.length) {
+    const existing = currentValues[index];
+    if (existing) {
       const updatedValues = [...currentValues];
-      updatedValues[index] = { ...updatedValues[index], text: input };
+      updatedValues[index] = { ...existing, text: input };
       form.setValue('inputStatements', updatedValues);
       setStatements(updatedValues.map((s) => s.text));
     }

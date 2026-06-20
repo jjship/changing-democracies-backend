@@ -119,9 +119,9 @@ export const MakePhoto: FC = () => {
       const endColor = { r: 64, g: 224, b: 208 };
 
       for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
+        const r = data[i] ?? 0;
+        const g = data[i + 1] ?? 0;
+        const b = data[i + 2] ?? 0;
         const brightnessValue = (r + g + b) / 3;
 
         const t = brightnessValue / 255;
