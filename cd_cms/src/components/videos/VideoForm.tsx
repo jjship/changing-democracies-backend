@@ -7,7 +7,6 @@ import { VideoPlayer } from './VideoPlayer';
 
 export function VideoForm({ video, onSave, onCancel }: { video: Video; onSave: () => void; onCancel: () => void }) {
   const [title, setTitle] = useState(video.title);
-  const [tags, setTags] = useState(video.tags);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [selectedSrclang, setSelectedSrclang] = useState('');
   const [label, setLabel] = useState('');
@@ -54,7 +53,7 @@ export function VideoForm({ video, onSave, onCancel }: { video: Video; onSave: (
 
   const handleSubmit = async () => {
     try {
-      await videosApi.updateVideo(video.guid, { title, tags });
+      await videosApi.updateVideo(video.guid, { title });
       if (selectedSrclang && vtt.trim()) {
         await videosApi.uploadCaptions(video.guid, selectedSrclang, { label, vtt });
       }
@@ -79,16 +78,6 @@ export function VideoForm({ video, onSave, onCancel }: { video: Video; onSave: (
           markUnsaved();
         }}
         placeholder="Title"
-      />
-
-      <FormLabel>Tags</FormLabel>
-      <Input
-        value={tags}
-        onChange={(e) => {
-          setTags(e.target.value);
-          markUnsaved();
-        }}
-        placeholder="Comma- or space-separated tags"
       />
 
       <FormLabel>Caption language</FormLabel>

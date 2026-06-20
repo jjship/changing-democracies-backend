@@ -19,8 +19,10 @@ export const registerUpdateVideoController =
         const { id } = req.params;
         const { title, tags } = req.body;
 
-        // Tags are stored as a single upper-cased metaTag, mirroring the legacy client.
-        const metaTags = tags ? [{ property: 'tags', value: tags.toUpperCase() }] : [];
+        // Tags are managed in their own panel; only touch metaTags when `tags` is
+        // explicitly provided. Omitting it leaves Bunny's existing metaTags intact
+        // (passing [] would wipe them).
+        const metaTags = tags !== undefined ? [{ property: 'tags', value: tags.toUpperCase() }] : undefined;
 
         const video = await bunnyStream.updateVideo({ videoId: id, title, metaTags });
         return res.status(200).send(video);

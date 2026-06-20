@@ -82,6 +82,25 @@ describe('Videos CMS endpoints', () => {
         metaTags: [{ property: 'tags', value: 'FOO BAR' }],
       });
     });
+
+    it('should not touch metaTags when tags are omitted (avoids wiping Bunny tags)', async () => {
+      const bunnyStream = makeBunnyStream();
+      const testApp = await setupTestApp({ bunnyStream });
+      const token = testApp.createAuthToken();
+
+      const res = await testApp
+        .request()
+        .patch('/videos/vid-1')
+        .headers({ Authorization: `Bearer ${token}`, 'content-type': 'application/json' })
+        .body(JSON.stringify({ title: 'Only title' }))
+        .end();
+
+      expect(res.statusCode).to.equal(200);
+      const updateStub = bunnyStream.updateVideo as sinon.SinonStub;
+      expect(updateStub.calledOnce).to.be.true;
+      expect(updateStub.firstCall.args[0].title).to.equal('Only title');
+      expect(updateStub.firstCall.args[0].metaTags).to.be.undefined;
+    });
   });
 
   describe('PUT /videos/:id/captions/:srclang', () => {
