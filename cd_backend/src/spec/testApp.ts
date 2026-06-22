@@ -29,6 +29,8 @@ export async function setupTestApp({ dbConnection, bunnyStream }: Partial<AppDep
     bunnyStream: bunnyStream || {
       getVideos: sinon.stub().resolves([]),
       deleteVideoCaptions: sinon.stub().resolves(),
+      updateVideo: sinon.stub().resolves({}),
+      uploadCaptions: sinon.stub().resolves(),
     },
   });
 

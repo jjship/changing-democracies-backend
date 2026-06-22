@@ -129,6 +129,60 @@ export const createVideosApi =
       }
     },
 
+    async updateVideo({
+      videoId,
+      title,
+      metaTags,
+    }: {
+      videoId: string;
+      title?: string | null;
+      metaTags?: { property: string; value: string }[] | null;
+    }): Promise<BunnyVideo> {
+      try {
+        const res = await axios.post<BunnyVideo>(
+          `/videos/${videoId}`,
+          { title, collectionId, chapters: null, moments: null, metaTags },
+          { timeout: REQUEST_TIMEOUT_MS },
+        );
+        logger.info({ videoId }, 'Successfully updated video');
+        return res.data;
+      } catch (err) {
+        logger.error({ err, videoId }, 'Failed to update video');
+        throw new Error(`Failed to update video ${videoId}: ${(err as Error).message}`);
+      }
+    },
+
+    async uploadCaptions({
+      videoId,
+      srclang,
+      label,
+      captionsBase64,
+    }: {
+      videoId: string;
+      srclang: string;
+      label: string;
+      captionsBase64: string;
+    }): Promise<void> {
+      try {
+        await axios.post(
+          `/videos/${videoId}/captions/${srclang}`,
+          { captionsFile: captionsBase64, srclang, label },
+          { timeout: REQUEST_TIMEOUT_MS },
+        );
+        logger.info({ videoId, srclang }, 'Successfully uploaded captions');
+      } catch (err) {
+        logger.error({ err, videoId, srclang }, 'Failed to upload captions');
+        throw new Error(`Failed to upload captions for video ${videoId}: ${(err as Error).message}`);
+      }
+
+      // Best-effort removal of the auto-generated variant; non-fatal if it doesn't exist.
+      try {
+        await this.deleteVideoCaptions({ videoId, srclang: `${srclang}-auto` });
+      } catch (err) {
+        logger.warn({ err, videoId, srclang }, 'Could not delete auto-caption variant (may not exist)');
+      }
+    },
+
     async getVideos() {
       try {
         // Add a global timeout to the entire operation
