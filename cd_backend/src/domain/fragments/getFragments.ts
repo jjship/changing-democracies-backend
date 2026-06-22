@@ -11,10 +11,19 @@ async function getFragments({
   dbConnection: DataSource;
   personIds?: string[];
 }): Promise<FragmentPayload[]> {
-  const queryBuilder = dbConnection.getRepository(FragmentEntity).createQueryBuilder('fragment');
+  const queryBuilder = dbConnection
+    .getRepository(FragmentEntity)
+    .createQueryBuilder('fragment')
+    // Always load person + country so the endpoint honors its schema. Previously these
+    // were only joined when filtering by personIds, so an unfiltered GET /fragments
+    // returned person:null for every fragment even when links existed in the DB — which
+    // left the Videos panel person/country filters empty.
+    .leftJoinAndSelect('fragment.person', 'person')
+    .leftJoinAndSelect('person.country', 'country')
+    .leftJoinAndSelect('country.names', 'countryNames');
 
   if (personIds && personIds.length > 0) {
-    queryBuilder.leftJoinAndSelect('fragment.person', 'person').andWhere('person.id IN (:...personIds)', { personIds });
+    queryBuilder.andWhere('person.id IN (:...personIds)', { personIds });
   }
 
   const dbFragments = await queryBuilder.getMany();
