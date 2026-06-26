@@ -27,6 +27,17 @@ const envSchema = z.object({
     .transform((val) => val === 'true')
     .default('true'),
 
+  // Local Postgres (e.g. the docker-compose `postgres` service) for offline dev with a
+  // restored prod dump. Defaults make `.env` only need USE_LOCAL_POSTGRES=true.
+  USE_LOCAL_POSTGRES: z
+    .string()
+    .transform((val) => val === 'true')
+    .default('false'),
+  DB_HOST: z.string().optional().default('postgres'),
+  DB_PORT: z.string().optional().default('5432'),
+  DB_USERNAME: z.string().optional().default('postgres'),
+  DB_PASSWORD: z.string().optional().default('postgres'),
+
   BUNNY_STREAM_BASE_URL: z.string(),
   BUNNY_STREAM_API_KEY: z.string(),
   BUNNY_STREAM_LIBRARY_ID: z.string(),
