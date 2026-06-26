@@ -80,6 +80,30 @@ describe('GET /fragments', () => {
     ]);
   });
 
+  it('should include the linked person without a personIds filter', async () => {
+    const testApp = await setupTestApp();
+    const authToken = testApp.createAuthToken();
+
+    const guid1 = uuid4();
+    const guid2 = uuid4();
+    const personIds = await testDb.saveTestPersons(['Linked Person']);
+
+    await testDb.saveTestFragments([
+      { guid: guid1, title: 'Has Person', length: 1, personId: personIds[0] },
+      { guid: guid2, title: 'No Person', length: 2 },
+    ]);
+
+    const res = await testApp
+      .request()
+      .get('/fragments')
+      .headers({ Authorization: `Bearer ${authToken}` })
+      .end();
+
+    const byId = Object.fromEntries(res.json().data.map((item: any) => [item.id, item.attributes.person]));
+    expect(byId[guid1]).to.deep.equal({ id: personIds[0], name: 'Linked Person' });
+    expect(byId[guid2]).to.equal(null);
+  });
+
   it('should filter fragments by person', async () => {
     const testApp = await setupTestApp();
     const authToken = testApp.createAuthToken();
