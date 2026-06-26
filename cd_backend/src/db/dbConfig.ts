@@ -36,6 +36,24 @@ export function getDataSourceOptions(): DataSourceOptions {
     } as DataSourceOptions;
   }
 
+  // Local Postgres (docker-compose `postgres` service) — for offline dev against a
+  // restored prod dump. No SSL.
+  if (ENV.USE_LOCAL_POSTGRES) {
+    return {
+      type: 'postgres',
+      host: ENV.DB_HOST,
+      port: parseInt(ENV.DB_PORT || '5432'),
+      username: ENV.DB_USERNAME,
+      password: ENV.DB_PASSWORD,
+      database: ENV.DB_DATABASE,
+      synchronize: false,
+      logging: ['error', 'schema', 'warn', 'info'],
+      entities: [`${__dirname}/entities/*.{js,ts}`],
+      migrations: [`${__dirname}/migrations/*.{js,ts}`],
+      migrationsRun: true,
+    } as DataSourceOptions;
+  }
+
   // Default SQLite configuration
   return {
     type: 'sqlite',
