@@ -66,7 +66,7 @@
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-prettier": "^5.5.7",
-    "eslint-plugin-unicorn": "^56.0.1",
+    "eslint-plugin-unicorn": "^79.0.0",
     "light-my-request": "^6.8.0",
     "mocha": "^11.7.5",
     "prettier": "^3.9.10",
