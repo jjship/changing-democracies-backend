@@ -19,7 +19,7 @@ describe('POST /narratives', () => {
   });
   it('should save the new narrative in db', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();

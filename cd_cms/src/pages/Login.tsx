@@ -1,14 +1,14 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Box, Button, FormControl, FormLabel, Input, VStack, Text, useToast, Container } from '@chakra-ui/react';
-import { supabase } from '../lib/supabase';
+import { Box, Button, FormControl, FormLabel, Input, VStack, Text, useToast, Container, Link } from '@chakra-ui/react';
+import { authApi } from '../lib/auth';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string().min(1, 'Password is required'),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -29,13 +29,7 @@ export function Login() {
   const onSubmit = async (data: LoginForm) => {
     try {
       setIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-
-      if (error) throw error;
-
+      await authApi.signIn(data.email, data.password);
       navigate('/narratives');
     } catch (error) {
       toast({
@@ -57,7 +51,7 @@ export function Login() {
           <VStack spacing={4}>
             <FormControl isInvalid={!!errors.email}>
               <FormLabel>Email</FormLabel>
-              <Input type="email" {...register('email')} placeholder="Enter your email" />
+              <Input type="email" autoComplete="username" {...register('email')} placeholder="Enter your email" />
               {errors.email && (
                 <Text color="red.500" fontSize="sm">
                   {errors.email.message}
@@ -67,7 +61,12 @@ export function Login() {
 
             <FormControl isInvalid={!!errors.password}>
               <FormLabel>Password</FormLabel>
-              <Input type="password" {...register('password')} placeholder="Enter your password" />
+              <Input
+                type="password"
+                autoComplete="current-password"
+                {...register('password')}
+                placeholder="Enter your password"
+              />
               {errors.password && (
                 <Text color="red.500" fontSize="sm">
                   {errors.password.message}
@@ -78,6 +77,10 @@ export function Login() {
             <Button type="submit" colorScheme="blue" width="full" isLoading={isLoading}>
               Sign In
             </Button>
+
+            <Link as={RouterLink} to="/forgot-password" color="blue.500" fontSize="sm">
+              Forgot your password?
+            </Link>
           </VStack>
         </form>
       </Box>

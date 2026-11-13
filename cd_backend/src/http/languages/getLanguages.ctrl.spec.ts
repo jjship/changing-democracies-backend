@@ -9,7 +9,7 @@ describe('Languages Controller', () => {
 
   beforeEach(async () => {
     testApp = await setupTestApp();
-    authToken = testApp.createAuthToken();
+    authToken = await testApp.createAuthToken();
   });
 
   describe('GET /languages', () => {

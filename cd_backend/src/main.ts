@@ -5,6 +5,7 @@ import { logger } from './services/logger/logger';
 import { setupApp } from './app';
 import { createCountryLayerApiClient } from './services/coutriesApi/countriesApiClient';
 import { syncCountriesAndLanguages } from './domain/syncCountriesAndLanguages';
+import { createResendMailer } from './services/mailer/mailer';
 
 main();
 
@@ -26,7 +27,9 @@ async function main() {
       await syncCountriesAndLanguages({ dbConnection, countriesApiClient, logger });
     }
 
-    const app = await setupApp({ dbConnection, bunnyStream });
+    const mailer = createResendMailer({ apiKey: ENV.RESEND_API_KEY, from: ENV.AUTH_EMAIL_FROM, logger });
+
+    const app = await setupApp({ dbConnection, bunnyStream, mailer });
 
     await app.listen({ port: ENV.BACKEND_PORT, host: ENV.BACKEND_HOST });
   } catch (err) {

@@ -23,7 +23,7 @@ describe('Countries Controller', () => {
   describe('POST /countries', () => {
     it('should create a new country with names in multiple languages', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
       const response = await testApp
         .request()
         .post('/countries')
@@ -70,7 +70,7 @@ describe('Countries Controller', () => {
 
     it('should fail when language does not exist', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -81,7 +81,7 @@ describe('Countries Controller', () => {
         })
         .end();
 
-      expect(response.statusCode).to.equal(500);
+      expect(response.statusCode).to.equal(400);
     });
   });
 
@@ -105,7 +105,7 @@ describe('Countries Controller', () => {
 
     it('should update an existing country', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -154,7 +154,7 @@ describe('Countries Controller', () => {
 
     it('should return 404 for non-existent country', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const nonExistentCountryId = uuid4();
 
@@ -194,7 +194,7 @@ describe('Countries Controller', () => {
 
     it('should delete an existing country', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -224,7 +224,7 @@ describe('Countries Controller', () => {
 
     it('should return 204 when deleting non-existent country', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
       const nonExistentCountryId = uuid4();
 
       const res = await testApp
@@ -263,7 +263,7 @@ describe('Countries Controller', () => {
 
     it('should fetch all countries', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()

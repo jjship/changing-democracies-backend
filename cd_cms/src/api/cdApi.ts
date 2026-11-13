@@ -1,5 +1,3 @@
-import { supabase } from '../lib/supabase';
-
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export async function cdApiRequest<T>({
@@ -11,22 +9,21 @@ export async function cdApiRequest<T>({
   options: RequestInit;
   retries?: number;
 }): Promise<T> {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
   const fetchWithRetry = async (attempt: number): Promise<Response> => {
     try {
       const response = await fetch(`${BACKEND_URL}${endpoint}`, {
         ...options,
+        credentials: 'include',
         headers: {
           ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-          Authorization: `Bearer ${session?.access_token}`,
           ...options.headers,
         },
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          window.location.assign('/login');
+        }
         if (response.status === 404) {
           throw new NotFoundError(`Resource not found: ${endpoint}`);
         }

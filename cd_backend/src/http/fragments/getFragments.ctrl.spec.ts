@@ -7,7 +7,7 @@ import { ENV } from '../../env';
 describe('GET /fragments', () => {
   it('should return all fragments from db', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -82,7 +82,7 @@ describe('GET /fragments', () => {
 
   it('should include the linked person without a personIds filter', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -106,7 +106,7 @@ describe('GET /fragments', () => {
 
   it('should filter fragments by person', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();

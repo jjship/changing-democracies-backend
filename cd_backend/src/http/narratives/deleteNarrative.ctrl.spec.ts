@@ -21,7 +21,7 @@ describe('DELETE /narratives/:id', () => {
   });
   it('should delete the narrative and all related entities', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     // Create test fragments
     const guid1 = uuid4();
@@ -103,7 +103,7 @@ describe('DELETE /narratives/:id', () => {
 
   it('should return 404 when narrative not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const notFoundId = uuid4();
 

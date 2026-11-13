@@ -20,7 +20,7 @@ describe('PATCH /narratives/:id', async () => {
   });
   it('should update narrative with new names and descriptions', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -123,7 +123,7 @@ describe('PATCH /narratives/:id', async () => {
 
   it('should update narrative fragments sequence', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -212,7 +212,7 @@ describe('PATCH /narratives/:id', async () => {
 
   it('should return 404 when narrative not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const notFoundId = uuid4();
     const res = await testApp
@@ -236,7 +236,7 @@ describe('PATCH /narratives/:id', async () => {
 
   it('should return 404 when language not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -307,7 +307,7 @@ describe('PATCH /narratives/:id', async () => {
 
   it('should return 404 when fragment not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();

@@ -58,3 +58,27 @@ A sample test environment configuration is available in `.env.test.example`. You
 - For production and development environments, the `USE_NEON_DB=true` flag may be used to connect to Neon DB.
 - For tests, we're using the local Docker PostgreSQL instance to avoid affecting production data.
 - SSL is explicitly disabled for the test database connection to work with the Docker PostgreSQL instance, which doesn't have SSL enabled by default.
+
+## Admin authentication
+
+CMS users are managed by this backend (no external identity provider). Passwords are hashed with
+scrypt, sessions are opaque random tokens stored hashed in `auth_session` and delivered to the CMS as
+an httpOnly `cd_session` cookie (scoped to the common parent domain of `CMS_URL` and `BACKEND_URL`,
+override with `AUTH_COOKIE_DOMAIN`). Scripts may send the same token as `Authorization: Bearer`.
+
+Endpoints: `POST /auth/sign-in`, `POST /auth/sign-out`, `GET /auth/session`,
+`POST /auth/request-password-reset`, `POST /auth/reset-password`, and for signed-in admins
+`GET|POST /auth/users`, `DELETE /auth/users/:id`. Reset and invite emails go out through Resend
+from `AUTH_EMAIL_FROM`.
+
+Create or import accounts with the CLI (each new account gets a set-password link, emailed unless
+`--no-invite`, and always printed):
+
+```bash
+# local (docker compose)
+docker compose run --rm cd_backend npm run admin-users -- create --email admin@example.org --name "Ada"
+docker compose run --rm cd_backend npm run admin-users -- import --csv /cd_backend/data/admins.csv
+
+# production container
+docker compose -f docker-compose.scaleway.yml exec cd_backend node scripts/adminUsers.js list
+```

@@ -53,8 +53,6 @@ jobs:
       run:
         working-directory: cd_cms
     env:
-      VITE_SUPABASE_URL: https://dummy.supabase.co
-      VITE_SUPABASE_ANON_KEY: dummy-anon-key
       VITE_BACKEND_URL: http://localhost:8083
     steps:
       - name: Checkout code
@@ -124,7 +122,6 @@ jobs:
       COUNTRY_LAYER_API_KEY: dummy-key
       SYNC_COUNTRIES: 'false'
       SYNC_LEGACY_FRAGMENTS: 'false'
-      SUPABASE_JWT_SECRET: dummy-jwt-secret-that-is-long-enough
       GITHUB_API_KEY: dummy-github-key
       CLIENT_API_KEY: dummy-client-key
       CMS_URL: http://localhost:3001
@@ -162,8 +159,6 @@ jobs:
       - name: Build CMS Docker image
         run: >
           docker build --target production -f cd_cms/Dockerfile cd_cms/
-          --build-arg VITE_SUPABASE_URL=https://dummy.supabase.co
-          --build-arg VITE_SUPABASE_ANON_KEY=dummy-key
           --build-arg VITE_BACKEND_URL=http://localhost:8083
 
   deploy:

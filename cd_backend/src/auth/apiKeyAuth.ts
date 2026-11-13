@@ -12,7 +12,6 @@ declare module 'fastify' {
   }
   interface FastifyInstance {
     authenticateApiKey: (request: FastifyRequest) => Promise<void>;
-    authenticateJwt: (request: FastifyRequest) => Promise<void>;
   }
 }
 
@@ -21,20 +20,15 @@ interface ApiClient {
   permissions: string[];
 }
 
-const API_CLIENTS: Record<string, ApiClient> = {
-  [ENV.CLIENT_API_KEY]: {
-    name: 'client',
-    permissions: ['read:public', 'read:client-protected'],
-  },
-  [ENV.GITHUB_API_KEY]: {
-    name: 'github',
-    permissions: ['read:public', 'read:github-protected', 'write:github-protected'],
-  },
-  [ENV.PHOTOBOOTH_API_KEY]: {
-    name: 'photobooth',
-    permissions: ['read:photobooth', 'write:photobooth'],
-  },
-};
+// Map, so header values like "constructor" cannot hit prototype keys
+const API_CLIENTS = new Map<string, ApiClient>([
+  [ENV.CLIENT_API_KEY, { name: 'client', permissions: ['read:public', 'read:client-protected'] }],
+  [
+    ENV.GITHUB_API_KEY,
+    { name: 'github', permissions: ['read:public', 'read:github-protected', 'write:github-protected'] },
+  ],
+  [ENV.PHOTOBOOTH_API_KEY, { name: 'photobooth', permissions: ['read:photobooth', 'write:photobooth'] }],
+]);
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export default fp(async (fastify: FastifyInstance) => {
@@ -47,7 +41,7 @@ export default fp(async (fastify: FastifyInstance) => {
         return;
       }
 
-      const client = API_CLIENTS[apiKey];
+      const client = API_CLIENTS.get(apiKey);
       if (client) {
         request.apiClient = client;
       }
@@ -58,6 +52,7 @@ export default fp(async (fastify: FastifyInstance) => {
 });
 
 export const requireApiKey = (requiredPermission?: string) => {
+  // eslint-disable-next-line @typescript-eslint/require-await
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.apiClient) {
       reply.code(401).send({ error: 'Invalid API key' });
@@ -71,12 +66,13 @@ export const requireApiKey = (requiredPermission?: string) => {
   };
 };
 
-export const requireApiKeyOrJwt = (requiredPermission?: string) => {
+export const requireApiKeyOrSession = (requiredPermission?: string) => {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     if (!request.apiClient) {
-      await request.server.authenticateJwt(request);
-    } else {
-      requireApiKey(requiredPermission)(request, reply);
+      await request.server.authenticateSession(request);
+      return;
     }
+
+    await requireApiKey(requiredPermission)(request, reply);
   };
 };
