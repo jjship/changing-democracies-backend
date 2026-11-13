@@ -1,11 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { requireApiKey } from '../../auth/apiKeyAuth';
 import { ENV } from '../../env';
+import { ipRateLimitKey } from '../../rateLimit';
+import { isPosterFileName } from './posterFileName';
 
 export const registerUploadPosterController = (app: FastifyInstance) => () => {
   app.route({
     method: 'PUT',
     url: '/photobooth/posters',
+    // the kiosk key ships in the SPA, so budget per address
+    config: { rateLimit: { max: 60, timeWindow: '10 minutes', keyGenerator: ipRateLimitKey } },
     preHandler: [requireApiKey('write:photobooth')],
     handler: async (req, res) => {
       const data = await req.file();
@@ -21,6 +25,10 @@ export const registerUploadPosterController = (app: FastifyInstance) => () => {
 
       if (!fileNameValue) {
         return res.status(400).send({ ok: false, error: 'Missing fileName field' });
+      }
+
+      if (!isPosterFileName(fileNameValue)) {
+        return res.status(400).send({ ok: false, error: 'Invalid fileName' });
       }
 
       const buffer = await data.toBuffer();

@@ -1,14 +1,19 @@
+import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { requireApiKey } from '../../auth/apiKeyAuth';
 import { ENV } from '../../env';
+import { POSTER_FILE_NAME_PATTERN } from './posterFileName';
 
 export const registerDeletePosterController = (app: FastifyInstance) => () => {
-  app.route({
+  app.withTypeProvider<TypeBoxTypeProvider>().route({
     method: 'DELETE',
     url: '/photobooth/posters/:fileName',
     preHandler: [requireApiKey('write:photobooth')],
+    schema: {
+      params: Type.Object({ fileName: Type.String({ pattern: POSTER_FILE_NAME_PATTERN, maxLength: 255 }) }),
+    },
     handler: async (req, res) => {
-      const { fileName } = req.params as { fileName: string };
+      const { fileName } = req.params;
 
       // Purge CDN cache first
       const purgeUrl = `https://api.bunny.net/purge?url=https%3A%2F%2F${ENV.BUNNY_STORAGE_PULL_ZONE}.b-cdn.net%2Fposters%2F${fileName}&async=false`;

@@ -50,6 +50,7 @@ import { registerGetSessionController } from './http/auth/getSession.ctrl';
 import { registerRequestPasswordResetController } from './http/auth/requestPasswordReset.ctrl';
 import { registerResetPasswordController } from './http/auth/resetPassword.ctrl';
 import { registerAdminUsersControllers } from './http/auth/adminUsers.ctrl';
+import { rateLimitKey, rateLimitMax } from './rateLimit';
 
 export type AppDeps = {
   dbConnection: DataSource;
@@ -82,15 +83,11 @@ export async function setupApp({ dbConnection, bunnyStream, mailer }: AppDeps) {
     },
   });
 
-  // Add rate limiter to protect against brute force attacks
+  // keyed by verified identity (session user, API client) and falling back to the address
   await app.register(rateLimit, {
-    max: 100, // Maximum 100 requests per windowMs
-    timeWindow: '1 minute', // Per minute
-    // Whitelist legitimate origins if needed
-    allowList: (req: { headers: { origin?: string } }) => {
-      const origin = req.headers.origin;
-      return !!(origin && [ENV.CMS_URL, ENV.CLIENT_URL].includes(origin));
-    },
+    timeWindow: '1 minute',
+    max: rateLimitMax,
+    keyGenerator: rateLimitKey,
   });
 
   await app.register(cors, {
@@ -209,8 +206,8 @@ export async function setupApp({ dbConnection, bunnyStream, mailer }: AppDeps) {
     registerSendPosterEmailController(app)();
   });
 
-  // Add a catch-all 404 handler for non-existent routes
-  app.setNotFoundHandler((request, reply) => {
+  // Add a catch-all 404 handler for non-existent routes, counted against the caller's budget
+  app.setNotFoundHandler({ preHandler: app.rateLimit() }, (request, reply) => {
     // Log the not found route with minimal information to avoid log bloat
     app.log.info(
       {

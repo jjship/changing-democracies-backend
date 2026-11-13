@@ -1,4 +1,4 @@
-FROM node:22.12-alpine AS base
+FROM node:22.22-alpine AS base
 WORKDIR /cd_photobooth
 COPY package*.json ./
 
@@ -21,7 +21,7 @@ ENV VITE_STORAGE_PULL_ZONE=${VITE_STORAGE_PULL_ZONE}
 RUN npm run build
 
 # Production stage
-FROM node:22.12-alpine AS production
+FROM node:22.22-alpine AS production
 WORKDIR /cd_photobooth
 COPY --from=builder /cd_photobooth/dist ./dist
 RUN npm install -g serve

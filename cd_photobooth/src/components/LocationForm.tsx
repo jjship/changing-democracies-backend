@@ -30,10 +30,13 @@ export const LocationForm: FC = () => {
   }, [stage, setStage, isSet]);
 
   const onSubmit = (values: { location: string }) => {
+    // the location becomes part of the poster file name, which the API restricts to [A-Za-z0-9-]
     const locationInput = values.location
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
-      .toUpperCase();
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
     setLocation(locationInput);
     setStage(thisStage + 1);
   };

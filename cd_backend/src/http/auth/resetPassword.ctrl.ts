@@ -14,7 +14,7 @@ export const registerResetPasswordController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'POST',
       url: '/auth/reset-password',
-      config: { rateLimit: { max: 5, timeWindow: '1 minute', allowList: () => false } },
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
       schema: {
         body: Type.Object({
           token: Type.String({ minLength: 1, maxLength: 256 }),

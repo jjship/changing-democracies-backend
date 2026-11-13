@@ -1,6 +1,5 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
-import axiosRetry, { IAxiosRetryConfig } from 'axios-retry';
 import { FastifyBaseLogger } from 'fastify';
+import { createFetchClient, HttpClient, RetryOptions } from '../http/fetchClient';
 
 export { createCountryLayerApiClient };
 
@@ -19,37 +18,26 @@ export type CountryData = {
 
 const createCountryLayerApiClient =
   ({ logger }: { logger: FastifyBaseLogger }) =>
-  ({
-    baseUrl,
-    apiKey,
-    retry = { retries: 3, shouldResetTimeout: true, retryCondition: shouldRetry },
-  }: {
-    baseUrl: string;
-    apiKey: string;
-    retry?: IAxiosRetryConfig;
-  }) => {
+  ({ baseUrl, apiKey, retry }: { baseUrl: string; apiKey: string; retry?: RetryOptions }) => {
     const serviceLogger = logger.child({ serviceName: 'country_layer' });
 
-    const countryAxios = axios.create({
-      baseURL: baseUrl,
-      params: {
-        access_key: apiKey,
-      },
-    });
+    const http = createFetchClient({ baseUrl, retry, logger: serviceLogger });
 
-    axiosRetry(countryAxios, retry);
-
-    return createGetEuropeanCountries({ axios: countryAxios, logger: serviceLogger });
+    return createGetEuropeanCountries({ http, apiKey, logger: serviceLogger });
   };
 
-const shouldRetry: (error: AxiosError) => boolean = (err) => axiosRetry.isNetworkOrIdempotentRequestError(err);
-
-const createGetEuropeanCountries = ({ axios, logger }: { axios: AxiosInstance; logger: FastifyBaseLogger }) => ({
+const createGetEuropeanCountries = ({
+  http,
+  apiKey,
+  logger,
+}: {
+  http: HttpClient;
+  apiKey: string;
+  logger: FastifyBaseLogger;
+}) => ({
   async getEuropeanCountries() {
     try {
-      const res = await axios.get<CountryData[]>('/region/Europe');
-
-      return res.data;
+      return await http.get<CountryData[]>('/region/Europe', { query: { access_key: apiKey } });
     } catch (err) {
       logger.error({ err }, 'Error while fetching countries.');
       throw err;
