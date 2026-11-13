@@ -10,10 +10,10 @@
     "start": "ts-node-dev --respawn ./src/main.ts",
     "start:prod": "node main.js",
     "build": "tsc",
-    "test:integration": "NODE_ENV=test TEST_DATABASE=cd_backend_test NODE_OPTIONS=--no-experimental-strip-types mocha --config ./src/spec/.mocharc.spec.json",
+    "test:integration": "NODE_ENV=test TEST_DATABASE=cd_backend_test NODE_OPTIONS=--no-strip-types mocha --config ./src/spec/.mocharc.spec.json",
     "typeorm": "typeorm-ts-node-commonjs -d src/db/dataSource.ts",
     "typecheck": "tsc --noEmit",
-    "admin-users": "NODE_OPTIONS=--no-experimental-strip-types node -r ts-node/register ./src/scripts/adminUsers.ts",
+    "admin-users": "NODE_OPTIONS=--no-strip-types node -r ts-node/register ./src/scripts/adminUsers.ts",
     "admin-users:prod": "node ./scripts/adminUsers.js",
     "lint": "eslint 'src/**/*.ts'",
     "check-all": "npm run typecheck && npm run lint && npm run build && npm run test:integration",
@@ -77,7 +77,7 @@
     "uuid4": "^2.0.3"
   },
   "engines": {
-    "node": ">= 22.0.0",
+    "node": ">= 26.0.0",
     "npm": ">= 10.0.0"
   }
 }
