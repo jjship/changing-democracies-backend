@@ -39,7 +39,7 @@ describe('Videos CMS endpoints', () => {
       const bunnyStream = makeBunnyStream();
       (bunnyStream.getVideos as sinon.SinonStub).resolves([{ guid: 'vid-1', title: 'A' }]);
       const testApp = await setupTestApp({ bunnyStream });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()
@@ -64,7 +64,7 @@ describe('Videos CMS endpoints', () => {
     it('should map tags to an upper-cased metaTag and call updateVideo', async () => {
       const bunnyStream = makeBunnyStream();
       const testApp = await setupTestApp({ bunnyStream });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()
@@ -86,7 +86,7 @@ describe('Videos CMS endpoints', () => {
     it('should not touch metaTags when tags are omitted (avoids wiping Bunny tags)', async () => {
       const bunnyStream = makeBunnyStream();
       const testApp = await setupTestApp({ bunnyStream });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()
@@ -120,7 +120,7 @@ describe('Videos CMS endpoints', () => {
       fetchStub.resolves(new Response('ok', { status: 200 }));
       const bunnyStream = makeBunnyStream();
       const testApp = await setupTestApp({ bunnyStream });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()
@@ -153,7 +153,7 @@ describe('Videos CMS endpoints', () => {
     it('should return the VTT text', async () => {
       fetchStub.resolves(new Response('WEBVTT\n\nhello', { status: 200 }));
       const testApp = await setupTestApp({ bunnyStream: makeBunnyStream() });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()
@@ -168,7 +168,7 @@ describe('Videos CMS endpoints', () => {
     it('should return 404 when the caption file does not exist', async () => {
       fetchStub.resolves(new Response('not found', { status: 404 }));
       const testApp = await setupTestApp({ bunnyStream: makeBunnyStream() });
-      const token = testApp.createAuthToken();
+      const token = await testApp.createAuthToken();
 
       const res = await testApp
         .request()

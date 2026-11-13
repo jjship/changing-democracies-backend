@@ -31,8 +31,6 @@ services:
       dockerfile: Dockerfile
       target: production
       args:
-        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
-        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
         VITE_BACKEND_URL: ${VITE_BACKEND_URL}
         VITE_LIBRARY_ID: ${BUNNY_STREAM_LIBRARY_ID}
     restart: unless-stopped

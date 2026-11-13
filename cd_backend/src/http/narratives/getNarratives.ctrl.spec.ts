@@ -25,7 +25,7 @@ describe('GET /narratives', async () => {
 
   it('should return all narratives with JWT authentication', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -138,7 +138,7 @@ describe('GET /narratives', async () => {
 
   it('should return an empty array when there are no narratives', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const res = await testApp
       .request()

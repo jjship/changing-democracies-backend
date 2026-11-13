@@ -1,13 +1,16 @@
 import { Box, Button, Flex, Spacer } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/supabase';
+import { authApi } from '../lib/auth';
 
 export function NavigationPanel() {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      await authApi.signOut();
+    } finally {
+      navigate('/login');
+    }
   };
 
   return (

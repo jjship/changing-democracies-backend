@@ -173,7 +173,7 @@ describe('GET /client-tag-categories', () => {
     expect(parsedRes).to.have.property('error', 'Invalid API key');
   });
 
-  it('should return 500 when language code is invalid', async () => {
+  it('should return 400 when language code is invalid', async () => {
     const res = await testApp
       .request()
       .get('/client-tag-categories')
@@ -181,7 +181,7 @@ describe('GET /client-tag-categories', () => {
       .query({ languageCode: 'INVALID' })
       .end();
 
-    expect(res.statusCode).to.equal(500);
+    expect(res.statusCode).to.equal(400);
     const parsedRes = await res.json();
     expect(parsedRes).to.have.property('error');
   });

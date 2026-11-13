@@ -3,7 +3,7 @@ import { FastifyInstance } from 'fastify';
 import { DataSource } from 'typeorm';
 import { NarrativeEntity } from '../../db/entities/Narrative';
 import { parseNarrativeEntity } from '../../domain/narratives/narratives.api';
-import { requireApiKeyOrJwt } from '../../auth/apiKeyAuth';
+import { requireApiKeyOrSession } from '../../auth/apiKeyAuth';
 import { narrativeSchema } from './narrative.schema';
 
 export const registerGetNarrativesController =
@@ -12,7 +12,7 @@ export const registerGetNarrativesController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'GET',
       url: '/narratives',
-      preHandler: [requireApiKeyOrJwt('read:client-protected')],
+      preHandler: [requireApiKeyOrSession('read:client-protected')],
       schema: {
         description: 'Get all narratives.',
         tags: ['narratives'],

@@ -2,7 +2,7 @@ import { DataSource } from 'typeorm';
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { FastifyInstance } from 'fastify';
 import { LanguageEntity } from '../../db/entities/Language';
-import { requireApiKeyOrJwt } from '../../auth/apiKeyAuth';
+import { requireApiKeyOrSession } from '../../auth/apiKeyAuth';
 import { languageSchema } from './languages.schema';
 
 export const registerGetLanguagesController =
@@ -11,7 +11,7 @@ export const registerGetLanguagesController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'GET',
       url: '/languages',
-      preHandler: [requireApiKeyOrJwt('read:client-protected')],
+      preHandler: [requireApiKeyOrSession('read:client-protected')],
       schema: getLanguagesSchema(),
       handler: async (_, reply) => {
         const languages = await dbConnection.getRepository(LanguageEntity).find();

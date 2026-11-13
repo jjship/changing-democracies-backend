@@ -24,7 +24,7 @@ describe('Tag Categories Controller', () => {
   describe('POST /tag-categories', () => {
     it('should create a new tag category with names in multiple languages when authenticated', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -57,7 +57,7 @@ describe('Tag Categories Controller', () => {
 
     it('should create a tag category with associated tags when tagIds are provided', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       // Create test tags first
       const tagIds: string[] = [];
@@ -99,7 +99,7 @@ describe('Tag Categories Controller', () => {
 
     it('should update an existing category when id is provided', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       // Create a category to update
       const category = new TagCategoryEntity();
@@ -142,7 +142,7 @@ describe('Tag Categories Controller', () => {
 
     it('should update a category with tag associations when tagIds are provided', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       // Create a category to update
       const category = new TagCategoryEntity();
@@ -211,7 +211,7 @@ describe('Tag Categories Controller', () => {
 
     it('should fail when language does not exist', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -227,7 +227,7 @@ describe('Tag Categories Controller', () => {
 
     it('should return 404 when updating non-existent category', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
       const nonExistentCategoryId = uuid4();
       const response = await testApp
         .request()
@@ -262,7 +262,7 @@ describe('Tag Categories Controller', () => {
 
     it('should delete an existing category when authenticated', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()
@@ -285,7 +285,7 @@ describe('Tag Categories Controller', () => {
 
     it('should delete category names but preserve tags when deleting a category', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       // Create tags
       const tagIds: string[] = [];
@@ -371,7 +371,7 @@ describe('Tag Categories Controller', () => {
 
     it('should succeed even if category does not exist', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
       const nonExistentCategoryId = uuid4();
 
       const response = await testApp
@@ -421,7 +421,7 @@ describe('Tag Categories Controller', () => {
 
     it('should return all categories with their tags', async () => {
       const testApp = await setupTestApp();
-      const authToken = testApp.createAuthToken();
+      const authToken = await testApp.createAuthToken();
 
       const response = await testApp
         .request()

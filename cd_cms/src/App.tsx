@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ChakraProvider, Flex, Box } from '@chakra-ui/react';
 import { Login } from './pages/Login';
-
-import { supabase } from './lib/supabase';
+import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
+import { authApi } from './lib/auth';
 import { TagsPage } from './pages/TagsPage';
 import { PersonsPage } from './pages/PersonPage';
 import { NarrativesPage } from './pages/NarrativesPage';
@@ -16,17 +17,20 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsAuthenticated(!!session);
-    });
+    let cancelled = false;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
+    authApi
+      .getSession()
+      .then((user) => {
+        if (!cancelled) setIsAuthenticated(user !== null);
+      })
+      .catch(() => {
+        if (!cancelled) setIsAuthenticated(false);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (isAuthenticated === null) {
@@ -53,6 +57,8 @@ export default function App() {
             <ErrorBoundary>
               <Routes>
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={<Navigate to="/tags" replace />} />
                 <Route
                   path="/narratives"

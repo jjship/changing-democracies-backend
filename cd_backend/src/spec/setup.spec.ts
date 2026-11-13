@@ -53,7 +53,7 @@ before(async function () {
     const migrationTableExists = await checkIfMigrationTableExists();
 
     // Check if required tables exist
-    const requiredTables = ['tag_category', 'tag_category_tags', 'name'];
+    const requiredTables = ['tag_category', 'tag_category_tags', 'name', 'admin_user'];
     const missingTables = await checkMissingTables(requiredTables);
 
     if (!migrationTableExists || missingTables.length > 0) {

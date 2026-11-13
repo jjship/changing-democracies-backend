@@ -19,7 +19,7 @@ describe('DELETE /persons/:id', () => {
 
   beforeEach(async () => {
     dbConnection = getDbConnection();
-    authToken = (await setupTestApp()).createAuthToken();
+    authToken = await (await setupTestApp()).createAuthToken();
 
     await testDb.saveTestLanguages([
       { code: 'EN', name: 'English' },

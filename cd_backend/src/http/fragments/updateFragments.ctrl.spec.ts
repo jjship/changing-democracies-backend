@@ -20,7 +20,7 @@ describe('PATCH /fragments', () => {
   });
   it('should update multiple fragments', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     // Create test data
     const [personId] = await testDb.saveTestPersons(['Test Person']);
@@ -84,7 +84,7 @@ describe('PATCH /fragments', () => {
 
   it('should return 404 when fragment not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const nonExistentId = uuid4();
 
@@ -111,7 +111,7 @@ describe('PATCH /fragments', () => {
 
   it('should return 404 when person not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const fragmentId = uuid4();
     const nonExistentPersonId = uuid4();
@@ -141,7 +141,7 @@ describe('PATCH /fragments', () => {
 
   it('should return 404 when tag not found', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const fragmentId = uuid4();
     const nonExistentTagId = uuid4();

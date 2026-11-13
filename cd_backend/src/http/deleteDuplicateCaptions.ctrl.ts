@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { Type, TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { BunnyStreamApiClient } from '../services/bunnyStream/bunnyStreamApiClient';
-import { requireApiKey } from '../auth/requireApiKey';
+import { requireApiKey } from '../auth/apiKeyAuth';
 import { deleteDuplicateCaptions } from '../domain/fragments/deleteDuplicateCaptions';
 
 export const registerDeleteDuplicateCaptionsController =

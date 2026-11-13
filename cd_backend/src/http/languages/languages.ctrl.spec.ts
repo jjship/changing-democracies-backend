@@ -14,7 +14,7 @@ describe('Languages Controller', () => {
   beforeEach(async () => {
     testApp = await setupTestApp();
     dbConnection = getDbConnection();
-    authToken = testApp.createAuthToken();
+    authToken = await testApp.createAuthToken();
   });
 
   describe('POST /languages', () => {

@@ -1,56 +1,91 @@
 import sinon from 'sinon';
 import { FastifyInstance } from 'fastify';
-import jwt from 'jsonwebtoken';
 import { AppDeps, setupApp } from '../app';
 import { getDbConnection } from '../db/db';
-import { ENV } from '../env';
+import { AdminUserEntity } from '../db/entities/AdminUser';
+import { hashPassword } from '../auth/password';
+import { createSession } from '../domain/auth/sessions';
+import { Mailer } from '../services/mailer/mailer';
+
+export const TEST_ADMIN_PASSWORD = 'correct-horse-battery-staple';
+
+export type TestMailer = { sendPasswordSetup: sinon.SinonStub };
 
 type TestApp = {
   request: () => ReturnType<FastifyInstance['inject']>;
   raw: () => FastifyInstance;
-  createAuthToken: (user?: Partial<TestUser>) => string;
+  /** Session token for a test admin; use as Bearer or cd_session cookie. */
+  createAuthToken: (user?: Partial<TestUser>) => Promise<string>;
+  createTestAdmin: (user?: Partial<TestUser>) => Promise<AdminUserEntity>;
+  mailer: TestMailer;
 };
 
-interface TestUser {
-  id: string;
+export interface TestUser {
   email: string;
-  role: string;
+  name: string;
+  /** null = invite pending */
+  password: string | null;
 }
 
 const defaultTestUser: TestUser = {
-  id: 'test-user-id',
   email: 'test@example.com',
-  role: 'authenticated',
+  name: 'Test Admin',
+  password: TEST_ADMIN_PASSWORD,
 };
 
-export async function setupTestApp({ dbConnection, bunnyStream }: Partial<AppDeps> = {}): Promise<TestApp> {
+// hash the default password once (scrypt is slow)
+let defaultPasswordHash: string | undefined;
+
+export async function setupTestApp({
+  dbConnection,
+  bunnyStream,
+  mailer,
+}: Partial<Omit<AppDeps, 'mailer'>> & { mailer?: TestMailer } = {}): Promise<TestApp> {
+  const db = dbConnection || getDbConnection();
+  const testMailer: TestMailer = mailer ?? { sendPasswordSetup: sinon.stub().resolves() };
+
   const app = await setupApp({
-    dbConnection: dbConnection || getDbConnection(),
+    dbConnection: db,
     bunnyStream: bunnyStream || {
       getVideos: sinon.stub().resolves([]),
       deleteVideoCaptions: sinon.stub().resolves(),
       updateVideo: sinon.stub().resolves({}),
       uploadCaptions: sinon.stub().resolves(),
     },
+    mailer: testMailer as unknown as Mailer,
   });
 
-  function createAuthToken(user: Partial<TestUser> = {}) {
+  async function createTestAdmin(user: Partial<TestUser> = {}) {
     const testUser = { ...defaultTestUser, ...user };
-    return jwt.sign(
-      {
-        aud: 'authenticated',
-        exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour from now
-        sub: testUser.id,
-        email: testUser.email,
-        role: testUser.role,
-      },
-      ENV.SUPABASE_JWT_SECRET,
-    );
+    const repository = db.getRepository(AdminUserEntity);
+
+    const existing = await repository.findOneBy({ email: testUser.email });
+    if (existing) {
+      return existing;
+    }
+
+    let passwordHash: string | null = null;
+    if (testUser.password === TEST_ADMIN_PASSWORD) {
+      defaultPasswordHash ??= await hashPassword(TEST_ADMIN_PASSWORD);
+      passwordHash = defaultPasswordHash;
+    } else if (testUser.password !== null) {
+      passwordHash = await hashPassword(testUser.password);
+    }
+
+    return repository.save(repository.create({ email: testUser.email, name: testUser.name, passwordHash }));
+  }
+
+  async function createAuthToken(user: Partial<TestUser> = {}) {
+    const admin = await createTestAdmin(user);
+    const { token } = await createSession({ dbConnection: db, user: admin });
+    return token;
   }
 
   return {
     request: () => app.inject(),
     raw: () => app,
     createAuthToken,
+    createTestAdmin,
+    mailer: testMailer,
   };
 }

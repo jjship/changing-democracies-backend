@@ -60,7 +60,9 @@ const envSchema = z.object({
       message: 'SYNC_COUNTRIES must be a boolean',
     }),
 
-  SUPABASE_JWT_SECRET: z.string(),
+  // admin auth; both optional
+  AUTH_COOKIE_DOMAIN: z.string().optional(),
+  AUTH_EMAIL_FROM: z.string().default('Changing Democracies <no-reply@cd-admin.ovh>'),
 
   GITHUB_API_KEY: z.string(),
 

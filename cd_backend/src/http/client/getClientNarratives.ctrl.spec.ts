@@ -26,7 +26,7 @@ describe('GET /client-narratives', async () => {
 
   it('should return client narratives with valid API key', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -207,7 +207,7 @@ describe('GET /client-narratives', async () => {
 
   it('should correctly populate otherPaths for shared fragments', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     const guid1 = uuid4();
     const guid2 = uuid4();
@@ -316,7 +316,7 @@ describe('GET /client-narratives', async () => {
 
   it('should return all language versions of narratives', async () => {
     const testApp = await setupTestApp();
-    const authToken = testApp.createAuthToken();
+    const authToken = await testApp.createAuthToken();
 
     // Create a country - we'll check bios in multiple languages instead
     await testDb.saveTestCountries([
