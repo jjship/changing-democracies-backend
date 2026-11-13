@@ -14,8 +14,7 @@ export const registerSignInController =
     app.withTypeProvider<TypeBoxTypeProvider>().route({
       method: 'POST',
       url: '/auth/sign-in',
-      // explicit allowList: the global limiter exempts the CMS Origin
-      config: { rateLimit: { max: 5, timeWindow: '1 minute', allowList: () => false } },
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
       schema: {
         body: Type.Object({
           email: Type.String({ format: 'email', maxLength: 254 }),

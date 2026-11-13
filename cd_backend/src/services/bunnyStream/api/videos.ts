@@ -1,5 +1,5 @@
-import { AxiosInstance, AxiosError } from 'axios';
 import { FastifyBaseLogger } from 'fastify';
+import { HttpClient, HttpRequestError } from '../../http/fetchClient';
 
 export type BunnyVideo = {
   videoLibraryId: number;
@@ -53,21 +53,16 @@ const MAX_ATTEMPTS_PER_REQUEST = 3;
 const REQUEST_TIMEOUT_MS = 10000; // 10 seconds timeout for individual requests
 
 // Helper function to determine if an error is a connection-related error
-const isConnectionError = (error: unknown): boolean => {
-  if (error && typeof error === 'object' && 'code' in error) {
-    return ['ECONNABORTED', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'EHOSTUNREACH'].includes(
-      (error as { code: string }).code,
-    );
-  }
-  return false;
-};
+const isConnectionError = (error: unknown): boolean =>
+  error instanceof HttpRequestError &&
+  ['ECONNABORTED', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'EAI_AGAIN', 'EHOSTUNREACH'].includes(error.code ?? '');
 
 // Create a promise that will reject after a specified time
 const createTimeout = (ms: number) =>
   new Promise<never>((_, reject) => setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms));
 
 export const createVideosApi =
-  ({ axios, logger }: { axios: AxiosInstance; logger: FastifyBaseLogger }) =>
+  ({ http, logger }: { http: HttpClient; logger: FastifyBaseLogger }) =>
   ({ collectionId }: { collectionId: string }) => ({
     async deleteVideoCaptions({ videoId, srclang }: { videoId: string; srclang: string }) {
       try {
@@ -79,16 +74,14 @@ export const createVideosApi =
 
             while (retryCount < maxRetries) {
               try {
-                await axios.delete(`/videos/${videoId}/captions/${srclang}`, {
-                  timeout: REQUEST_TIMEOUT_MS,
+                await http.delete(`/videos/${encodeURIComponent(videoId)}/captions/${encodeURIComponent(srclang)}`, {
+                  timeoutMs: REQUEST_TIMEOUT_MS,
                 });
                 logger.info({ videoId, srclang }, 'Successfully deleted video captions');
                 return;
               } catch (err) {
-                const error = err as Error | AxiosError;
-
                 // Check if this is a network-related error that could benefit from retry
-                if (isConnectionError(error) || (error as AxiosError).code === 'ECONNABORTED') {
+                if (isConnectionError(err)) {
                   retryCount++;
 
                   if (retryCount < maxRetries) {
@@ -139,13 +132,13 @@ export const createVideosApi =
       metaTags?: { property: string; value: string }[] | null;
     }): Promise<BunnyVideo> {
       try {
-        const res = await axios.post<BunnyVideo>(
-          `/videos/${videoId}`,
+        const video = await http.post<BunnyVideo>(
+          `/videos/${encodeURIComponent(videoId)}`,
           { title, collectionId, chapters: null, moments: null, metaTags },
-          { timeout: REQUEST_TIMEOUT_MS },
+          { timeoutMs: REQUEST_TIMEOUT_MS },
         );
         logger.info({ videoId }, 'Successfully updated video');
-        return res.data;
+        return video;
       } catch (err) {
         logger.error({ err, videoId }, 'Failed to update video');
         throw new Error(`Failed to update video ${videoId}: ${(err as Error).message}`);
@@ -164,10 +157,10 @@ export const createVideosApi =
       captionsBase64: string;
     }): Promise<void> {
       try {
-        await axios.post(
-          `/videos/${videoId}/captions/${srclang}`,
+        await http.post(
+          `/videos/${encodeURIComponent(videoId)}/captions/${encodeURIComponent(srclang)}`,
           { captionsFile: captionsBase64, srclang, label },
-          { timeout: REQUEST_TIMEOUT_MS },
+          { timeoutMs: REQUEST_TIMEOUT_MS },
         );
         logger.info({ videoId, srclang }, 'Successfully uploaded captions');
       } catch (err) {
@@ -213,16 +206,16 @@ export const createVideosApi =
 
               while (!pageSuccess && pageRetryCount < maxPageRetries) {
                 try {
-                  const res = await axios.get<GetVideosResponse>(`/videos`, {
-                    params: {
+                  const res = await http.get<GetVideosResponse>(`/videos`, {
+                    query: {
                       collectionId,
                       page: currentPage,
                       itemsPerPage,
                     },
-                    timeout: REQUEST_TIMEOUT_MS,
+                    timeoutMs: REQUEST_TIMEOUT_MS,
                   });
 
-                  const { items, totalItems: fetchedTotalItems } = res.data;
+                  const { items, totalItems: fetchedTotalItems } = res;
 
                   // Validate response data to avoid processing invalid data
                   if (!Array.isArray(items)) {
@@ -249,10 +242,8 @@ export const createVideosApi =
                     'Successfully fetched page of videos',
                   );
                 } catch (err) {
-                  const error = err as Error | AxiosError;
-
                   // Check if this is a network-related error that could benefit from retry
-                  if (isConnectionError(error) || (error as AxiosError).code === 'ECONNABORTED') {
+                  if (isConnectionError(err)) {
                     pageRetryCount++;
 
                     if (pageRetryCount < maxPageRetries) {

@@ -3,6 +3,24 @@ import sinon from 'sinon';
 import { setupTestApp } from '../../spec/testApp';
 import { ENV } from '../../env';
 
+const boundary = '----TestBoundary';
+
+const multipartUpload = (fileName: string) =>
+  [
+    `--${boundary}`,
+    'Content-Disposition: form-data; name="blob"; filename="test.jpeg"',
+    'Content-Type: image/jpeg',
+    '',
+    'fake-image-data',
+    `--${boundary}`,
+    'Content-Disposition: form-data; name="fileName"',
+    '',
+    fileName,
+    `--${boundary}--`,
+  ].join('\r\n');
+
+const posterUrl = (path: string) => `https://${ENV.BUNNY_STORAGE_PULL_ZONE}.b-cdn.net${path}`;
+
 describe('Photobooth endpoints', () => {
   let fetchStub: sinon.SinonStub;
 
@@ -90,20 +108,6 @@ describe('Photobooth endpoints', () => {
 
       fetchStub.resolves(new Response('ok', { status: 201 }));
 
-      const boundary = '----TestBoundary';
-      const body = [
-        `--${boundary}`,
-        'Content-Disposition: form-data; name="blob"; filename="test.jpeg"',
-        'Content-Type: image/jpeg',
-        '',
-        'fake-image-data',
-        `--${boundary}`,
-        'Content-Disposition: form-data; name="fileName"',
-        '',
-        'poster_test_BERLIN.jpeg',
-        `--${boundary}--`,
-      ].join('\r\n');
-
       const res = await testApp
         .request()
         .put('/photobooth/posters')
@@ -111,7 +115,7 @@ describe('Photobooth endpoints', () => {
           'x-api-key': ENV.PHOTOBOOTH_API_KEY,
           'content-type': `multipart/form-data; boundary=${boundary}`,
         })
-        .body(body)
+        .body(multipartUpload('poster_test_BERLIN.jpeg'))
         .end();
 
       expect(res.statusCode).to.equal(200);
@@ -123,6 +127,57 @@ describe('Photobooth endpoints', () => {
       expect(url).to.include(`storage.bunnycdn.com/${ENV.BUNNY_STORAGE_NAME}/posters/poster_test_BERLIN.jpeg`);
       expect(options.method).to.equal('PUT');
       expect(options.headers.AccessKey).to.equal(ENV.BUNNY_STORAGE_API_KEY);
+    });
+
+    for (const fileName of [
+      '../../other.jpeg',
+      '..%2F..%2Fother.jpeg',
+      'poster.exe',
+      'poster test.jpeg',
+      'a.jpeg?x=1',
+    ]) {
+      it(`should reject the file name ${JSON.stringify(fileName)}`, async () => {
+        const testApp = await setupTestApp();
+
+        const res = await testApp
+          .request()
+          .put('/photobooth/posters')
+          .headers({
+            'x-api-key': ENV.PHOTOBOOTH_API_KEY,
+            'content-type': `multipart/form-data; boundary=${boundary}`,
+          })
+          .body(multipartUpload(fileName))
+          .end();
+
+        expect(res.statusCode).to.equal(400);
+        expect(fetchStub.called).to.be.false;
+      });
+    }
+
+    it('should rate limit uploads per address', async function () {
+      this.timeout(20000);
+      const testApp = await setupTestApp();
+
+      const statuses: number[] = [];
+      for (let i = 0; i < 61; i++) {
+        const res = await testApp
+          .request()
+          .put('/photobooth/posters')
+          .headers({ 'x-api-key': ENV.PHOTOBOOTH_API_KEY })
+          .end();
+        statuses.push(res.statusCode);
+      }
+
+      expect(statuses.slice(0, 60)).to.not.include(429);
+      expect(statuses[60]).to.equal(429);
+
+      const other = await testApp.raw().inject({
+        method: 'PUT',
+        url: '/photobooth/posters',
+        headers: { 'x-api-key': ENV.PHOTOBOOTH_API_KEY },
+        remoteAddress: '10.0.0.9',
+      });
+      expect(other.statusCode).to.not.equal(429);
     });
   });
 
@@ -162,6 +217,21 @@ describe('Photobooth endpoints', () => {
       expect(deleteUrl).to.include(`storage.bunnycdn.com/${ENV.BUNNY_STORAGE_NAME}/posters/poster_test_BERLIN.jpeg`);
     });
 
+    for (const fileName of ['..%2F..%2Fother.jpeg', 'poster.exe', 'poster%20test.jpeg']) {
+      it(`should reject the file name ${JSON.stringify(fileName)}`, async () => {
+        const testApp = await setupTestApp();
+
+        const res = await testApp
+          .request()
+          .delete(`/photobooth/posters/${fileName}`)
+          .headers({ 'x-api-key': ENV.PHOTOBOOTH_API_KEY })
+          .end();
+
+        expect(res.statusCode).to.equal(400);
+        expect(fetchStub.called).to.be.false;
+      });
+    }
+
     it('should return 502 when storage delete fails', async () => {
       const testApp = await setupTestApp();
 
@@ -189,7 +259,7 @@ describe('Photobooth endpoints', () => {
         .headers({ 'content-type': 'application/json' })
         .body(
           JSON.stringify({
-            imageUrl: 'https://test.b-cdn.net/posters/test.jpeg',
+            imageUrl: posterUrl('/posters/test.jpeg'),
             fileName: 'test.jpeg',
             email: 'test@example.com',
           }),
@@ -199,7 +269,36 @@ describe('Photobooth endpoints', () => {
       expect(res.statusCode).to.equal(401);
     });
 
-    it('should reject disallowed image URLs', async () => {
+    for (const imageUrl of [
+      'https://evil.example.org/malicious.jpeg',
+      'https://other-zone.b-cdn.net/posters/test.jpeg',
+      `https://${ENV.BUNNY_STORAGE_PULL_ZONE}.b-cdn.net.example.org/posters/test.jpeg`,
+      posterUrl('/other/test.jpeg'),
+      posterUrl('/posters/../secret.jpeg'),
+      posterUrl('/posters/sub/test.jpeg'),
+      posterUrl('/posters/test.jpeg?x=1'),
+      posterUrl('/posters/test.exe'),
+      posterUrl('/posters/test.jpeg').replace('https://', 'http://'),
+    ]) {
+      it(`should reject the image URL ${JSON.stringify(imageUrl)}`, async () => {
+        const testApp = await setupTestApp();
+
+        const res = await testApp
+          .request()
+          .post('/photobooth/posters/send-email')
+          .headers({
+            'x-api-key': ENV.PHOTOBOOTH_API_KEY,
+            'content-type': 'application/json',
+          })
+          .body(JSON.stringify({ imageUrl, fileName: 'test.jpeg', email: 'test@example.com' }))
+          .end();
+
+        expect(res.statusCode).to.equal(403);
+        expect(fetchStub.called).to.be.false;
+      });
+    }
+
+    it('should reject an attachment file name outside the allowed pattern', async () => {
       const testApp = await setupTestApp();
 
       const res = await testApp
@@ -211,14 +310,43 @@ describe('Photobooth endpoints', () => {
         })
         .body(
           JSON.stringify({
-            imageUrl: 'https://evil.com/malicious.jpeg',
-            fileName: 'test.jpeg',
+            imageUrl: posterUrl('/posters/test.jpeg'),
+            fileName: '../test.jpeg',
             email: 'test@example.com',
           }),
         )
         .end();
 
-      expect(res.statusCode).to.equal(403);
+      expect(res.statusCode).to.equal(400);
+      expect(fetchStub.called).to.be.false;
+    });
+
+    it('should rate limit sending per address', async function () {
+      this.timeout(20000);
+      const testApp = await setupTestApp();
+
+      const statuses: number[] = [];
+      for (let i = 0; i < 31; i++) {
+        const res = await testApp
+          .request()
+          .post('/photobooth/posters/send-email')
+          .headers({ 'x-api-key': ENV.PHOTOBOOTH_API_KEY, 'content-type': 'application/json' })
+          .body(JSON.stringify({}))
+          .end();
+        statuses.push(res.statusCode);
+      }
+
+      expect(statuses.slice(0, 30)).to.not.include(429);
+      expect(statuses[30]).to.equal(429);
+
+      const other = await testApp.raw().inject({
+        method: 'POST',
+        url: '/photobooth/posters/send-email',
+        headers: { 'x-api-key': ENV.PHOTOBOOTH_API_KEY, 'content-type': 'application/json' },
+        payload: {},
+        remoteAddress: '10.0.0.9',
+      });
+      expect(other.statusCode).to.not.equal(429);
     });
 
     it('should send email with poster attachment', async () => {
@@ -241,7 +369,7 @@ describe('Photobooth endpoints', () => {
         })
         .body(
           JSON.stringify({
-            imageUrl: 'https://test.b-cdn.net/posters/test.jpeg',
+            imageUrl: posterUrl('/posters/test.jpeg'),
             fileName: 'test.jpeg',
             email: 'test@example.com',
           }),
@@ -252,7 +380,7 @@ describe('Photobooth endpoints', () => {
       // and verify the first call was to download the image.
       expect(fetchStub.called).to.be.true;
       const [imageUrl] = fetchStub.firstCall.args;
-      expect(imageUrl).to.equal('https://test.b-cdn.net/posters/test.jpeg');
+      expect(imageUrl).to.equal(posterUrl('/posters/test.jpeg'));
     });
   });
 });

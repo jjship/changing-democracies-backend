@@ -3,13 +3,16 @@ import { FastifyInstance } from 'fastify';
 import { Resend } from 'resend';
 import { requireApiKey } from '../../auth/apiKeyAuth';
 import { ENV } from '../../env';
+import { ipRateLimitKey } from '../../rateLimit';
+import { isPosterFileName, POSTER_FILE_NAME_PATTERN } from './posterFileName';
 
-const ALLOWED_HOSTS = ['b-cdn.net', 'bunnycdn.com', 'changingdemocracies.eu'];
+const postersBaseUrl = `https://${ENV.BUNNY_STORAGE_PULL_ZONE}.b-cdn.net/posters/`;
 
-function isAllowedUrl(url: string): boolean {
+// Only our own pull zone, and only a plain poster file name below /posters/
+function isPosterUrl(url: string): boolean {
   try {
-    const parsed = new URL(url);
-    return ALLOWED_HOSTS.some((host) => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`));
+    const { href } = new URL(url);
+    return href.startsWith(postersBaseUrl) && isPosterFileName(href.slice(postersBaseUrl.length));
   } catch {
     return false;
   }
@@ -19,18 +22,20 @@ export const registerSendPosterEmailController = (app: FastifyInstance) => () =>
   app.withTypeProvider<TypeBoxTypeProvider>().route({
     method: 'POST',
     url: '/photobooth/posters/send-email',
+    // the kiosk key ships in the SPA, so budget per address
+    config: { rateLimit: { max: 30, timeWindow: '10 minutes', keyGenerator: ipRateLimitKey } },
     preHandler: [requireApiKey('write:photobooth')],
     schema: {
       body: Type.Object({
-        imageUrl: Type.String({ format: 'uri' }),
-        fileName: Type.String({ minLength: 1 }),
-        email: Type.String({ format: 'email' }),
+        imageUrl: Type.String({ format: 'uri', maxLength: 2048 }),
+        fileName: Type.String({ pattern: POSTER_FILE_NAME_PATTERN, maxLength: 255 }),
+        email: Type.String({ format: 'email', maxLength: 254 }),
       }),
     },
     handler: async (req, res) => {
       const { imageUrl, fileName, email } = req.body;
 
-      if (!isAllowedUrl(imageUrl)) {
+      if (!isPosterUrl(imageUrl)) {
         return res.status(403).send({ ok: false, error: 'Image URL not allowed' });
       }
 

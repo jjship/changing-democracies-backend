@@ -1,27 +1,24 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
 import { logger } from '../../logger/logger';
+import { HttpClient } from '../../http/fetchClient';
 import { createVideosApi } from './videos';
 
 describe('VideosApi Integration Tests', () => {
-  let axiosInstance: any;
+  let http: HttpClient & { delete: sinon.SinonStub; get: sinon.SinonStub };
 
   beforeEach(() => {
-    axiosInstance = {
+    http = {
       delete: sinon.stub().resolves(),
-      get: sinon.stub().resolves({
-        data: {
-          items: [],
-          totalItems: 0,
-        },
-      }),
+      get: sinon.stub().resolves({ items: [], totalItems: 0 }),
+      post: sinon.stub().resolves(),
     };
   });
 
   describe('deleteVideoCaptions', () => {
     it('should successfully delete video captions', async () => {
       const videosApi = createVideosApi({
-        axios: axiosInstance,
+        http,
         logger,
       })({ collectionId: 'test-collection' });
 
@@ -30,16 +27,16 @@ describe('VideosApi Integration Tests', () => {
         srclang: 'nl-auto',
       });
 
-      expect(axiosInstance.delete.calledOnce).to.be.true;
-      expect(axiosInstance.delete.firstCall.args[0]).to.equal('/videos/test-video/captions/nl-auto');
+      expect(http.delete.calledOnce).to.be.true;
+      expect(http.delete.firstCall.args[0]).to.equal('/videos/test-video/captions/nl-auto');
     });
 
     it('should handle errors when deleting captions', async () => {
       const error = new Error('API Error');
-      axiosInstance.delete.rejects(error);
+      http.delete.rejects(error);
 
       const videosApi = createVideosApi({
-        axios: axiosInstance,
+        http,
         logger,
       })({ collectionId: 'test-collection' });
 

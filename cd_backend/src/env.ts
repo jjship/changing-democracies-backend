@@ -6,7 +6,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 
   BACKEND_HOST: z.string(),
-  BACKEND_PORT: portSchema.default('8083'),
+  BACKEND_PORT: portSchema.default(8083),
   BACKEND_URL: z.string(),
 
   DB_DATABASE: z.string(),
@@ -16,7 +16,7 @@ const envSchema = z.object({
   USE_NEON_DB: z
     .string()
     .transform((val) => val === 'true')
-    .default('false'),
+    .default(false),
   NEON_DB_HOST: z.string().optional().default(''),
   NEON_DB_PORT: z.string().optional().default('5432'),
   NEON_DB_USERNAME: z.string().optional().default(''),
@@ -25,14 +25,14 @@ const envSchema = z.object({
   NEON_DB_SSL: z
     .string()
     .transform((val) => val === 'true')
-    .default('true'),
+    .default(true),
 
   // Local Postgres (e.g. the docker-compose `postgres` service) for offline dev with a
   // restored prod dump. Defaults make `.env` only need USE_LOCAL_POSTGRES=true.
   USE_LOCAL_POSTGRES: z
     .string()
     .transform((val) => val === 'true')
-    .default('false'),
+    .default(false),
   DB_HOST: z.string().optional().default('postgres'),
   DB_PORT: z.string().optional().default('5432'),
   DB_USERNAME: z.string().optional().default('postgres'),
@@ -83,7 +83,7 @@ const parsed = envSchema.safeParse(process.env);
 
 if (!parsed.success) {
   // eslint-disable-next-line no-console
-  console.error('❌ Invalid environment variables:', parsed.error.flatten().fieldErrors);
+  console.error('❌ Invalid environment variables:', z.flattenError(parsed.error).fieldErrors);
   throw new Error('Invalid environment variables');
 }
 
