@@ -23,18 +23,50 @@
   }
 }
 
-body {
-  margin: 0;
-  background-color: #191818;
-  color: white;
-  font-family: 'Archivo', sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply text-foreground;
+  }
 }
 
-/* react-simple-keyboard theme overrides */
-.myTheme1 {
-  background-color: transparent;
+body {
+  margin: 0;
 }
-.myTheme1 .hg-button {
+
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* react-simple-keyboard theme */
+.simple-keyboard.myTheme1 {
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 0;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.simple-keyboard.myTheme1 .hg-button {
   height: 50px;
-  font-size: 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 1);
+  color: white;
+}
+
+.simple-keyboard.myTheme1 .hg-button:active {
+  background: rgba(184, 82, 82, 1);
+  color: white;
+}
+
+.simple-keyboard.myTheme1 .hg-button-alt {
+  max-width: 80px;
 }
