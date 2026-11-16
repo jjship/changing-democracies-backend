@@ -38,63 +38,45 @@ export function TagCategoryForm({
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadLanguages = async () => {
+      try {
+        const langs = await languagesApi.getLanguages();
+        if (ignore) return;
+        setLanguages(langs);
+        if (langs.length > 0) {
+          setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
+        }
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading languages',
+          status: 'error',
+          duration: 3000,
+        });
+      }
+    };
+    const loadTags = async () => {
+      try {
+        const allTags = await tagsApi.getTags();
+        if (!ignore) setTags(allTags);
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading tags',
+          status: 'error',
+          duration: 3000,
+        });
+      } finally {
+        if (!ignore) setIsLoadingTags(false);
+      }
+    };
     loadLanguages();
     loadTags();
-    if (tagCategory) {
-      loadTagCategory();
-    }
-  }, [tagCategory]);
-
-  const loadTagCategory = async () => {
-    if (!tagCategory) return;
-    try {
-      if (tagCategory.names && tagCategory.names.length > 0) {
-        setNames(tagCategory.names);
-        setLanguageCode(tagCategory.names[0].languageCode);
-      }
-      if (tagCategory.tags) {
-        setSelectedTagIds(tagCategory.tags.map((t) => t.id));
-      }
-    } catch (_error) {
-      toast({
-        title: 'Error loading tag category',
-        status: 'error',
-        duration: 3000,
-      });
-    }
-  };
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await languagesApi.getLanguages();
-      setLanguages(langs);
-      if (langs.length > 0 && !languageCode) {
-        setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
-      }
-    } catch (_error) {
-      toast({
-        title: 'Error loading languages',
-        status: 'error',
-        duration: 3000,
-      });
-    }
-  };
-
-  const loadTags = async () => {
-    setIsLoadingTags(true);
-    try {
-      const allTags = await tagsApi.getTags();
-      setTags(allTags);
-    } catch (_error) {
-      toast({
-        title: 'Error loading tags',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoadingTags(false);
-    }
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [toast]);
 
   const handleSubmit = async () => {
     try {

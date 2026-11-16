@@ -1,19 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { narrativesApi, CreateNarrativeAttributes, Narrative, NarrativeFragment } from '../../api/narratives';
 import { Box, Input, Button, Textarea } from '@chakra-ui/react';
 
 export function NarrativeForm({ narrative, onSave }: { narrative?: Narrative; onSave: () => void }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [fragmentsSequence, setFragmentsSequence] = useState<NarrativeFragment[]>([]);
-
-  useEffect(() => {
-    if (narrative) {
-      setTitle(narrative.names[0].name);
-      setDescription(narrative.descriptions[0].description.join(' '));
-      setFragmentsSequence(narrative.fragmentsSequence);
-    }
-  }, [narrative]);
+  const [title, setTitle] = useState(narrative?.names[0].name ?? '');
+  const [description, setDescription] = useState(narrative?.descriptions[0].description.join(' ') ?? '');
+  const [fragmentsSequence] = useState<NarrativeFragment[]>(narrative?.fragmentsSequence ?? []);
 
   const handleSubmit = async () => {
     const narrativeAttributes: CreateNarrativeAttributes = {

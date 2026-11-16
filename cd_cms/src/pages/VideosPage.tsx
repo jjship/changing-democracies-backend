@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Box, Button, Container, Flex, Heading, Input, Select, useToast } from '@chakra-ui/react';
 import { EnrichedVideo, VideoMeta, videosApi } from '../api/videos';
 import { VideoList } from '../components/videos/VideoList';
@@ -16,24 +16,27 @@ export function VideosPage() {
   const [country, setCountry] = useState('');
   const toast = useToast();
 
-  const loadVideos = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const [vids, meta] = await Promise.all([
-        videosApi.getVideos(),
-        videosApi.getVideoMeta().catch(() => new Map<string, VideoMeta>()),
-      ]);
-      setVideos(vids.map((video) => ({ ...video, ...(meta.get(video.guid) ?? EMPTY_META) })));
-    } catch (_error) {
-      toast({ title: 'Error loading videos, please try again', status: 'error', duration: 3000 });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
   useEffect(() => {
+    let ignore = false;
+    const loadVideos = async () => {
+      try {
+        const [vids, meta] = await Promise.all([
+          videosApi.getVideos(),
+          videosApi.getVideoMeta().catch(() => new Map<string, VideoMeta>()),
+        ]);
+        if (ignore) return;
+        setVideos(vids.map((video) => ({ ...video, ...(meta.get(video.guid) ?? EMPTY_META) })));
+      } catch (_error) {
+        if (!ignore) toast({ title: 'Error loading videos, please try again', status: 'error', duration: 3000 });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
     loadVideos();
-  }, [loadVideos, refresh]);
+    return () => {
+      ignore = true;
+    };
+  }, [refresh, toast]);
 
   const persons = useMemo(() => {
     const byId = new Map<string, string>();
@@ -65,6 +68,7 @@ export function VideosPage() {
   );
 
   const handleSave = () => {
+    setIsLoading(true);
     setRefresh(!refresh);
     setEditingVideo(null);
   };

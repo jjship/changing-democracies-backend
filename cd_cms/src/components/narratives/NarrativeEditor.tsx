@@ -22,6 +22,16 @@ import { CloseIcon } from '@chakra-ui/icons';
 import { Language, languagesApi } from '../../api/languages';
 import { useSaveColor } from '../../hooks/useSaveColor';
 
+function emptyNarrative(): Narrative {
+  return {
+    id: '',
+    names: [{ name: '', languageCode: 'EN' }],
+    descriptions: [{ languageCode: 'EN', description: [''] }],
+    totalDurationSec: 0,
+    fragmentsSequence: [],
+  };
+}
+
 export default function NarrativeEditor({
   narrative,
   onSave,
@@ -36,28 +46,22 @@ export default function NarrativeEditor({
   persons: Person[];
 }) {
   const { saveColor, markUnsaved, markSaved } = useSaveColor();
-  const [currentNarrative, setCurrentNarrative] = useState<Narrative | null>(narrative);
+  const [currentNarrative, setCurrentNarrative] = useState<Narrative | null>(narrative ?? emptyNarrative());
   const [descriptionLanguage, setDescriptionLanguage] = useState<Language | null>(null);
   const [filteredFragments, setFilteredFragments] = useState<Fragment[]>(fragments);
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [prevNarrative, setPrevNarrative] = useState(narrative);
+  const [prevFragments, setPrevFragments] = useState(fragments);
 
-  useEffect(() => {
-    if (narrative) {
-      setCurrentNarrative(narrative);
-    } else {
-      setCurrentNarrative({
-        id: '',
-        names: [{ name: '', languageCode: 'EN' }],
-        descriptions: [{ languageCode: 'EN', description: [''] }],
-        totalDurationSec: 0,
-        fragmentsSequence: [],
-      });
-    }
-  }, [narrative]);
-
-  useEffect(() => {
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (narrative !== prevNarrative) {
+    setPrevNarrative(narrative);
+    setCurrentNarrative(narrative ?? emptyNarrative());
+  }
+  if (fragments !== prevFragments) {
+    setPrevFragments(fragments);
     setFilteredFragments(fragments);
-  }, [fragments]);
+  }
 
   useEffect(() => {
     const fetchLanguages = async () => {

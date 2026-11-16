@@ -24,49 +24,34 @@ export function PersonForm({
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadLanguages = async () => {
+      try {
+        const langs = await languagesApi.getLanguages();
+        if (ignore) return;
+        setLanguages(langs);
+        if (langs.length > 0) {
+          setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
+        }
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading languages',
+          status: 'error',
+          duration: 3000,
+        });
+      }
+    };
+    const loadCountries = async () => {
+      const countries = await countriesApi.getCountries();
+      if (!ignore) setCountries(countries);
+    };
     loadLanguages();
     loadCountries();
-    if (person) {
-      loadPersonBio();
-    }
-  }, [person]);
-
-  const loadPersonBio = async () => {
-    if (!person) return;
-    try {
-      if (person.bios && person.bios.length > 0) {
-        setBios(person.bios);
-        setLanguageCode(person.bios[0].languageCode);
-      }
-    } catch (_error) {
-      toast({
-        title: 'Error loading person bio',
-        status: 'error',
-        duration: 3000,
-      });
-    }
-  };
-
-  const loadLanguages = async () => {
-    try {
-      const langs = await languagesApi.getLanguages();
-      setLanguages(langs);
-      if (langs.length > 0 && !languageCode) {
-        setLanguageCode(langs.find((lang) => lang.code === 'EN')?.code || langs[0].code);
-      }
-    } catch (_error) {
-      toast({
-        title: 'Error loading languages',
-        status: 'error',
-        duration: 3000,
-      });
-    }
-  };
-
-  const loadCountries = async () => {
-    const countries = await countriesApi.getCountries();
-    setCountries(countries);
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [toast]);
 
   const handleSubmit = async () => {
     try {

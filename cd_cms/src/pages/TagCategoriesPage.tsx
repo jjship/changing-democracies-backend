@@ -13,26 +13,30 @@ export function TagCategoriesPage() {
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadTagCategories = async () => {
+      try {
+        const data = await tagCategoriesApi.getTagCategories();
+        if (!ignore) setTagCategories(data);
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading tag categories, please try again',
+          status: 'error',
+          duration: 3000,
+        });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
     loadTagCategories();
-  }, [refresh]);
-
-  const loadTagCategories = async () => {
-    setIsLoading(true);
-    try {
-      const data = await tagCategoriesApi.getTagCategories();
-      setTagCategories(data);
-    } catch (_error) {
-      toast({
-        title: 'Error loading tag categories, please try again',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [refresh, toast]);
 
   const handleSave = () => {
+    setIsLoading(true);
     setRefresh(!refresh);
     setSelectedTagCategory(undefined);
   };
@@ -49,6 +53,7 @@ export function TagCategoriesPage() {
         status: 'success',
         duration: 3000,
       });
+      setIsLoading(true);
       setRefresh(!refresh);
     } catch (_error) {
       toast({

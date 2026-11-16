@@ -16,32 +16,37 @@ export function NarrativesPage() {
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadData = async () => {
+      try {
+        const [narrativesData, fragmentsResponse, personsData] = await Promise.all([
+          narrativesApi.getNarratives(),
+          fragmentsApi.getFragments({}),
+          personsApi.getPersons(),
+        ]);
+        if (ignore) return;
+        setNarratives(narrativesData);
+        setFragments(fragmentsResponse.data);
+        setPersons(personsData);
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading data, please try again',
+          status: 'error',
+          duration: 3000,
+        });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
     loadData();
-  }, [refresh]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const [narrativesData, fragmentsResponse, personsData] = await Promise.all([
-        narrativesApi.getNarratives(),
-        fragmentsApi.getFragments({}),
-        personsApi.getPersons(),
-      ]);
-      setNarratives(narrativesData);
-      setFragments(fragmentsResponse.data);
-      setPersons(personsData);
-    } catch (_error) {
-      toast({
-        title: 'Error loading data, please try again',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [refresh, toast]);
 
   const handleSave = () => {
+    setIsLoading(true);
     setRefresh(!refresh);
     setEditingNarrative(undefined);
   };
@@ -52,6 +57,7 @@ export function NarrativesPage() {
 
   const handleDelete = async (id: string) => {
     await narrativesApi.deleteNarrative(id);
+    setIsLoading(true);
     setRefresh(!refresh);
   };
 
