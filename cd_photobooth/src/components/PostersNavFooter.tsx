@@ -47,7 +47,7 @@ export const PostersNavFooter: FC<PostersNavFooterProps> = ({
         <p className="mt-9 min-w-min text-5xl font-extrabold text-white">
           {make.toUpperCase()}
         </p>
-        <img src="/simple_arrow.svg" alt="arrow" className="mb-6" />
+        <img src="/simple_arrow.svg" alt="arrow" width={110} height={29} className="mb-6" />
         <div className="relative w-28">
           <Button
             className="fixed bottom-6 right-6 flex h-44 w-44 items-center justify-center rounded-full bg-red_mains pt-5 text-3xl/7 font-black text-black shadow-lg hover:bg-red-700"

@@ -22,7 +22,7 @@ export const BackBtn: FC<BackProps> = ({ nextStage }) => {
       className="absolute left-0 top-20 bg-transparent hover:bg-transparent"
       onClick={handleClick}
     >
-      <img src="/back_arrow.svg" alt="back arrow" />
+      <img src="/back_arrow.svg" alt="back arrow" width={87} height={69} />
     </Button>
   );
 };
