@@ -13,26 +13,30 @@ export function PersonsPage() {
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadPersons = async () => {
+      try {
+        const data = await personsApi.getPersons();
+        if (!ignore) setPersons(data);
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading persons, please try again',
+          status: 'error',
+          duration: 3000,
+        });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
     loadPersons();
-  }, [refresh]);
-
-  const loadPersons = async () => {
-    setIsLoading(true);
-    try {
-      const data = await personsApi.getPersons();
-      setPersons(data);
-    } catch (_error) {
-      toast({
-        title: 'Error loading persons, please try again',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [refresh, toast]);
 
   const handleSave = () => {
+    setIsLoading(true);
     setRefresh(!refresh);
     setEditingPerson(undefined);
   };

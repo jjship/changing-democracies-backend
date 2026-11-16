@@ -22,6 +22,15 @@ import { CloseIcon } from '@chakra-ui/icons';
 import { Language, languagesApi } from '../../api/languages';
 import { useSaveColor } from '../../hooks/useSaveColor';
 
+function emptyTag(): Tag {
+  return { id: '', names: [{ languageCode: 'EN', name: '' }], fragments: [] };
+}
+
+function taggedFragments(tag: Tag | null, fragments: Fragment[]): Fragment[] {
+  if (!tag?.fragments) return [];
+  return fragments.filter((fragment) => tag.fragments.some((tagFragment) => tagFragment.id === fragment.id));
+}
+
 export default function TagEditor({
   tag,
   onSave,
@@ -36,35 +45,22 @@ export default function TagEditor({
   persons: Person[];
 }) {
   const { saveColor, markUnsaved, markSaved } = useSaveColor();
-  const [currentTag, setCurrentTag] = useState<Tag | null>(tag);
+  const [currentTag, setCurrentTag] = useState<Tag | null>(tag ?? emptyTag());
   const [nameLanguage, setNameLanguage] = useState<Language | null>(null);
   const [selectedPersonId, setSelectedPersonId] = useState<string>('');
   const [personFragments, setPersonFragments] = useState<Fragment[]>([]);
-  const [tagFragments, setTagFragments] = useState<Fragment[]>([]);
+  const [tagFragments, setTagFragments] = useState<Fragment[]>(() => taggedFragments(tag, fragments));
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [prevTag, setPrevTag] = useState(tag);
+  const [prevFragments, setPrevFragments] = useState(fragments);
 
-  useEffect(() => {
-    if (tag) {
-      setCurrentTag(tag);
-
-      // Initialize tagFragments from tag's fragments data
-      if (tag.fragments && fragments.length > 0) {
-        const taggedFragments = fragments.filter((fragment) =>
-          tag.fragments.some((tagFragment) => tagFragment.id === fragment.id)
-        );
-        setTagFragments(taggedFragments);
-      } else {
-        setTagFragments([]);
-      }
-    } else {
-      setCurrentTag({
-        id: '',
-        names: [{ languageCode: 'EN', name: '' }],
-        fragments: [],
-      });
-      setTagFragments([]);
-    }
-  }, [tag, fragments]);
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  if (tag !== prevTag || fragments !== prevFragments) {
+    setPrevTag(tag);
+    setPrevFragments(fragments);
+    setCurrentTag(tag ?? emptyTag());
+    setTagFragments(taggedFragments(tag, fragments));
+  }
 
   useEffect(() => {
     const fetchLanguages = async () => {

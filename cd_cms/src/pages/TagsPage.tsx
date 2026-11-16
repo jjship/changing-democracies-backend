@@ -17,32 +17,36 @@ export function TagsPage() {
   const toast = useToast();
 
   useEffect(() => {
+    let ignore = false;
+    const loadData = async () => {
+      try {
+        const tagsData = await tagsApi.getTags();
+        if (!ignore) setTags(tagsData);
+
+        const fragmentsResponse = await fragmentsApi.getFragments({});
+        if (!ignore) setFragments(fragmentsResponse.data);
+
+        const personsData = await personsApi.getPersons();
+        if (!ignore) setPersons(personsData);
+      } catch (_error) {
+        if (ignore) return;
+        toast({
+          title: 'Error loading data, please try again',
+          status: 'error',
+          duration: 3000,
+        });
+      } finally {
+        if (!ignore) setIsLoading(false);
+      }
+    };
     loadData();
-  }, [refresh]);
-
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const tagsData = await tagsApi.getTags();
-      setTags(tagsData);
-
-      const fragmentsResponse = await fragmentsApi.getFragments({});
-      setFragments(fragmentsResponse.data);
-
-      const personsData = await personsApi.getPersons();
-      setPersons(personsData);
-    } catch (_error) {
-      toast({
-        title: 'Error loading data, please try again',
-        status: 'error',
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    return () => {
+      ignore = true;
+    };
+  }, [refresh, toast]);
 
   const handleSave = () => {
+    setIsLoading(true);
     setRefresh(!refresh);
     setEditingTag(undefined);
   };
@@ -61,6 +65,7 @@ export function TagsPage() {
 
   const handleDelete = async (id: string) => {
     await tagsApi.deleteTag(id);
+    setIsLoading(true);
     setRefresh(!refresh);
   };
 
