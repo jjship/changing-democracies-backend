@@ -24,7 +24,7 @@
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
     "react-idle-timer": "^5.7.2",
-    "react-simple-animate": "^3.5.2",
+    "react-simple-animate": "^4.1.0",
     "react-simple-keyboard": "^3.8.296",
     "react-webcam": "^7.2.0",
     "swr": "^2.5.1",
