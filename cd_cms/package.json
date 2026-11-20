@@ -16,7 +16,7 @@
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.14.1",
     "@hello-pangea/dnd": "^18.0.1",
-    "@hookform/resolvers": "^3.3.4",
+    "@hookform/resolvers": "^7.0.6",
     "@vitejs/plugin-react": "^4.3.4",
     "framer-motion": "^11.0.8",
     "react": "^18.3.1",
